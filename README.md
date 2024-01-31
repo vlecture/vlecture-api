@@ -4,7 +4,7 @@
 
 ### How to install and use the project (for the first time)
 
-1. Clone this repository with the command `git clone `
+1. Clone this repository with the command `git clone https://gitlab.cs.ui.ac.id/notebook-ai/notebook-be.git`
 2. Make sure to enter the directory using `cd notebook-be`
 3. Create a virtual environment using `python -m venv env`
 4. Run the virtual environment using `source env/bin/activate` for Mac and `env\Scripts\activate.bat` for Windows
