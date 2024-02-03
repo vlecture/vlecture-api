@@ -3,17 +3,34 @@ image: python:3.10
 stages:
   - build
   - test
+  - deploy
 
 build_job:
   stage: build
   script:
-    - echo "Installing dependencies..."
-    - pip install -r requirements.txt 
     - echo "Building the project..."
-    - uvicorn src.main:app --reload
+    - echo "Installing dependencies..."
+    - pip install -r requirements.txt
+  artifacts:
+    paths:
+      - myapp/
+    expire_in: 1 hour
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
+
 
 test_job:
   stage: test
   script:
     - echo "Running tests..."
     - pytest
+
+deploy_job:
+  stage: deploy
+  script:
+    - echo "Deploying the application..."
+    # Add deployment commands here
+  only:
+    - main
