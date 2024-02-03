@@ -9,11 +9,11 @@
 3. Create a virtual environment using `python -m venv env`
 4. Run the virtual environment using `source env/bin/activate` for Mac and `env\Scripts\activate.bat` for Windows
 5. Install the required modules with `pip install -r requirements.txt`
-6. Run the app using `make dev`
+6. Run the app using `make dev` or `.\build.bat`
 
 ### How to run (if you have already installed)
 
 1. Make sure to be in the **notebook-be** directory using `cd notebook-be`
 2. Run your virtual environment using `source env/bin/activate` for Mac and `env\Scripts\activate.bat` for Windows
 3. Keep your project up-to-date by installing the newest modules using `pip install -r requirements.txt`
-4. Run the app using `make dev`
+4. Run the app using `make dev` or `.\build.bat`
