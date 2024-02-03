@@ -15,5 +15,5 @@
 
 1. Make sure to be in the **notebook-be** directory using `cd notebook-be`
 2. Run your virtual environment using `source env/bin/activate` for Mac and `env\Scripts\activate.bat` for Windows
-3. Keep your project up-to-date by installing the newest modules using `pip install requirements.txt`
+3. Keep your project up-to-date by installing the newest modules using `pip install -r requirements.txt`
 4. Run the app using `make dev`
