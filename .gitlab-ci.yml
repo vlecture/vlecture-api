@@ -1,36 +1,47 @@
-image: python:3.10
-
 stages:
   - build
   - test
   - deploy
 
-build_job:
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+
+before_script:
+  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - ssh-keyscan -H $DEPLOY_SERVER >> ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
+
+build:
   stage: build
+  image: docker:19.03.12
+  services:
+    - docker:19.03.12-dind
   script:
-    - echo "Building the project..."
-    - echo "Installing dependencies..."
+    - echo "Building project..."
     - pip install -r requirements.txt
-  artifacts:
-    paths:
-      - myapp/
-    expire_in: 1 hour
-  cache:
-    paths:
-      - .cache/pip
-      - venv/
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
 
-
-test_job:
+test:
   stage: test
+  image: python:3.10
   script:
     - echo "Running tests..."
+    - pip install pytest
     - pytest
 
-deploy_job:
+deploy:
   stage: deploy
+  image: alpine:latest
   script:
     - echo "Deploying the application..."
-    # Add deployment commands here
+    - apk add --no-cache openssh-client rsync
+    - rsync -avz --delete --exclude='.git/' --exclude='venv/' ./ ec2-user@$DEPLOY_SERVER:/path/to/your/application
+    - ssh ec2-user@$DEPLOY_SERVER 'bash -s' < ./deploy_script.sh
   only:
     - main
