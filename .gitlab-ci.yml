@@ -16,7 +16,7 @@ build:
   
   services:
     - docker:dind
-  command: ["--tls=false"]
+    command: ["--tls=false"]
   script:
     - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
 
