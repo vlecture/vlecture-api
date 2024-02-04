@@ -4,8 +4,8 @@
 #   - docker:dind
 
 stages:
-  - build
   - test
+  - build
   - publish
   - deploy
 
@@ -15,15 +15,11 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_USER/$IMAGE_NAME
   DOCKER_TAG: $IMAGE_TAG
 
-build:
-  stage: build
-  image: docker:latest
-  
-  services:
-    - docker:dind
+setup:
+  stage: test
+  image: ubuntu:22.04
   script:
-    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
-
+    - apt-get update && apt install openssh-client libpq-dev gcc
 
 test:
   stage: test
@@ -33,12 +29,22 @@ test:
     - build
   script:
     - echo "TESTING FASTAPI PROJECT...."
-    # - pip install -r requirements.txt
+    - pip install -r requirements.txt
 
     - pytest
   only: 
     - main
 
+build:
+  stage: build
+  image: docker:latest
+  
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+  script:
+    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
 
 # Publish the new project Image to dockerhub 
 publish:
@@ -48,8 +54,8 @@ publish:
     - build
   services:
     - docker:dind
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+  # before_script:
+  #   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
   script:
     - ls
     - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
