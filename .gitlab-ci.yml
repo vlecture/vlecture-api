@@ -14,14 +14,14 @@ build:
   image: docker:latest
   variables:
     DOCKER_HOST: $DOCKER_HOST
-  services:
-    - docker:dind
-  before_script:
-    - apt install --no-cache --upgrade bash
+  # services:
+  #   - docker:dind
+  # before_script:
+  #   - apt install --no-cache --upgrade bash
   script:
-    # To handle invalid fetching api
-    - sudo usermod -aG docker ${USER}
-    - su - ${USER}
+    # # To handle invalid fetching api
+    # - sudo usermod -aG docker ${USER}
+    # - su - ${USER}
 
     - docker build -t $IMAGE_NAME .
 
