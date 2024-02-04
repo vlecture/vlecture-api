@@ -12,3 +12,9 @@ Base.metadata.create_all(bind=engine)
 @app.get("/")
 def root():
     return {"message": "Hello world!"}
+
+@app.get("/hi")
+def hi():
+    return {
+        "message": "Bonjour!"
+    }

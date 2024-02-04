@@ -17,3 +17,7 @@
 2. Run your virtual environment using `source env/bin/activate` for Mac and `env\Scripts\activate.bat` for Windows
 3. Keep your project up-to-date by installing the newest modules using `pip install -r requirements.txt`
 4. Run the app using `make dev` or `.\build.bat`
+
+## Running Docker container
+1. Build Docker image: `docker build -t notebook-fastapi .`
+2. Run image on container port 8080: `docker run -p 8080:8080 notebook-fastapi`
