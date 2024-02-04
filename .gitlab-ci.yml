@@ -24,8 +24,8 @@ build:
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin
   script:
-    - export $DOCKER_HOST="tcp://127.0.01:2375" && docker build -t $IMAGE_NAME .4
-    - echo "build: Running image..."
+    - export $DOCKER_HOST="tcp://127.0.01:2375" && docker build -t $IMAGE_NAME .
+    - echo "Running image...."
     - docker run $IMAGE_NAME -p 8080:8080
 
 
