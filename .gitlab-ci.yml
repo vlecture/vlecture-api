@@ -33,7 +33,7 @@ publish:
   dependencies:
     - build
   before_script:
-    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
   script:
     - ls
     - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
@@ -54,9 +54,12 @@ deploy:
     - apt-get update && apt install openssh-client
   
   script:
+    # Store key in file
     - echo "$AWS_SSH_KEY" > "key.pem"
-    # Owner access only
+
+    # Owner read access only
     - chmod 400 key.pem 
+
     # SSH into AWS EC2 instance
     - ssh -i "key.pem" $AWS_USERNAME@$AWS_PUBLIC_DNS "
       docker container rm -f $SERVER_CONTAINER_NAME || true && 
