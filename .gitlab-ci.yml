@@ -9,17 +9,17 @@ tages:
 variables:
   DOCKER_IMAGE: $CI_REGISTRY_USER/$IMAGE_NAME
   DOCKER_TAG: $IMAGE_TAG
+  DOCKER_HOST: "tcp://docker:2375"
 
 build:
   stage: build
   image: docker:latest
   variables:
-    DOCKER_HOST: "tcp://127.0.01:2375"
-  
+    DOCKER_HOST: $DOCKER_HOST
   services:
     - docker:dind
   script:
-    - export DOCKER_HOST="tcp://127.0.01:2375" && docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
 
 
 test:
