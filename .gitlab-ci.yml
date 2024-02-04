@@ -51,7 +51,7 @@ deploy:
   image: ubuntu:22.04
   before_script:
     # Installs on Ubuntu dist.
-    - apt-get update && apt install openssh-client
+    - apt-get update && apt install -y openssh-client
   
   script:
     # Store key in file
