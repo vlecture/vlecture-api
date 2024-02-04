@@ -24,9 +24,6 @@ setup:
 test:
   stage: test
   image: python:3.10-slim
-
-  dependencies:
-    - build
   script:
     - echo "TESTING FASTAPI PROJECT...."
     - pip install -r requirements.txt
