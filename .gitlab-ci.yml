@@ -24,33 +24,25 @@ test:
 # Build Docker image
 build:
   stage: build
-  image: docker:latest
+  image: docker:20-dind
   services:
     - docker
-    # - docker:dind
-  script:
-    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
-
-
-# Publish the new project Image to dockerhub 
-publish:
-  stage: publish
-  image: docker:latest
-  dependencies:
-    - build
+  variables:
+    DOCKER_HOST: tcp://docker:2375 
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
   services:
-    - docker:dind
+    - name: docker:20-dind
+      alias: docker
+      command: ["--tls=false"]
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
   script:
     - ls
     - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+
+    # Publish the new project Image to dockerhub 
     - docker push $DOCKER_IMAGE:$DOCKER_TAG
-  tags:
-    - dind
-  only:
-    - main
-  
 
 deploy:
   stage: deploy
