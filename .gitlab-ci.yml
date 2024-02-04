@@ -23,7 +23,6 @@ build:
       command: ["--tls=false"]
   before_script:
     - echo $CI_REGISTRY_PASSWORD| docker login -u $CI_REGISTRY_USER --password-stdin docker.io
-  password-stdin
   script:
     - export $DOCKER_HOST="tcp://127.0.01:2375" && docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
     - docker run -p 8080:8080 
