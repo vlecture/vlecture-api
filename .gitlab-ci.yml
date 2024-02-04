@@ -1,47 +1,114 @@
+image: docker:latest
+services:
+  - docker:dind
+
 stages:
   - build
   - test
+  - publish
   - deploy
 
 variables:
-  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-
-before_script:
-  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
-  - eval $(ssh-agent -s)
-  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-  - mkdir -p ~/.ssh
-  - chmod 700 ~/.ssh
-  - ssh-keyscan -H $DEPLOY_SERVER >> ~/.ssh/known_hosts
-  - chmod 644 ~/.ssh/known_hosts
+  DOCKER_IMAGE: $CI_REGISTRY_USER/$IMAGE_NAME
+  DOCKER_TAG: $IMAGE_TAG
 
 build:
   stage: build
-  image: docker:19.03.12
-  services:
-    - docker:19.03.12-dind
   script:
-    - echo "Building project..."
-    - pip install -r requirements.txt
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $DOCKER_IMAGE .
-    - docker push $DOCKER_IMAGE
+    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
 
 test:
   stage: test
-  image: python:3.10
+  dependencies:
+    - build
   script:
-    - echo "Running tests..."
-    - pip install pytest
-    - pytest
+    - docker run --rm $DOCKER_IMAGE:$DOCKER_TAG pytest
+
+# Publish the new project Image to dockerhub 
+publish:
+  stage: publish
+  image: docker:latest
+  services:
+    - docker:dind
+  dependencies:
+    - build
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    - ls
+    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+    - docker push $DOCKER_IMAGE:$DOCKER_TAG
+  tags:
+    - dind
+  only:
+    - main
+  
 
 deploy:
   stage: deploy
-  image: alpine:latest
+  dependencies:
+    - build
+  image: ubuntu:22.04
+  before_script:
+    # Installs on Ubuntu dist.
+    - apt-get update && apt install openssh-client
+  
   script:
-    - echo "Deploying the application..."
-    - apk add --no-cache openssh-client rsync
-    - rsync -avz --delete --exclude='.git/' --exclude='venv/' ./ ec2-user@$DEPLOY_SERVER:/path/to/your/application
-    - ssh ec2-user@$DEPLOY_SERVER 'bash -s' < ./deploy_script.sh
+    - echo "$AWS_SSH_KEY" > "key.pem"
+    # Owner access only
+    - chmod 400 key.pem 
+    # SSH into AWS EC2 instance
+    - ssh -i "key.pem" $AWS_USERNAME@$AWS_PUBLIC_DNS "
+      docker container rm -f $SERVER_CONTAINER_NAME || true && 
+      docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true &&
+      docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
   only:
     - main
+
+# stages:
+#   - build
+#   - test
+#   - deploy
+
+# variables:
+#   DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+
+# before_script:
+#   - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+#   - eval $(ssh-agent -s)
+#   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+#   - mkdir -p ~/.ssh
+#   - chmod 700 ~/.ssh
+#   - ssh-keyscan -H $DEPLOY_SERVER >> ~/.ssh/known_hosts
+#   - chmod 644 ~/.ssh/known_hosts
+
+# build:
+#   stage: build
+#   image: docker:19.03.12
+#   services:
+#     - docker:19.03.12-dind
+#   script:
+#     - echo "Building project..."
+#     - pip install -r requirements.txt
+#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#     - docker build -t $DOCKER_IMAGE .
+#     - docker push $DOCKER_IMAGE
+
+# test:
+#   stage: test
+#   image: python:3.10
+#   script:
+#     - echo "Running tests..."
+#     - pip install pytest
+#     - pytest
+
+# deploy:
+#   stage: deploy
+#   image: alpine:latest
+#   script:
+#     - echo "Deploying the application..."
+#     - apk add --no-cache openssh-client rsync
+#     - rsync -avz --delete --exclude='.git/' --exclude='venv/' ./ ec2-user@$DEPLOY_SERVER:/path/to/your/application
+#     - ssh ec2-user@$DEPLOY_SERVER 'bash -s' < ./deploy_script.sh
+#   only:
+#     - main
