@@ -7,7 +7,7 @@ stages:
 variables:
   DOCKER_IMAGE: $CI_REGISTRY_USER/$IMAGE_NAME
   DOCKER_TAG: $IMAGE_TAG
-  DOCKER_HOST: "tcp://docker:2375"
+  DOCKER_HOST: "tcp://127.0.01:2375"
 
 build:
   stage: build
