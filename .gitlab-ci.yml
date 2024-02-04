@@ -16,6 +16,8 @@ build:
     DOCKER_HOST: $DOCKER_HOST
   services:
     - docker:dind
+  before_script:
+    - apt install --no-cache --upgrade bash
   script:
     # To handle invalid fetching api
     - sudo usermod -aG docker ${USER}
