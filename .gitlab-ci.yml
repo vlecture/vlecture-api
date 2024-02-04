@@ -4,8 +4,8 @@
 #   - docker:dind
 
 stages:
-  - test
   - build
+  - test
   - publish
   - deploy
 
@@ -33,6 +33,8 @@ test:
     - build
   script:
     - echo "TESTING FASTAPI PROJECT...."
+    # - pip install -r requirements.txt
+
     - pytest
   only: 
     - main
