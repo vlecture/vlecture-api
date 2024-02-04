@@ -52,22 +52,25 @@ deploy:
   before_script:
     # Installs on Ubuntu dist.
     - apt-get update && apt install -y openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$AWS_SSH_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh 
+    - chmod 700 ~/.ssh
   
   script:
-    # Store key in file
-    - echo "$AWS_SSH_KEY" > "key.pem"
+    - ls -ll
+    - ssh -o StrictHostKeyChecking=no $AWS_USERNAME@$AWS_PUBLIC_DNS "cd /home/vlecture; touch foo.txt; unzip public.zip"
 
-    # Owner read access only
-    - chmod 400 key.pem 
+    - ssh -o StrictHostKeyChecking=no $AWS_USERNAME@$AWS_PUBLIC_DNS "docker container rm -f $SERVER_CONTAINER_NAME || true"
+    - ssh -o StrictHostKeyChecking=no $AWS_USERNAME@$AWS_PUBLIC_DNS "docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true"
+    - ssh -o StrictHostKeyChecking=no $AWS_USERNAME@$AWS_PUBLIC_DNS "docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
 
-    # fix attempt - failed
-    # - echo -n "$AWS_SSH_KEY" | base64 --decode > ~/.ssh/id_rsa
-    # - chmod 700 ~/.ssh
-    # - chmod 600 ~/.ssh/id_rsa
+    # # Store key in file
+    # - echo "$AWS_SSH_KEY" > "key.pem"
 
-    - ssh $AWS_USERNAME@$AWS_PUBLIC_DNS "docker container rm -f $SERVER_CONTAINER_NAME || true"
-    - ssh $AWS_USERNAME@$AWS_PUBLIC_DNS "docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true"
-    - ssh $AWS_USERNAME@$AWS_PUBLIC_DNS "docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
+    # # Owner read access only
+    # - chmod 400 key.pem 
+
 
     # SSH into AWS EC2 instance
     # - ssh -i "key.pem" $AWS_USERNAME@$AWS_PUBLIC_DNS "
