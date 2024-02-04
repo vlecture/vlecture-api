@@ -17,7 +17,8 @@ test:
   stage: test
   image: python:3.10-slim
   script:
-    - pip install pytest    
+    - echo "TESTING FASTAPI PROJECT...."
+    - pip install -r requirements.txt
     - pytest
   only: 
     - main
