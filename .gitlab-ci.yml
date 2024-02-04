@@ -17,6 +17,10 @@ build:
   services:
     - docker:dind
   script:
+    # To handle invalid fetching api
+    - sudo usermod -aG docker ${USER}
+    - su - ${USER}
+
     - docker build -t $IMAGE_NAME .
 
 test:
