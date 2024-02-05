@@ -60,7 +60,7 @@ deploy:
     - chmod 700 ~/.ssh
 
     # - ssh-keyscan -f $AWS_PUBLIC_DNS >> ~/.ssh/known_hosts
-    - ssh-keyscan -f $AWS_EC2_IP >> ~/.ssh/known_hosts
+    - ssh-keyscan $AWS_EC2_IP >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
 
     # Store key in file
