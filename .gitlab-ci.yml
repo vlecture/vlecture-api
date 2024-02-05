@@ -76,6 +76,6 @@ deploy:
 
 
     # SSH into AWS EC2 instance
-    - ssh -o StrictHostKeyChecking=no -i "key.pem" $AWS_USERNAME@$AWS_PUBLIC_DNS "docker container rm -f $SERVER_CONTAINER_NAME || true && docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true && docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
+    - ssh -o StrictHostKeyChecking=no -i "key.pem" ubuntu@ec2-54-68-107-42.us-west-2.compute.amazonaws.com "docker container rm -f $SERVER_CONTAINER_NAME || true && docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true && docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
   only:
     - main
