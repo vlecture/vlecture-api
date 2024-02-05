@@ -63,14 +63,14 @@ deploy:
     - ssh-keyscan $AWS_EC2_IP >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
 
-    # Store key in file
-    - echo "$AWS_SSH_KEY" > "key.pem"
+    # # Store key in file
+    # - echo "$AWS_SSH_KEY" > "key.pem"
 
-    # Owner read access only
-    - chmod 400 key.pem 
+    # # Owner read access only
+    # - chmod 400 key.pem 
   
   script:
-    - ls -ll
+    # - ls -ll
 
     # - ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/key.pem $AWS_USERNAME@$AWS_PUBLIC_DNS "docker container rm -f $SERVER_CONTAINER_NAME || true"
     # - ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/key.pem $AWS_USERNAME@$AWS_PUBLIC_DNS "docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true"
@@ -80,7 +80,7 @@ deploy:
     # # SSH into AWS EC2 instance using DNS ADDR
     # - ssh -o StrictHostKeyChecking=no -i "key.pem" ubuntu@ec2-54-68-107-42.us-west-2.compute.amazonaws.com "docker container rm -f $SERVER_CONTAINER_NAME || true && docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true && docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
 
-    # SSH using IP Addr 
+    # SSH using VM IP Addr 
     - ssh -o StrictHostKeyChecking=no -i ubuntu@$AWS_EC2_IP "docker container rm -f $SERVER_CONTAINER_NAME || true && docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true && docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
   only:
     - main
