@@ -50,36 +50,32 @@ deploy:
     - build
   image: ubuntu:22.04
   before_script:
-    # Installs on Ubuntu dist.
-    - apt-get update && apt install -y openssh-client
+    # https://docs.gitlab.com/ee/ci/ssh_keys/#ssh-keys-when-using-the-docker-executor
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
 
-    # https://www.fosstechnix.com/gitlab-ci-deploy-to-ec2-using-ssh/
-    - eval $(ssh-agent -s)
-    - echo "$AWS_SSH_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh 
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -f $AWS_PUBLIC_DNS >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
+    # # https://www.fosstechnix.com/gitlab-ci-deploy-to-ec2-using-ssh/
+    # - eval $(ssh-agent -s)
+    # - echo "$AWS_SSH_KEY" | tr -d '\r' | ssh-add -
+    # - mkdir -p ~/.ssh 
+    # - chmod 700 ~/.ssh
+    # - ssh-keyscan -f $AWS_PUBLIC_DNS >> ~/.ssh/known_hosts
+    # - chmod 644 ~/.ssh/known_hosts
+
+    # Store key in file
+    - echo "$AWS_SSH_KEY" > "key.pem"
+
+    # Owner read access only
+    - chmod 400 key.pem 
   
   script:
     - ls -ll
-    - ssh -o StrictHostKeyChecking=no $AWS_USERNAME@$AWS_PUBLIC_DNS "cd /home/vlecture; touch foo.txt; unzip public.zip"
 
-    - ssh -o StrictHostKeyChecking=no $AWS_USERNAME@$AWS_PUBLIC_DNS "docker container rm -f $SERVER_CONTAINER_NAME || true"
-    - ssh -o StrictHostKeyChecking=no $AWS_USERNAME@$AWS_PUBLIC_DNS "docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true"
-    - ssh -o StrictHostKeyChecking=no $AWS_USERNAME@$AWS_PUBLIC_DNS "docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
-
-    # # Store key in file
-    # - echo "$AWS_SSH_KEY" > "key.pem"
-
-    # # Owner read access only
-    # - chmod 400 key.pem 
+    # - ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/key.pem $AWS_USERNAME@$AWS_PUBLIC_DNS "docker container rm -f $SERVER_CONTAINER_NAME || true"
+    # - ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/key.pem $AWS_USERNAME@$AWS_PUBLIC_DNS "docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true"
+    # - ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/key.pem $AWS_USERNAME@$AWS_PUBLIC_DNS "docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
 
 
     # SSH into AWS EC2 instance
-    # - ssh -i "key.pem" $AWS_USERNAME@$AWS_PUBLIC_DNS "
-    #   docker container rm -f $SERVER_CONTAINER_NAME || true && 
-    #   docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true &&
-    #   docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
+    - ssh -o StrictHostKeyChecking=no -i "key.pem" $AWS_USERNAME@$AWS_PUBLIC_DNS "docker container rm -f $SERVER_CONTAINER_NAME || true && docker image rm -f $DOCKER_IMAGE:$DOCKER_TAG || true && docker run --name $SERVER_CONTAINER_NAME -d -p 80:8080 $DOCKER_IMAGE:$DOCKER_TAG"
   only:
     - main
