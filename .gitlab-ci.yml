@@ -59,9 +59,16 @@ deploy:
     - mkdir -p ~/.ssh 
     - chmod 700 ~/.ssh
 
+    # Check contents of ssh folder
+    - ls ~/.ssh
+
     # - ssh-keyscan -f $AWS_PUBLIC_DNS >> ~/.ssh/known_hosts
     - ssh-keyscan $AWS_EC2_IP >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
+
+    # Check known_hosts
+    - ls ~/.ssh/known_hosts
+
 
     # # Store key in file
     # - echo "$AWS_SSH_KEY" > "key.pem"
