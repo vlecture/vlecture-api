@@ -52,14 +52,10 @@ deploy:
   before_script:
     # Installs on Ubuntu dist.
     - apt-get update && apt install -y openssh-client
-
-    # https://www.fosstechnix.com/gitlab-ci-deploy-to-ec2-using-ssh/
     - eval $(ssh-agent -s)
     - echo "$AWS_SSH_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh 
     - chmod 700 ~/.ssh
-    - ssh-keyscan $AWS_PUBLIC_DNS >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
   
   script:
     - ls -ll
