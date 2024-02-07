@@ -36,9 +36,15 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+        
       - name: Test with pytest
         run: |
-          railway run --service ${{ secrets.RAILWAY_SERVICE }}  pytest
+          npm i -g @railway/cli railway 
+          run --service ${{ secrets.RAILWAY_SERVICE }}  
+          pytest
         env:
           DB_URL: ${{ secrets.DB_URL }}
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
