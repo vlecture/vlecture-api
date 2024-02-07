@@ -35,6 +35,9 @@ jobs:
     - name: Run pytest
       run: |
         pytest
+      env:
+        DB_URL: ${{ secrets.DB_URL }}
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
   # test:
   #   needs: build
   #   runs-on: ubuntu-22.04
