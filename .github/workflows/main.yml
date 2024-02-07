@@ -36,17 +36,31 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/setup-node@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
         with:
-          node-version: 16
-        
-      - name: Test with pytest
+          python-version: "3.10"
+
+      - name: Install dependencies
         run: |
-          npm i -g @railway/cli 
-          railway run --service ${{ secrets.RAILWAY_SERVICE }} pytest
-        env:
-          DB_URL: ${{ secrets.DB_URL }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run pytest
+        run: |
+          pip install pytest
+          pytest
+      # - uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 16
+        
+      # - name: Test with pytest
+      #   run: |
+      #     npm i -g @railway/cli 
+      #     railway run --service ${{ secrets.RAILWAY_SERVICE }} pytest
+      #   env:
+      #     DB_URL: ${{ secrets.DB_URL }}
+      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
   deploy:
     needs: test
     runs-on: ubuntu-22.04
@@ -73,3 +87,7 @@ jobs:
     # env:
     #   DOCKER_CLI_EXPERIMENTAL: enabled
     #   DOCKER_BUILDKIT: 1
+
+
+
+# Reference: https://github.com/bervProject/MyPersonalWebAPI/blob/main/.github/workflows/node%26docker.yml
