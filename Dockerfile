@@ -24,4 +24,3 @@ EXPOSE 8080
 
 # Run FastAPI using uvicorn web server (src/main.py => app = FastAPI())
 CMD uvicorn src.main:app --host 0.0.0.0 --port $PORT
-# CMD [ "uvicorn", "src.main:app", "--host", "0.0.0.0", "--reload", "--port", "${PORT}" ]
