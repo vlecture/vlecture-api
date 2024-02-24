@@ -7,7 +7,7 @@ from alembic import context
 
 from src.utils.db import Base
 from src.utils.settings import DATABASE_URL
-from src.models.user import User
+from src.models.users import User
 
 
 # this is the Alembic Config object, which provides
