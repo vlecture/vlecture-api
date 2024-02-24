@@ -1,7 +1,12 @@
-from fastapi import FastAPI
-from src.routes.routes import router
-from src.utils.db import Base, engine
+from fastapi import FastAPI, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+
+from src.routes.routes import router
+from src.utils.db import Base, engine, get_db
+from src.schemas.users import CreateUserSchema
+from src.models.users import User
+from src.services.users import create_user
 
 
 app = FastAPI()
@@ -34,3 +39,10 @@ def root():
 @app.get("/hi")
 def hi():
     return {"message": "Bonjour!"}
+
+
+@app.post("/signup", tags=["auth"])
+def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db)):
+    """Processes request to register user account."""
+    payload.hashed_password = User.hash_password(payload.hashed_password)
+    return create_user(session, user=payload)
