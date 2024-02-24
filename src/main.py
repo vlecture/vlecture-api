@@ -4,9 +4,6 @@ from src.utils.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
 
 
-# For testing 
-from fastapi.testclient import TestClient
-
 app = FastAPI()
 app.include_router(router)
 
@@ -33,8 +30,7 @@ Base.metadata.create_all(bind=engine)
 def root():
     return {"message": "Hello world!"}
 
+
 @app.get("/hi")
 def hi():
-    return {
-        "message": "Bonjour!"
-    }
+    return {"message": "Bonjour!"}
