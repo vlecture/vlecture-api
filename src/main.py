@@ -1,12 +1,13 @@
-from fastapi import FastAPI, Depends, Body
+from fastapi import FastAPI, status, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from typing import Dict
 
 from src.routes.routes import router
 from src.utils.db import Base, engine, get_db
-from src.schemas.users import CreateUserSchema
+from src.schemas.users import CreateUserSchema, UserLoginSchema
 from src.models.users import User
-from src.services.users import create_user
+from src.services.users import create_user, get_user
 
 
 app = FastAPI()
@@ -46,3 +47,30 @@ def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db
     """Processes request to register user account."""
     payload.hashed_password = User.hash_password(payload.hashed_password)
     return create_user(session, user=payload)
+
+
+@app.post("/login", response_model=Dict, tags=["auth"])
+def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db)):
+    """Processes user's authentication and returns a token
+    on successful authentication.
+
+    request body:
+
+    - email,
+
+    - password
+    """
+    try:
+        user: User = get_user(session=session, email=payload.email)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user credentials"
+        )
+
+    is_validated: bool = user.validate_password(payload.password)
+    if not is_validated:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user credentials"
+        )
+
+    return user.generate_token()
