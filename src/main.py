@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import Dict
 
-from src.routes.routes import router
 from src.utils.db import Base, engine, get_db
 from src.schemas.users import CreateUserSchema, UserLoginSchema
 from src.models.users import User
@@ -11,7 +10,6 @@ from src.services.users import create_user, get_user
 
 
 app = FastAPI()
-app.include_router(router)
 
 # CORS
 origins = [
