@@ -43,8 +43,14 @@ def hi():
 @app.post("/signup", tags=["auth"])
 def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db)):
     """Processes request to register user account."""
-    payload.hashed_password = User.hash_password(payload.hashed_password)
-    return create_user(session, user=payload)
+    existing_user: User = get_user(session=session, email=payload.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="User already exists!"
+        )
+    else:
+        payload.hashed_password = User.hash_password(payload.hashed_password)
+        return create_user(session, user=payload)
 
 
 @app.post("/login", tags=["auth"])
