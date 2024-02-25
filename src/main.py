@@ -94,5 +94,4 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user credentials"
         )
 
-    user.generate_token()
-    return user
+    return user.generate_token()

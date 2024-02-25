@@ -66,3 +66,4 @@ class User(Base):
         )
         self.refresh_token = refresh_token
         self.access_token = access_token
+        return {refresh_token, access_token}
