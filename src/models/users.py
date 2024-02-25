@@ -21,6 +21,8 @@ class User(Base):
     first_name = Column(String(225))
     last_name = Column(String(225))
     hashed_password = Column(LargeBinary, nullable=False)
+    refresh_token = Column(String(225))
+    access_token = Column(String(225))
     is_active = Column(Boolean, default=False)
 
     UniqueConstraint("email", name="uq_user_email")

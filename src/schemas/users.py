@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field, EmailStr
 
 
@@ -14,6 +15,8 @@ class CreateUserSchema(UserBaseSchema):
 class UserSchema(UserBaseSchema):
     id: int
     is_active: bool = Field(default=False)
+    refresh_token: Optional[str]
+    access_token: Optional[str]
 
     class Config:
         from_attributes = True
