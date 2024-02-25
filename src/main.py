@@ -47,7 +47,7 @@ def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db
     return create_user(session, user=payload)
 
 
-@app.post("/login", response_model=Dict, tags=["auth"])
+@app.post("/login", tags=["auth"])
 def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db)):
     """Processes user's authentication and returns a token
     on successful authentication.
@@ -71,4 +71,5 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user credentials"
         )
 
-    return user.generate_token()
+    user.generate_token()
+    return user

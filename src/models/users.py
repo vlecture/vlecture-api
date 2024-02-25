@@ -1,7 +1,8 @@
 import bcrypt
-import jwt
+from datetime import datetime, timedelta, timezone
+from jose import jwt
 from src.utils.db import Base
-from src.utils.settings import SECRET
+from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
 from sqlalchemy import (
     Boolean,
     Column,
@@ -43,15 +44,25 @@ class User(Base):
         """Confirms password validity"""
         return bcrypt.checkpw(password.encode(), self.hashed_password)
 
-    def generate_token(self) -> dict:
-        """Generate access token for user"""
-        return {
-            "access_token": jwt.encode(
-                {
-                    "first_name": self.first_name,
-                    "last_name": self.last_name,
-                    "email": self.email,
-                },
-                SECRET,
-            )
-        }
+    def generate_token(self):
+        """Generate access token and refresh token for user"""
+        refresh_token = jwt.encode(
+            {
+                "first_name": self.first_name,
+                "last_name": self.last_name,
+                "email": self.email,
+                "exp": datetime.now(timezone.utc) + timedelta(days=7),
+            },
+            REFRESH_TOKEN_SECRET,
+        )
+        access_token = jwt.encode(
+            {
+                "first_name": self.first_name,
+                "last_name": self.last_name,
+                "email": self.email,
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+            },
+            ACCESS_TOKEN_SECRET,
+        )
+        self.refresh_token = refresh_token
+        self.access_token = access_token
