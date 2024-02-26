@@ -1,5 +1,6 @@
 from fastapi import FastAPI, status, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 from typing import Dict
 
@@ -32,6 +33,10 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 
+class Tags(Enum):
+    auth = "auth"
+
+
 @app.get("/")
 def root():
     return {"message": "Hello world!"}
@@ -42,7 +47,7 @@ def hi():
     return {"message": "Bonjour!"}
 
 
-@app.post("/signup", tags=["auth"])
+@app.post("/signup", tags=[Tags.auth])
 def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db)):
     """Processes request to register user account."""
     user = None
@@ -70,7 +75,7 @@ def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db
         return create_user(session, user=payload)
 
 
-@app.post("/login", tags=["auth"])
+@app.post("/login", tags=[Tags.auth])
 def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db)):
     """Processes user's authentication and returns a token
     on successful authentication.
