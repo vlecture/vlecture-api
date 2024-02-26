@@ -1,3 +1,4 @@
+import uuid
 import bcrypt
 from datetime import datetime, timedelta, timezone
 from jose import jwt
@@ -6,7 +7,7 @@ from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
 from sqlalchemy import (
     Boolean,
     Column,
-    Integer,
+    UUID,
     LargeBinary,
     PrimaryKeyConstraint,
     String,
@@ -17,7 +18,9 @@ from sqlalchemy import (
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, nullable=False, primary_key=True)
+    id = Column(
+        UUID(as_uuid=True), nullable=False, primary_key=True, default=uuid.uuid4
+    )
     email = Column(String(225), nullable=False, unique=True)
     first_name = Column(String(225))
     last_name = Column(String(225))

@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import UUID4, BaseModel, Field, EmailStr
 
 
 class UserBaseSchema(BaseModel):
@@ -13,7 +13,7 @@ class CreateUserSchema(UserBaseSchema):
 
 
 class UserSchema(UserBaseSchema):
-    id: int
+    id: UUID4
     is_active: bool = Field(default=False)
     refresh_token: Optional[str]
     access_token: Optional[str]
