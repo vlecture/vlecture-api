@@ -5,6 +5,7 @@ from pydantic import UUID4, BaseModel, Field, EmailStr
 class UserBaseSchema(BaseModel):
     email: EmailStr
     first_name: str
+    middle_name: str
     last_name: str
 
 

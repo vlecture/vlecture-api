@@ -23,6 +23,7 @@ class User(Base):
     )
     email = Column(String(225), nullable=False, unique=True)
     first_name = Column(String(225))
+    middle_name = Column(String(225))
     last_name = Column(String(225))
     hashed_password = Column(LargeBinary, nullable=False)
     refresh_token = Column(String(225))
@@ -52,7 +53,6 @@ class User(Base):
         refresh_token = jwt.encode(
             {
                 "first_name": self.first_name,
-                "last_name": self.last_name,
                 "email": self.email,
                 "exp": datetime.now(timezone.utc) + timedelta(days=7),
             },
@@ -61,7 +61,6 @@ class User(Base):
         access_token = jwt.encode(
             {
                 "first_name": self.first_name,
-                "last_name": self.last_name,
                 "email": self.email,
                 "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
             },
