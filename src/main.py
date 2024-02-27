@@ -1,3 +1,4 @@
+import base64
 import mimetypes
 from fastapi import FastAPI, File, UploadFile, status, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -106,11 +107,12 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
 
         return user.generate_token()
 
-@app.post('/upload/download')
-async def upload_download(payload: AudioFileSchema, file: UploadFile = File(...), db: Session = Depends(get_db)):
+
+@app.post('/upload')
+async def upload_download(file: UploadFile = File(...), db: Session = Depends(get_db)):
     allowed_audio_types = ['audio/mp3', 'audio/mpeg']
     content_type, _ = mimetypes.guess_type(file.filename)
-    
+
     if content_type not in allowed_audio_types:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
@@ -118,6 +120,12 @@ async def upload_download(payload: AudioFileSchema, file: UploadFile = File(...)
 
     data = await file.read()
     new_filename = file.filename
+    print(new_filename)
 
-    audio_file_data = payload(filename=new_filename, content_type=content_type, file_content=data)
+    encoded_data = base64.b64encode(data)
+
+    audio_file_data = {
+        "filename": new_filename,
+        "file_content": encoded_data
+    }
     return create_audio_file(db, audio_file_data)
