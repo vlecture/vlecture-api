@@ -1,12 +1,15 @@
-from fastapi import FastAPI, status, HTTPException, Depends, Body
+import mimetypes
+from fastapi import FastAPI, File, UploadFile, status, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
 from starlette.status import HTTP_400_BAD_REQUEST
+from src.services.audio_file import create_audio_file
 
 from src.utils.db import Base, engine, get_db
 from src.schemas.users import CreateUserSchema, UserLoginSchema
+from src.schemas.audio_file import AudioFileSchema
 from src.models.users import User
 from src.services.users import create_user, get_user
 
@@ -102,3 +105,19 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
             )
 
         return user.generate_token()
+
+@app.post('/upload/download')
+async def upload_download(payload: AudioFileSchema, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    allowed_audio_types = ['audio/mp3', 'audio/mpeg']
+    content_type, _ = mimetypes.guess_type(file.filename)
+    
+    if content_type not in allowed_audio_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
+        )
+
+    data = await file.read()
+    new_filename = file.filename
+
+    audio_file_data = payload(filename=new_filename, content_type=content_type, file_content=data)
+    return create_audio_file(db, audio_file_data)

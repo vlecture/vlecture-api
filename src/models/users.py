@@ -30,7 +30,7 @@ class User(Base):
     refresh_token = Column(String(225))
     access_token = Column(String(225))
     is_active = Column(Boolean, default=False)
-    files = relationship("AudioFiles", back_populates="owner")
+    files = relationship("AudioFile", back_populates="owner")
     
     UniqueConstraint("email", name="uq_user_email")
     PrimaryKeyConstraint("id", name="pk_user_id")
