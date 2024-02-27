@@ -12,8 +12,9 @@ class TranscriptionChunks(BaseModel):
 
 class TranscriptionSchema(BaseModel):
   id: UUID4
-  title: Optional[str]
-  tags: Optional[List[int]]
+  title: str
+  tags: Optional[List[str]]
   chunks: Optional[List[TranscriptionChunks]]
   duration: float # total seconds of transcription
   created_at: datetime
+  updated_at: datetime
