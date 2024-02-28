@@ -24,13 +24,13 @@ from sqlalchemy.orm import (
   Mapped,
   mapped_column,
   DeclarativeBase,
-  relationship
+  relationship,
 )
 
 class TranscriptionChunk(Base):
   __tablename__ = "transcription_chunk"
 
-  id = mapped_column(
+  id: Mapped[UUID] = mapped_column(
     "id",
     UUID(as_uuid=True),
     nullable = False,
@@ -38,17 +38,17 @@ class TranscriptionChunk(Base):
     default = uuid.uuid4
   )
 
-  transcription_id = mapped_column(ForeignKey("transcription.id"))
+  transcription_id: Mapped[UUID] = mapped_column(ForeignKey("transcription.id"))
 
-  transcription_parent = relationship("Transcription", back_populates="chunks")
+  transcription_parent: Mapped["Transcription"] = relationship("Transcription", back_populates="chunks")
 
-  duration = mapped_column(Float, nullable=False, default = 0) 
+  duration: Mapped[Float] = mapped_column(Float, min=0, nullable=False, default=0) 
 
-  created_at = mapped_column(DATETIME, nullable=False, default = datetime.now())
+  created_at: Mapped[DATETIME] = mapped_column(DATETIME, nullable=False, default_factory=lambda: datetime.now())
 
-  updated_at = mapped_column(DATETIME, nullable=False, default = datetime.now())
+  updated_at: Mapped[DATETIME] = mapped_column(DATETIME, nullable=False, default_factory=lambda: datetime.now())
 
-  is_edited = mapped_column(Boolean, nullable=False, default = False)
+  is_edited: Mapped[Boolean] = mapped_column(Boolean, nullable=False, default=False)
 
   
   
@@ -56,7 +56,7 @@ class TranscriptionChunk(Base):
 class Transcription(Base):
   __tablename__ = "transcription"
   
-  id = mapped_column(
+  id: Mapped[UUID] = mapped_column(
     "id",
     UUID(as_uuid=True),
     nullable = False,
@@ -64,16 +64,16 @@ class Transcription(Base):
     default = uuid.uuid4
   )
 
-  title = mapped_column(String(255), nullable=False, unique=False)
+  title: Mapped[String] = mapped_column(String(255), nullable=False, unique=False)
 
-  tags = mapped_column(ARRAY(String), nullable=True)
+  tags: Mapped[ARRAY] = mapped_column(ARRAY(String), nullable=True)
 
-  chunks = relationship("TranscriptionChunk", back_populates="transcription_parent")
+  chunk: Mapped["TranscriptionChunk"] = relationship("TranscriptionChunk", back_populates="transcription_parent")
 
-  duration = mapped_column(Float, nullable=False, default = 0) 
+  duration: Mapped[Float] = mapped_column(Float, nullable=False, default = 0) 
 
-  created_at = mapped_column(DATETIME, nullable=False, default = datetime.now())
+  created_at: Mapped[DATETIME] = mapped_column(DATETIME, nullable=False, default_factory=lambda: datetime.now())
 
-  updated_at = mapped_column(DATETIME, nullable=False, default = datetime.now())
+  updated_at: Mapped[DATETIME] = mapped_column(DATETIME, nullable=False, default_factory=lambda: datetime.now())
 
   
