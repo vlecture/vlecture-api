@@ -30,6 +30,16 @@ class TranscriptionChunksSchema(BaseModel):
     return dur
 
 class TranscriptionSchema(BaseModel):
+  """
+  Input type & schema for Transcription
+  
+  Usage example:
+
+  async def create_trc(trc: TranscriptionSchema) -> Any:
+      ... 
+      return transcriptionResObj
+    
+  """
   id: UUID4 = Field(default_factory= lambda: uuid.uuid4())
   title: str = TRANSCRIPTION_DEFAULT_TITLE
   tags: Optional[Union[List[str], str]] = []
@@ -39,6 +49,35 @@ class TranscriptionSchema(BaseModel):
   updated_at: datetime = Field(default_factory=lambda: datetime.now())
   is_edited: bool = False
   is_deleted: bool = False
+
+  @computed_field
+  @property
+  def duration(self) -> float:
+    if len(self.chunks) == 0:
+      return 0
+    
+    total = 0
+
+    for chunk in self.chunks:
+      total += chunk.duration
+    
+    return total
+
+class TranscriptionResponseSchema(BaseModel):
+  """
+  Return type for Transcription object
+
+  Usage example:
+
+  @app.post("/transcribe/", response_model=TranscriptionResponseSchema):
+      ... 
+      return transcriptionResObj
+  """
+  id: UUID4 = Field(default_factory= lambda: uuid.uuid4())
+  title: str = Field(min_length=1, max_length=255, default=TRANSCRIPTION_DEFAULT_TITLE)
+  tags: Optional[Union[List[str], str]] = []
+  created_at: datetime = Field(default_factory=lambda: datetime.now())
+  is_edited: bool = False
 
   @computed_field
   @property

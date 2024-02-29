@@ -1,5 +1,4 @@
 import uuid
-import bcrypt
 from datetime import datetime, timedelta, timezone
 from src.utils.db import Base
 from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
@@ -12,13 +11,12 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     String,
     Float,
-    DATETIME,
+    DateTime,
     UniqueConstraint,
     ForeignKey,
 )
 
-from __future__ import annotations
-from typing import List
+from sqlalchemy.sql import func
 
 from sqlalchemy.orm import (
   Mapped,
@@ -26,6 +24,10 @@ from sqlalchemy.orm import (
   DeclarativeBase,
   relationship,
 )
+
+from __future__ import annotations
+from typing import List
+
 
 class TranscriptionChunk(Base):
   __tablename__ = "transcription_chunk"
@@ -42,13 +44,17 @@ class TranscriptionChunk(Base):
 
   transcription_parent: Mapped["Transcription"] = relationship("Transcription", back_populates="chunks")
 
-  duration: Mapped[Float] = mapped_column(Float, min=0, nullable=False, default=0) 
+  duration: Mapped[float] = mapped_column(Float, min=0, nullable=False, default=0) 
 
-  created_at: Mapped[DATETIME] = mapped_column(DATETIME, nullable=False, default_factory=lambda: datetime.now())
+  created_at: Mapped[datetime] = mapped_column(
+    DateTime(timezone=True), server_default=func.now()
+  )
 
-  updated_at: Mapped[DATETIME] = mapped_column(DATETIME, nullable=False, default_factory=lambda: datetime.now())
+  updated_at: Mapped[datetime] = mapped_column(
+    DateTime(timezone=True), server_default=func.now()
+  )
 
-  is_edited: Mapped[Boolean] = mapped_column(Boolean, nullable=False, default=False)
+  is_edited: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
   
   
@@ -68,12 +74,16 @@ class Transcription(Base):
 
   tags: Mapped[ARRAY] = mapped_column(ARRAY(String), nullable=True)
 
-  chunk: Mapped["TranscriptionChunk"] = relationship("TranscriptionChunk", back_populates="transcription_parent")
+  chunk: Mapped[List["TranscriptionChunk"]] = relationship("TranscriptionChunk", back_populates="transcription_parent")
 
   duration: Mapped[Float] = mapped_column(Float, nullable=False, default = 0) 
 
-  created_at: Mapped[DATETIME] = mapped_column(DATETIME, nullable=False, default_factory=lambda: datetime.now())
+  created_at: Mapped[datetime] = mapped_column(
+    DateTime(timezone=True), server_default=func.now()
+  )
 
-  updated_at: Mapped[DATETIME] = mapped_column(DATETIME, nullable=False, default_factory=lambda: datetime.now())
+  updated_at: Mapped[datetime] = mapped_column(
+    DateTime(timezone=True), server_default=func.now()
+  )
 
   
