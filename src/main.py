@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
+import sentry_sdk
+
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.utils.db import Base, engine, get_db
@@ -10,8 +12,22 @@ from src.schemas.users import CreateUserSchema, UserLoginSchema
 from src.models.users import User
 from src.services.users import create_user, get_user
 
+sentry_sdk.init(
+    dsn="https://f549ed1816a0723660761eeee7df5759@o4506829505363968.ingest.sentry.io/4506829522337793",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # Sentry recommends adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
 
 app = FastAPI()
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0
 
 # CORS
 origins = [
