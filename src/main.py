@@ -109,27 +109,6 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
 
         return user.generate_token()
 
-
-# @app.post('/upload')
-# async def upload_download(file: UploadFile = File(...), db: Session = Depends(get_db)):
-#     allowed_audio_types = ['audio/mp3', 'audio/mpeg']
-#     content_type, _ = mimetypes.guess_type(file.filename)
-
-#     if content_type not in allowed_audio_types:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
-#         )
-
-#     data = await file.read()
-
-#     audio_file_data = {
-#         "filename": file.filename,
-#         "file_content": data,
-#     }
-
-#     return create_audio_file(db, audio_file_data)
-
-
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     temp = NamedTemporaryFile(delete=False)
