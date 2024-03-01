@@ -1,9 +1,16 @@
 import http
 from datetime import datetime
 from typing import Optional, Any, Union
+
+import uuid
 from uuid import UUID
 
 from pydantic.main import BaseModel
+
+from pydantic import (
+  BaseModel, 
+)
+
 class GenericResponseModel(BaseModel):
   """
   A generic response model for all API responses
@@ -20,7 +27,7 @@ class DBBaseModel(BaseModel):
   """
 
   id: UUID
-  created_at: datetime
+  created_at: datetime 
   updated_at: Optional[datetime]
   is_deleted: datetime
 
