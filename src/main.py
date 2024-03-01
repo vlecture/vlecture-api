@@ -108,7 +108,6 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    temp = NamedTemporaryFile(delete=False)
     try:
         allowed_types = ['audio/mp3', 'audio/mpeg']
         file_type, _ = mimetypes.guess_type(file.filename)
