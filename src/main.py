@@ -1,5 +1,7 @@
 import base64
 import mimetypes
+import os
+from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, File, UploadFile, status, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
@@ -108,24 +110,55 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
         return user.generate_token()
 
 
-@app.post('/upload')
-async def upload_download(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    allowed_audio_types = ['audio/mp3', 'audio/mpeg']
-    content_type, _ = mimetypes.guess_type(file.filename)
+# @app.post('/upload')
+# async def upload_download(file: UploadFile = File(...), db: Session = Depends(get_db)):
+#     allowed_audio_types = ['audio/mp3', 'audio/mpeg']
+#     content_type, _ = mimetypes.guess_type(file.filename)
 
-    if content_type not in allowed_audio_types:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
-        )
+#     if content_type not in allowed_audio_types:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
+#         )
 
-    data = await file.read()
-    new_filename = file.filename
-    print(new_filename)
+#     data = await file.read()
 
-    encoded_data = base64.b64encode(data)
+#     audio_file_data = {
+#         "filename": file.filename,
+#         "file_content": data,
+#     }
 
-    audio_file_data = {
-        "filename": new_filename,
-        "file_content": encoded_data
-    }
-    return create_audio_file(db, audio_file_data)
+#     return create_audio_file(db, audio_file_data)
+
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    temp = NamedTemporaryFile(delete=False)
+    try:
+        try:
+            allowed_types = ['audio/mp3', 'audio/mpeg']
+            file_type, _ = mimetypes.guess_type(file.filename)
+            if file_type not in allowed_types:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
+                )
+            data = await file.read()
+            with temp as f:
+                f.write(data)
+
+        except Exception:
+            raise HTTPException(
+                status_code=500, detail='Error on uploading the file')
+        finally:
+            file.file.close()
+
+        # TODO: define s3_client
+        s3_client = ()
+        s3_client.upload_file(temp.name, "", file.filename)
+
+    except Exception:
+        raise HTTPException(status_code=500, detail='Something went wrong')
+    finally:
+        os.remove(temp.name)
+
+    print(data)
+    return {"filename": file.filename}
