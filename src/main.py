@@ -25,6 +25,7 @@ sentry_sdk.init(
 
 app = FastAPI()
 
+# sentry trigger error test
 @app.get("/sentry-debug")
 async def trigger_error():
     division_by_zero = 1 / 0
