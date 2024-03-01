@@ -1,6 +1,4 @@
-import base64
 import mimetypes
-import os
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, File, UploadFile, status, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,11 +6,9 @@ from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
 from starlette.status import HTTP_400_BAD_REQUEST
-from src.services.audio_file import create_audio_file
 
 from src.utils.db import Base, engine, get_db
 from src.schemas.users import CreateUserSchema, UserLoginSchema
-from src.schemas.audio_file import AudioFileSchema
 from src.models.users import User
 from src.services.users import create_user, get_user
 
@@ -109,35 +105,30 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
 
         return user.generate_token()
 
+
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     temp = NamedTemporaryFile(delete=False)
     try:
-        try:
-            allowed_types = ['audio/mp3', 'audio/mpeg']
-            file_type, _ = mimetypes.guess_type(file.filename)
-            if file_type not in allowed_types:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
-                )
-            data = await file.read()
-            with temp as f:
-                f.write(data)
-
-        except Exception:
+        allowed_types = ['audio/mp3', 'audio/mpeg']
+        file_type, _ = mimetypes.guess_type(file.filename)
+        if file_type not in allowed_types:
             raise HTTPException(
-                status_code=500, detail='Error on uploading the file')
-        finally:
-            file.file.close()
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
+            )
+        # data = await file.read()
 
         # TODO: define s3_client
-        s3_client = ()
-        s3_client.upload_file(temp.name, "", file.filename)
+        # s3_client = boto3.client("s3")
+        # s3_client.upload_file(file.file, "bucket_name", file.filename)
 
-    except Exception:
-        raise HTTPException(status_code=500, detail='Something went wrong')
+    except HTTPException as e:
+        return e
+    except Exception as e:
+        print("Error:", str(e))
+        raise HTTPException(
+            status_code=500, detail='Error on uploading the file')
     finally:
-        os.remove(temp.name)
+        file.file.close()
 
-    print(data)
     return {"filename": file.filename}
