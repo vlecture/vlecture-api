@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       id-token: write # This is required for requesting the JWT
-      contents: read
+      contents: read # This is required for actions/checkout@v2
 
     env:
       DEV_CONFIG_ENV: ${{ secrets.DEV_CONFIG_ENV }}
@@ -19,21 +19,20 @@ jobs:
       AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       CONTAINER_IMAGE_NAME: vlecture-api-dev
       AWS_REGION: us-west-2
-      AWS_ROLE_IAM: arn:aws:iam::637493203392:role/ppl-vlecture-deployment
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
       IMAGE_TAG: ${{ github.sha }}
     
     steps:
-      - name: Checkout Sources
-        uses: actions/checkout@v3
-
       - name: Configure AWS Credentials 1
         id: creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-west-2
-          role-to-assume: $AWS_ROLE_IAM
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          output-credentials: true
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: $AWS_ROLE_ARN
+          role-session-name: GithubToAWSSession
+
+      - name: Checkout Sources
+        uses: actions/checkout@v3
 
       - name: get caller identity 1
         run: |
@@ -42,11 +41,11 @@ jobs:
       - name: Configure AWS Credentials 2
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-west-2
+          aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ steps.creds.outputs.aws-access-key-id }}
           aws-secret-access-key: ${{ steps.creds.outputs.aws-secret-access-key }}
           aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
-          role-to-assume: $AWS_ROLE_IAM
+          role-to-assume: $AWS_ROLE_ARN
 
       - name: get caller identity2
         run: |
@@ -58,7 +57,7 @@ jobs:
       #   with:
       #     aws-access-key-id: $AWS_ACCESS_KEY_ID
       #     aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
-      #     aws-region: us-west-2
+      #     aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to AWS ECR
         id: login-ecr
@@ -83,7 +82,7 @@ jobs:
         with:
           access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          region: us-west-2
+          region: ${{ env.AWS_REGION }}
           image: $CONTAINER_IMAGE_NAME:$IMAGE_TAG
           local-image: CONTAINER_IMAGE_NAME
           direction: pull
