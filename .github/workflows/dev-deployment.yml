@@ -89,7 +89,7 @@ jobs:
       #     direction: pull
       
       - name: Pull latest image from ECR and run container
-        uses: appleboy/ssh-action@v0.1.10
+        uses: appleboy/ssh-action@master
         env:
           # DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DEV_ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
@@ -100,26 +100,37 @@ jobs:
           key: ${{ secrets.DEV_SSH_PRIVATEKEY }}
           envs: DEV_CONFIG_ENV,AWS_SECRET_ACCESS_KEY,AWS_ACCESS_KEY_ID,DEV_ECR_REGISTRY,DEV_ECR_REPOSITORY
           script: |
-            mkdir -pv ./app/vlecture-api
-            cd ./app/vlecture-api
-            echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env
-
-            if [ "$(docker ps -q -f name=vlecture-api)" ]; then
-                sudo docker rm -f vlecture-api
-            fi
-
-            aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{ env.DEV_ECR_REGISTRY }}
-
+            sudo apt update
+            sudo apt install docker.io -y
+            sudo apt install awscli -y
+            sudo $(aws ecr get-login --no-include-email --region ${{ env.AWS_REGION }})
+            sudo docker stop ${{ env.CONTAINER_IMAGE_NAME }} || true
+            sudo docker rm ${{ env.CONTAINER_IMAGE_NAME }} || true
             sudo docker pull "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
-            echo "$(sudo docker ps)"
-            sudo docker run -d --name vlecture-api \
-              --restart always \
-              -v "$(pwd)/.env:/app/vlecture-api/.env:ro" \
-              -p "8080:8080" \
-              "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
+            sudo docker run -d --name ${{ env.CONTAINER_IMAGE_NAME }} -p 8080:8080
 
 
 #             (aws ecr get-login-password --region ${{ env.AWS_REGION }} |docker login --username AWS --password-stdin $DEV_ECR_REGISTRY)
+
+# PREV SCRIPT TAG
+# script: |
+#     mkdir -pv ./app/vlecture-api
+#     cd ./app/vlecture-api
+#     echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env
+
+#     if [ "$(docker ps -q -f name=vlecture-api)" ]; then
+#         sudo docker rm -f vlecture-api
+#     fi
+
+#     aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{ env.DEV_ECR_REGISTRY }}
+
+#     sudo docker pull "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
+#     echo "$(sudo docker ps)"
+#     sudo docker run -d --name vlecture-api \
+#       --restart always \
+#       -v "$(pwd)/.env:/app/vlecture-api/.env:ro" \
+#       -p "8080:8080" \
+#       "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
 
 
 # OLD STAGE CODE
