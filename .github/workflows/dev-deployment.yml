@@ -23,39 +23,42 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials 1
-        id: creds
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          role-session-name: samplerolesession
-          output-credentials: true
+      # - name: Configure AWS Credentials 1
+      #   id: creds
+      #   uses: aws-actions/configure-aws-credentials@v3
+      #   with:
+      #     aws-region: ${{ env.AWS_REGION }}
+      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      #     role-session-name: samplerolesession
+      #     output-credentials: true
 
       # - name: get caller identity 1
       #   run: |
       #     aws sts get-caller-identity
 
-      - name: Configure AWS Credentials 2
+      - name: Configure AWS Credentials 
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-region: ${{ env.AWS_REGION }}
-          aws-access-key-id: ${{ steps.creds.outputs.aws-access-key-id }}
-          aws-secret-access-key: ${{ steps.creds.outputs.aws-secret-access-key }}
-          aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-duration-seconds: 1200
+          role-session-name: GithubConfigAWSCreds
+          role-skip-session-tagging: true
 
       # - name: get caller identity2
       #   run: |
       #     aws sts get-caller-identity
       
       # Old ver
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to AWS ECR
         id: login-ecr
