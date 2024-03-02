@@ -3,11 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
-from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
-from src.models.users import User
 from src.services.users import get_user
 from src.services.auth import register
 
@@ -50,29 +48,10 @@ def hi():
 @app.post("/signup", tags=[Tags.auth])
 def signup(payload: RegisterSchema = Body(), session: Session = Depends(get_db)):
     """Processes request to register user account."""
-    user = None
-    if (
-        len(payload.email) == 0
-        or len(payload.first_name) == 0
-        or (payload.last_name) == 0
-        or (payload.hashed_password) == 0
-    ):
-        raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail="All required fields must be filled!",
-        )
     try:
-        user = get_user(session=session, email=payload.email)
-    except Exception:
-        payload.hashed_password = User.hash_password(payload.hashed_password)
-        return register(session, user=payload)
-    if user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User already exists!"
-        )
-    else:
-        payload.hashed_password = User.hash_password(payload.hashed_password)
-        return register(session, user=payload)
+        return register(session, payload=payload)
+    except HTTPException as err:
+        return err
 
 
 @app.post("/login", tags=[Tags.auth])
