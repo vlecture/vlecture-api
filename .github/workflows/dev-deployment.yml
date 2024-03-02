@@ -7,10 +7,12 @@ on:
 
 jobs:
   Dev-Deployment:
-    name: Build Image
+    name: Dev Deployment
     runs-on: ubuntu-22.04
 
     env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: us-west-2
       CONTAINER_IMAGE_NAME: vlecture-api-dev
       IMAGE_TAG: ${{ github.sha }}
@@ -22,8 +24,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: $AWS_ACCESS_KEY_ID
+          aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
           aws-region: $AWS_DEFAULT_REGION
 
       - name: Login to AWS ECR
