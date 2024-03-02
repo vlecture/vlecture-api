@@ -29,8 +29,12 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          role-session-name: samplerolesession
           output-credentials: true
+          # role-session-name: samplerolesession
+
+      - name: get caller identity 1
+        run: |
+          aws sts get-caller-identity
 
       - name: Configure AWS Credentials 
         uses: aws-actions/configure-aws-credentials@v4
@@ -43,7 +47,9 @@ jobs:
           role-duration-seconds: 1200
           role-session-name: GithubConfigAWSCreds
           role-skip-session-tagging: true
-
+      - name: get caller identity2
+        run: |
+          aws sts get-caller-identity
       # Old ver
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
