@@ -70,7 +70,7 @@ jobs:
         env:
           DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
-        run: ${{ env.CONTAINER_IMAGE_NAME}}
+        run: |
           docker build -t $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
           docker tag "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
 
