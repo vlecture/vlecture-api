@@ -55,8 +55,13 @@ def login(session: Session, payload: LoginSchema):
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Invalid user credentials",
         )
+    access_token = generate_access_token(user)
+    refresh_token = generate_refresh_token(user)
 
-    return generate_token(user)
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+    }
 
 
 # Helper functions
@@ -74,8 +79,8 @@ def validate_password(user: User, password: str) -> bool:
     return bcrypt.checkpw(password.encode(), user.hashed_password)
 
 
-def generate_token(user: User):
-    """Generate access token and refresh token for user"""
+def generate_refresh_token(user: User):
+    """Generate refresh token for user"""
     refresh_token = jwt.encode(
         {
             "first_name": user.first_name,
@@ -84,6 +89,11 @@ def generate_token(user: User):
         },
         REFRESH_TOKEN_SECRET,
     )
+    return refresh_token
+
+
+def generate_access_token(user: User):
+    """Generate access token for user"""
     access_token = jwt.encode(
         {
             "first_name": user.first_name,
@@ -92,9 +102,4 @@ def generate_token(user: User):
         },
         ACCESS_TOKEN_SECRET,
     )
-    user.refresh_token = refresh_token
-    user.access_token = access_token
-    return {
-        "refresh_token": refresh_token,
-        "access_token": access_token,
-    }
+    return access_token
