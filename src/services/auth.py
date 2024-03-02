@@ -1,5 +1,9 @@
+import bcrypt
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from jose import jwt
+from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
 
 from starlette.status import (
     HTTP_400_BAD_REQUEST,
@@ -27,7 +31,7 @@ def register(session: Session, payload: RegisterSchema):
     try:
         user = get_user(session=session, email=payload.email)
     except Exception:
-        payload.hashed_password = User.hash_password(payload.hashed_password)
+        payload.hashed_password = hash_password(payload.hashed_password)
         db_user = User(**payload.model_dump())
         session.add(db_user)
         session.commit()
@@ -45,11 +49,52 @@ def login(session: Session, payload: LoginSchema):
         user = get_user(session=session, email=payload.email)
     except Exception:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found!")
-    is_validated: bool = user.validate_password(payload.password)
+    is_validated: bool = validate_password(user, payload.password)
     if not is_validated:
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Invalid user credentials",
         )
 
-    return user.generate_token()
+    return generate_token(user)
+
+
+# Helper functions
+
+
+def hash_password(password: bytes) -> bytes:
+    """Transforms password from it's raw textual form to
+    cryptographic hashes
+    """
+    return bcrypt.hashpw(password, bcrypt.gensalt())
+
+
+def validate_password(user: User, password: str) -> bool:
+    """Confirms password validity"""
+    return bcrypt.checkpw(password.encode(), user.hashed_password)
+
+
+def generate_token(user: User):
+    """Generate access token and refresh token for user"""
+    refresh_token = jwt.encode(
+        {
+            "first_name": user.first_name,
+            "email": user.email,
+            "exp": datetime.now(timezone.utc) + timedelta(days=7),
+        },
+        REFRESH_TOKEN_SECRET,
+    )
+    access_token = jwt.encode(
+        {
+            "first_name": user.first_name,
+            "email": user.email,
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+        },
+        ACCESS_TOKEN_SECRET,
+    )
+    user.refresh_token = refresh_token
+    user.access_token = access_token
+    return {
+        "refresh_token": refresh_token,
+        "access_token": access_token,
+    }
