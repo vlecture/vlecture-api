@@ -108,10 +108,10 @@ jobs:
             cd ./app/vlecture-api
             echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env
 
-            docker rm -f vlecture-api
-            docker pull "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
-            echo "$(docker ps)"
-            docker run -d --name vlecture-api \
+            sudo docker rm -f vlecture-api
+            sudo docker pull "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
+            echo "$(sudo docker ps)"
+            sudo docker run -d --name vlecture-api \
               --restart always \
               -v "$(pwd)/.env:/app/vlecture-api/.env:ro" \
               -p "8080:8080" \
