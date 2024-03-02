@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status, HTTPException, Depends, Body
+from fastapi import FastAPI, Response, status, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
@@ -58,7 +58,11 @@ def register(payload: RegisterSchema = Body(), session: Session = Depends(get_db
 
 
 @app.post("/login", tags=[Tags.auth])
-def login(payload: LoginSchema = Body(), session: Session = Depends(get_db)):
+def login(
+    response: Response,
+    payload: LoginSchema = Body(),
+    session: Session = Depends(get_db),
+):
     """Processes user's authentication and returns a token
     on successful authentication.
 
@@ -67,6 +71,6 @@ def login(payload: LoginSchema = Body(), session: Session = Depends(get_db)):
     - password
     """
     try:
-        return auth.login(session, payload)
+        return auth.login(response, session, payload)
     except HTTPException as err:
         return err

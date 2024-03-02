@@ -32,3 +32,9 @@ class User(Base):
     def __repr__(self):
         """Returns string representation of model instance"""
         return "<User {first_name}>".format(first_name=self.first_name)
+
+    def update_refresh_token(self, token):
+        self.refresh_token = token
+
+    def update_access_token(self, token):
+        self.access_token = token

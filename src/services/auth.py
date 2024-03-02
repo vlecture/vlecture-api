@@ -1,6 +1,6 @@
 import bcrypt
 from datetime import datetime, timedelta, timezone
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from sqlalchemy.orm import Session
 from jose import jwt
 from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
@@ -43,7 +43,7 @@ def register(session: Session, payload: RegisterSchema):
         )
 
 
-def login(session: Session, payload: LoginSchema):
+def login(response: Response, session: Session, payload: LoginSchema):
     user = None
     try:
         user = get_user(session=session, email=payload.email)
@@ -55,8 +55,14 @@ def login(session: Session, payload: LoginSchema):
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Invalid user credentials",
         )
-    access_token = generate_access_token(user)
     refresh_token = generate_refresh_token(user)
+    access_token = generate_access_token(user)
+
+    user.update_refresh_token(refresh_token)
+    user.update_access_token(access_token)
+
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
 
     return {
         "access_token": access_token,
