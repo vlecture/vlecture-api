@@ -112,7 +112,7 @@ jobs:
                 sudo docker rm -f vlecture-api
             fi
 
-            aws ecr get-login-password | docker login --username AWS --password-stdin $DEV_ECR_REGISTRY
+            aws ecr get-login-password | docker login --username AWS --password-stdin us-west-2
 
             sudo docker pull "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
             echo "$(sudo docker ps)"
