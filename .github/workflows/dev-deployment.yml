@@ -23,24 +23,24 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
     
     steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
       - name: Configure AWS Credentials 1
         id: creds
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: $AWS_ROLE_ARN
+          role-session-name: samplerolesession
           output-credentials: true
-          role-session-name: GithubToAWSSession
-
-      - name: Checkout Sources
-        uses: actions/checkout@v3
 
       - name: get caller identity 1
         run: |
           aws sts get-caller-identity
 
       - name: Configure AWS Credentials 2
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ steps.creds.outputs.aws-access-key-id }}
