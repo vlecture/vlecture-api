@@ -37,7 +37,7 @@ jobs:
       #     aws sts get-caller-identity
 
       - name: Configure AWS Credentials 
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -112,15 +112,15 @@ jobs:
                 sudo docker rm -f vlecture-api
             fi
 
-            aws ecr get-login-password | docker login --username AWS --password-stdin us-west-2
+            aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{ env.DEV_ECR_REGISTRY }}
 
-            sudo docker pull "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
+            sudo docker pull "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
             echo "$(sudo docker ps)"
             sudo docker run -d --name vlecture-api \
               --restart always \
               -v "$(pwd)/.env:/app/vlecture-api/.env:ro" \
               -p "8080:8080" \
-              "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
+              "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
 
 
 #             (aws ecr get-login-password --region ${{ env.AWS_REGION }} |docker login --username AWS --password-stdin $DEV_ECR_REGISTRY)
