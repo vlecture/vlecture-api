@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, Body
+from fastapi import FastAPI, Response, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
-from src.services.users import get_user
 from src.services import auth
 
 
