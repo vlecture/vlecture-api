@@ -15,6 +15,7 @@ jobs:
 
     env:
       DEV_CONFIG_ENV: ${{ secrets.DEV_CONFIG_ENV }}
+      PUB_REGISTRY: public.ecr.aws/x6v6j9u1
       CONTAINER_IMAGE_NAME: vlecture-api-dev
       # CONTAINER_IMAGE_NAME: sample # TESTING WHETHER WE ACTUALLY NEED THE CREATOR's ACCESS KEY OR NOT
       AWS_REGION: us-west-2
@@ -70,7 +71,8 @@ jobs:
       
       - name: Build, tag, and push image to AWS ECR
         env:
-          DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          # DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DEV_ECR_REGISTRY: ${{ env.PUB_REGISTRY }}
           DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         run: |
           docker build -t $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
