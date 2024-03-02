@@ -29,6 +29,7 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: $AWS_ROLE_ARN
+          output-credentials: true
           role-session-name: GithubToAWSSession
 
       - name: Checkout Sources
