@@ -15,8 +15,8 @@ jobs:
 
     env:
       DEV_CONFIG_ENV: ${{ secrets.DEV_CONFIG_ENV }}
-      # CONTAINER_IMAGE_NAME: vlecture-api-dev
-      CONTAINER_IMAGE_NAME: sample # TESTING WHETHER WE ACTUALLY NEED THE CREATOR's ACCESS KEY OR NOT
+      CONTAINER_IMAGE_NAME: vlecture-api-dev
+      # CONTAINER_IMAGE_NAME: sample # TESTING WHETHER WE ACTUALLY NEED THE CREATOR's ACCESS KEY OR NOT
       AWS_REGION: us-west-2
       IMAGE_TAG: ${{ github.sha }}
     
@@ -91,18 +91,6 @@ jobs:
       #     direction: pull
       
       # us-west-2 for running container on VM
-      - name: Configure AWS Credentials 
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          # aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          role-duration-seconds: 1200
-          role-session-name: GithubConfigAWSCreds
-          role-skip-session-tagging: true
-
       - name: Pull latest image from ECR and run container
         uses: appleboy/ssh-action@master
         env:
