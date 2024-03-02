@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Configure AWS Credentials 1
         id: creds
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: $AWS_ROLE_ARN
@@ -40,7 +40,7 @@ jobs:
           aws sts get-caller-identity
 
       - name: Configure AWS Credentials 2
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ steps.creds.outputs.aws-access-key-id }}
