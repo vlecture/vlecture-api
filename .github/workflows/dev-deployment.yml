@@ -3,7 +3,7 @@ name: Workflow for Development Environment Deployment
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   Dev-Deployment:
