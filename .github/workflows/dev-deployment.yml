@@ -108,8 +108,8 @@ jobs:
       - name: Pull latest image from ECR and run container
         uses: appleboy/ssh-action@v0.1.9
         env:
-          # DEV_ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-          DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DEV_ECR_REGISTRY: ${{ env.PUB_REGISTRY }}
+          # DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         with:
           host: ${{ secrets.DEV_SSH_HOST }}
@@ -119,9 +119,7 @@ jobs:
           debug: true
           envs: DEV_CONFIG_ENV,AWS_SECRET_ACCESS_KEY,AWS_ACCESS_KEY_ID,DEV_ECR_REGISTRY,DEV_ECR_REPOSITORY
           script: |
-            sudo apt update
-            sudo apt install docker.io -y
-            sudo apt install awscli -y
+            sudo apt-get update
             sudo (aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.DEV_ECR_REGISTRY }})
             sudo docker stop ${{ env.CONTAINER_IMAGE_NAME }} || true
             sudo docker rm ${{ env.CONTAINER_IMAGE_NAME }} || true
