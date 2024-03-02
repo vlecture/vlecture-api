@@ -110,6 +110,7 @@ jobs:
 
             docker rm -f vlecture-api
             docker pull "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
+            echo "$(docker ps)"
             docker run -d --name vlecture-api \
               --restart always \
               -v "$(pwd)/.env:/app/vlecture-api/.env:ro" \
