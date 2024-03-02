@@ -108,7 +108,10 @@ jobs:
             cd ./app/vlecture-api
             echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env
 
-            sudo docker rm -f vlecture-api
+            if [ "$(docker ps -q -f name=vlecture-api)" ]; then
+                sudo docker rm -f vlecture-api
+            fi
+            
             sudo docker pull "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
             echo "$(sudo docker ps)"
             sudo docker run -d --name vlecture-api \
