@@ -120,7 +120,7 @@ jobs:
           envs: DEV_CONFIG_ENV,AWS_SECRET_ACCESS_KEY,AWS_ACCESS_KEY_ID,DEV_ECR_REGISTRY,DEV_ECR_REPOSITORY
           script: |
             sudo apt-get update
-            sudo (aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.DEV_ECR_REGISTRY }})
+            sudo aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.DEV_ECR_REGISTRY }}
             sudo docker stop ${{ env.CONTAINER_IMAGE_NAME }} || true
             sudo docker rm ${{ env.CONTAINER_IMAGE_NAME }} || true
             sudo docker pull "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
