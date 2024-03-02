@@ -15,7 +15,8 @@ jobs:
 
     env:
       DEV_CONFIG_ENV: ${{ secrets.DEV_CONFIG_ENV }}
-      CONTAINER_IMAGE_NAME: vlecture-api-dev
+      # CONTAINER_IMAGE_NAME: vlecture-api-dev
+      CONTAINER_IMAGE_NAME: sample # TESTING WHETHER WE ACTUALLY NEED THE CREATOR's ACCESS KEY OR NOT
       AWS_REGION: us-west-2
       IMAGE_TAG: ${{ github.sha }}
     
