@@ -69,14 +69,14 @@ jobs:
       - name: Build, tag, and push image to AWS ECR
         env:
           DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          DEV_ECR_REPOSITORY: $CONTAINER_IMAGE_NAME
-        run: |
-          docker build -t $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:$IMAGE_TAG .
-          docker tag "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:$IMAGE_TAG" "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
+          DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
+        run: ${{ env.CONTAINER_IMAGE_NAME}}
+          docker build -t $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
+          docker tag "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
 
       - name: Push to AWS ECR
         run: |
-          docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:$IMAGE_TAG
+          docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}
           docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest
       
       - name: Pull from ECR
@@ -86,8 +86,8 @@ jobs:
           access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           region: ${{ env.AWS_REGION }}
-          image: $CONTAINER_IMAGE_NAME:$IMAGE_TAG
-          local-image: CONTAINER_IMAGE_NAME
+          image: ${{ env.CONTAINER_IMAGE_NAME}}:${{ '${{ env.IMAGE_TAG }}' }}
+          local-image: ${{ env.CONTAINER_IMAGE_NAME}}
           direction: pull
       
       - name: Pull latest image and run container
@@ -113,3 +113,6 @@ jobs:
 
 
 # Source: https://dev.to/slsbytheodo/configure-authentication-to-your-aws-account-in-your-github-actions-ci-13p3
+
+# NOTES
+# If stuck on aws credentials config, ensure that your Role Trust Relationship have 2 statements - 1 for ODIC Github Actions and 1 For the AWS Role with AssumeRole permission
