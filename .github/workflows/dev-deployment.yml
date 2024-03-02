@@ -46,7 +46,7 @@ jobs:
           aws-access-key-id: ${{ steps.creds.outputs.aws-access-key-id }}
           aws-secret-access-key: ${{ steps.creds.outputs.aws-secret-access-key }}
           aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
-          role-to-assume: $AWS_ROLE_ARN
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
 
       - name: get caller identity2
         run: |
