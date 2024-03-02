@@ -91,8 +91,8 @@ jobs:
       - name: Pull latest image from ECR and run container
         uses: appleboy/ssh-action@master
         env:
-          # DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          DEV_ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          # DEV_ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         with:
           host: ${{ secrets.DEV_SSH_HOST }}
