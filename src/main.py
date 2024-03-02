@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, Body
+from fastapi import FastAPI, status, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
@@ -8,7 +8,8 @@ from starlette.status import HTTP_400_BAD_REQUEST
 from src.utils.db import Base, engine, get_db
 from src.schemas.users import CreateUserSchema, UserLoginSchema
 from src.models.users import User
-from src.services.users import create_user, get_user
+from src.services.users import get_user
+from src.services.auth import register
 
 
 app = FastAPI()
@@ -64,14 +65,14 @@ def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db
         user = get_user(session=session, email=payload.email)
     except Exception:
         payload.hashed_password = User.hash_password(payload.hashed_password)
-        return create_user(session, user=payload)
+        return register(session, user=payload)
     if user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User already exists!"
         )
     else:
         payload.hashed_password = User.hash_password(payload.hashed_password)
-        return create_user(session, user=payload)
+        return register(session, user=payload)
 
 
 @app.post("/login", tags=[Tags.auth])
