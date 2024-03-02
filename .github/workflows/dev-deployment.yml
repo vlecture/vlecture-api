@@ -1,4 +1,4 @@
-name: Workflow for Development Environment Deployment
+name: Dev Deployment
 
 on:
   push:
