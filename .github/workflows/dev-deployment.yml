@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
+      DEV_CONFIG_ENV: ${{ secrets.DEV_CONFIG_ENV }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       CONTAINER_IMAGE_NAME: vlecture-api-dev
