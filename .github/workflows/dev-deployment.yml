@@ -9,6 +9,9 @@ jobs:
   Dev-Deployment:
     name: Dev Deployment
     runs-on: ubuntu-22.04
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read
 
     env:
       DEV_CONFIG_ENV: ${{ secrets.DEV_CONFIG_ENV }}
@@ -16,7 +19,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       CONTAINER_IMAGE_NAME: vlecture-api-dev
       AWS_REGION: us-west-2
-      AWS_ROLE_IAM: arn:aws:iam::637493203392:user/ppl-vlecture-github-ci
+      AWS_ROLE_IAM: arn:aws:iam::637493203392:role/ppl-vlecture-deployment
       IMAGE_TAG: ${{ github.sha }}
     
     steps:
@@ -29,6 +32,7 @@ jobs:
         with:
           aws-region: us-west-2
           role-to-assume: $AWS_ROLE_IAM
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
           output-credentials: true
 
       - name: get caller identity 1
@@ -104,3 +108,6 @@ jobs:
               -v "$(pwd)/.env:/app/vlecture-api/.env:ro" \
               -p "8080:8080" \
               "$REGISTRY/$REGISTRY_IMAGE:latest"
+
+
+# Source: https://dev.to/slsbytheodo/configure-authentication-to-your-aws-account-in-your-github-actions-ci-13p3
