@@ -5,7 +5,7 @@ on:
 
 env:
   CONFIG_ENV: ${{ secrets.CONFIG_ENV }}
-  TARGET_PLATFORMS: ${{ secrets.TARGET_PLATFORMS }}
+  CONTAINER_IMAGE_NAME: vlecture-api
   REGISTRY: ${{ secrets.REGISTRY }}
   REGISTRY_IMAGE: ${{ secrets.REGISTRY_IMAGE }}
   REGISTRY_ACCESS_TOKEN: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
