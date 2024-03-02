@@ -45,6 +45,9 @@ def hi():
     return {"message": "Bonjour!"}
 
 
+# Authentication Endpoints
+
+
 @app.post("/register", tags=[Tags.auth])
 def register(payload: RegisterSchema = Body(), session: Session = Depends(get_db)):
     """Processes request to register user account."""
@@ -60,25 +63,10 @@ def login(payload: LoginSchema = Body(), session: Session = Depends(get_db)):
     on successful authentication.
 
     request body:
-
     - email,
-
     - password
     """
-    user = None
     try:
-        user = get_user(session=session, email=payload.email)
-    except Exception:
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found!"
-            )
-    else:
-        is_validated: bool = user.validate_password(payload.password)
-        if not is_validated:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid user credentials",
-            )
-
-        return user.generate_token()
+        return auth.login(session, payload)
+    except HTTPException as err:
+        return err

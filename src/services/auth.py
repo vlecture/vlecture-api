@@ -1,9 +1,14 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT
+from starlette.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+)
 from src.models.users import User
-from src.schemas.auth import RegisterSchema
+from src.schemas.auth import LoginSchema, RegisterSchema
 from src.services.users import get_user
 
 
@@ -32,3 +37,19 @@ def register(session: Session, payload: RegisterSchema):
         raise HTTPException(
             status_code=HTTP_409_CONFLICT, detail="User already exists!"
         )
+
+
+def login(session: Session, payload: LoginSchema):
+    user = None
+    try:
+        user = get_user(session=session, email=payload.email)
+    except Exception:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found!")
+    is_validated: bool = user.validate_password(payload.password)
+    if not is_validated:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Invalid user credentials",
+        )
+
+    return user.generate_token()
