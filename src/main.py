@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
 from src.services.users import get_user
-from src.services.auth import register
+from src.services import auth
 
 
 app = FastAPI()
@@ -45,11 +45,11 @@ def hi():
     return {"message": "Bonjour!"}
 
 
-@app.post("/signup", tags=[Tags.auth])
-def signup(payload: RegisterSchema = Body(), session: Session = Depends(get_db)):
+@app.post("/register", tags=[Tags.auth])
+def register(payload: RegisterSchema = Body(), session: Session = Depends(get_db)):
     """Processes request to register user account."""
     try:
-        return register(session, payload=payload)
+        return auth.register(session, payload=payload)
     except HTTPException as err:
         return err
 
