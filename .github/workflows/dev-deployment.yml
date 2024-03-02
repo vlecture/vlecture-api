@@ -23,18 +23,18 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
-      - name: Pre-Configure AWS Credentials 
-        id: creds
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          output-credentials: true
-          # role-session-name: samplerolesession
+      # - name: Pre-Configure AWS Credentials 
+      #   id: creds
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-region: ${{ env.AWS_REGION }}
+      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      #     output-credentials: true
+      #     # role-session-name: samplerolesession
 
-      - name: get caller identity 1
-        run: |
-          aws sts get-caller-identity
+      # - name: get caller identity 1
+      #   run: |
+      #     aws sts get-caller-identity
 
       - name: Configure AWS Credentials 
         uses: aws-actions/configure-aws-credentials@v4
@@ -42,14 +42,15 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
+          # aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-duration-seconds: 1200
           role-session-name: GithubConfigAWSCreds
           role-skip-session-tagging: true
-      - name: get caller identity2
-        run: |
-          aws sts get-caller-identity
+
+      # - name: get caller identity2
+      #   run: |
+      #     aws sts get-caller-identity
       # Old ver
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
@@ -89,7 +90,8 @@ jobs:
       - name: Pull latest image from ECR and run container
         uses: appleboy/ssh-action@v0.1.10
         env:
-          DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          # DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DEV_ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
           DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         with:
           host: ${{ secrets.DEV_SSH_HOST }}
