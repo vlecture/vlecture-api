@@ -75,6 +75,9 @@ jobs:
           docker tag "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
 
       - name: Push to AWS ECR
+        env:
+          DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         run: |
           docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}
           docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest
