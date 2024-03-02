@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.utils.db import Base, engine, get_db
-from src.schemas.users import CreateUserSchema, UserLoginSchema
+from src.schemas.auth import RegisterSchema, LoginSchema
 from src.models.users import User
 from src.services.users import get_user
 from src.services.auth import register
@@ -48,7 +48,7 @@ def hi():
 
 
 @app.post("/signup", tags=[Tags.auth])
-def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db)):
+def signup(payload: RegisterSchema = Body(), session: Session = Depends(get_db)):
     """Processes request to register user account."""
     user = None
     if (
@@ -76,7 +76,7 @@ def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db
 
 
 @app.post("/login", tags=[Tags.auth])
-def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db)):
+def login(payload: LoginSchema = Body(), session: Session = Depends(get_db)):
     """Processes user's authentication and returns a token
     on successful authentication.
 
