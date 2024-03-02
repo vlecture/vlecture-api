@@ -26,6 +26,6 @@ class DBBase:
   is_deleted = Column(Boolean, default=False)
 
   @classmethod
-  def get_by_uuid(cls, uuid: UUID) -> Any:
+  def get_by_id(cls, uuid: UUID) -> Any:
      db: Session = get_db()
      return db.query(cls).filter(cls.id == uuid, cls.is_deleted._is_(False)).first()
