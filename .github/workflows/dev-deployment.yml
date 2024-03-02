@@ -27,7 +27,7 @@ jobs:
         id: creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: $AWS_REGION
+          aws-region: us-west-2
           role-to-assume: $AWS_ROLE_IAM
           output-credentials: true
 
@@ -38,7 +38,7 @@ jobs:
       - name: Configure AWS Credentials 2
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: $AWS_REGION
+          aws-region: us-west-2
           aws-access-key-id: ${{ steps.creds.outputs.aws-access-key-id }}
           aws-secret-access-key: ${{ steps.creds.outputs.aws-secret-access-key }}
           aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
@@ -54,7 +54,7 @@ jobs:
       #   with:
       #     aws-access-key-id: $AWS_ACCESS_KEY_ID
       #     aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
-      #     aws-region: $AWS_REGION
+      #     aws-region: us-west-2
 
       - name: Login to AWS ECR
         id: login-ecr
@@ -79,7 +79,7 @@ jobs:
         with:
           access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          region: $AWS_REGION
+          region: us-west-2
           image: $CONTAINER_IMAGE_NAME:$IMAGE_TAG
           local-image: CONTAINER_IMAGE_NAME
           direction: pull
