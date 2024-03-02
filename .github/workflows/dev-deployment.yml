@@ -94,7 +94,7 @@ jobs:
       
       # us-west-2 for running container on VM
       - name: Pull latest image from ECR and run container
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.9
         env:
           # DEV_ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
           DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -103,6 +103,8 @@ jobs:
           host: ${{ secrets.DEV_SSH_HOST }}
           username: ${{ secrets.DEV_SSH_USER }}
           key: ${{ secrets.DEV_SSH_PRIVATEKEY }}
+          port: ${{ secrets.DEV_SSH_PORT }}
+          debug: true
           envs: DEV_CONFIG_ENV,AWS_SECRET_ACCESS_KEY,AWS_ACCESS_KEY_ID,DEV_ECR_REGISTRY,DEV_ECR_REPOSITORY
           script: |
             sudo apt update
