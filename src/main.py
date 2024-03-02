@@ -1,17 +1,16 @@
 import mimetypes
-from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, File, UploadFile, status, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
 from starlette.status import HTTP_400_BAD_REQUEST
-
+from src.utils.settings import AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY
 from src.utils.db import Base, engine, get_db
 from src.schemas.users import CreateUserSchema, UserLoginSchema
 from src.models.users import User
 from src.services.users import create_user, get_user
-
+import boto3
 
 app = FastAPI()
 
@@ -32,6 +31,9 @@ app.add_middleware(
 )
 
 Base.metadata.create_all(bind=engine)
+
+s3_client = boto3.client(
+    "s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
 
 class Tags(Enum):
@@ -108,6 +110,7 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
+    # TODO: check user already login or not as precondition
     try:
         allowed_types = ['audio/mp3', 'audio/mpeg']
         file_type, _ = mimetypes.guess_type(file.filename)
@@ -115,19 +118,22 @@ async def upload_file(file: UploadFile = File(...)):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
             )
-        # data = await file.read()
 
-        # TODO: define s3_client
-        # s3_client = boto3.client("s3")
-        # s3_client.upload_file(file.file, "bucket_name", file.filename)
+        # TODO: Update the file name (waiting cookies implement)
+        # So that same file name won't be a problem
+        # file_name = "UUID(user)" + file.filename
+        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME,  file.filename)
 
     except HTTPException as e:
         return e
+
     except Exception as e:
         print("Error:", str(e))
         raise HTTPException(
             status_code=500, detail='Error on uploading the file')
+
     finally:
         file.file.close()
 
     return {"filename": file.filename}
+
