@@ -23,18 +23,14 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
-      # - name: Configure AWS Credentials 1
-      #   id: creds
-      #   uses: aws-actions/configure-aws-credentials@v3
-      #   with:
-      #     aws-region: ${{ env.AWS_REGION }}
-      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-      #     role-session-name: samplerolesession
-      #     output-credentials: true
-
-      # - name: get caller identity 1
-      #   run: |
-      #     aws sts get-caller-identity
+      - name: Pre-Configure AWS Credentials 
+        id: creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: samplerolesession
+          output-credentials: true
 
       - name: Configure AWS Credentials 
         uses: aws-actions/configure-aws-credentials@v4
@@ -42,16 +38,12 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          # aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
+          aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-duration-seconds: 1200
           role-session-name: GithubConfigAWSCreds
           role-skip-session-tagging: true
 
-      # - name: get caller identity2
-      #   run: |
-      #     aws sts get-caller-identity
-      
       # Old ver
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
@@ -74,14 +66,9 @@ jobs:
           docker build -t $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
           docker tag "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
 
-      - name: Push to AWS ECR
-        env:
-          DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
-        run: |
           docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}
           docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest
-      
+
       # - name: Pull from ECR
       #   id: ecr
       #   uses: jwalton/gh-ecr-push@v1
