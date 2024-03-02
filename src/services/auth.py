@@ -13,7 +13,7 @@ from starlette.status import (
 )
 from src.models.users import User
 from src.schemas.auth import LoginSchema, RegisterSchema
-from src.services.users import get_user
+from src.services.users import create_user, get_user
 
 
 def register(session: Session, payload: RegisterSchema):
@@ -32,11 +32,7 @@ def register(session: Session, payload: RegisterSchema):
         user = get_user(session=session, email=payload.email)
     except Exception:
         payload.hashed_password = hash_password(payload.hashed_password)
-        db_user = User(**payload.model_dump())
-        session.add(db_user)
-        session.commit()
-        session.refresh(db_user)
-        return db_user
+        return create_user(session=session, user=payload)
     if user:
         raise HTTPException(
             status_code=HTTP_409_CONFLICT, detail="User already exists!"
