@@ -68,6 +68,20 @@ def test_register_user_already_exists():
     assert response.status_code == 409
 
 
+def test_register_with_invalid_email():
+    response = client.post(
+        "/register",
+        json={
+            "email": "notanemail",
+            "first_name": "Invalid",
+            "middle_name": "Test",
+            "last_name": "Email",
+            "hashed_password": "invalidemail",
+        },
+    )
+    assert response.status_code == 422  # Invalid email format
+
+
 def test_login_user_not_found():
     response = client.post(
         "/login", json={"email": "nonexistent@example.com", "password": "any"}
@@ -81,6 +95,21 @@ def test_login_wrong_password():
         "/login", json={"email": "positive@example.com", "password": "wrongpassword"}
     )
     assert response.status_code == 401  # Unauthorized
+
+
+def test_register_with_long_values():
+    long_string = "a" * 256  # Testing with exceeding the maximum length of 255
+    response = client.post(
+        "/register",
+        json={
+            "email": f"{long_string}@example.com",
+            "first_name": long_string,
+            "middle_name": long_string,
+            "last_name": long_string,
+            "hashed_password": long_string,
+        },
+    )
+    assert response.status_code == 422  # Data too long for one or more fields
 
 
 # Edge Cases
