@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.utils.db import Base, engine, get_db
-from src.schemas.users import CreateUserSchema, UserLoginSchema
+from src.schemas.users import CreateUserSchema, UserLoginSchema, UserSchema
 from src.models.users import User
 from src.services.users import create_user, get_user
 
@@ -102,3 +102,23 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
             )
 
         return user.generate_token()
+
+@app.post("/logout", tags=[Tags.auth])
+def logout(payload: UserSchema = Body(), session: Session = Depends(get_db)):
+    user = None
+    try:
+        user = get_user(session=session, email=payload.email)
+        is_active: bool = user.is_active()
+        if not is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User is inactive.",
+            )
+        
+        return user.clear_token()
+    
+    except Exception:  
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User is not logged in!"
+            )

@@ -72,3 +72,13 @@ class User(Base):
             "refresh_token": refresh_token,
             "access_token": access_token,
         }
+    
+    def is_active(self):
+        return self.is_active
+    
+    def clear_token(self):
+        """Deactivate user as well as clear access token and refresh token upon logout"""
+        self.is_active = False
+        self.access_token = None
+        self.refresh_token = None
+        return {"message": "Logout succesful."}
