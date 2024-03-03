@@ -20,15 +20,16 @@ transcription_router = APIRouter(
 )
 
 @transcription_router.post(
-  "/{s3_obj_uuid}", 
+  "/{s3_object_name}", 
   status_code=http.HTTPStatus.CREATED, 
   response_model=GenericResponseModel
 )
-async def transcribe_audio(filename: str, file_format: str, language_code = "id-ID"):
+async def transcribe_audio(s3_object_name: str, language_code = "id-ID"):
   # s3_client = AWSS3Client().get_client()
   service = TranscriptionService()
   transcribe_client = AWSTranscribeClient().get_client()
 
+  filename, file_format = s3_object_name.split(".")
   generated_job_name = service.generate_job_name()
 
   try:
