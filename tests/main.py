@@ -82,6 +82,46 @@ def test_register_with_invalid_email():
     assert response.status_code == 422  # Invalid email format
 
 
+def test_register_with_special_characters_in_name():
+    response = client.post(
+        "/register",
+        json={
+            "email": "specialchar@example.com",
+            "first_name": "Speci@l",
+            "middle_name": "@wesome",
+            "last_name": "Ch@r",
+            "hashed_password": "specialpassword",
+        },
+    )
+    assert response.status_code == 200
+
+
+def test_register_identical_emails_with_different_cases():
+    # Testing case sensitivity in email uniqueness
+    response1 = client.post(
+        "/register",
+        json={
+            "email": "CaseSensitiveEmail@example.com",
+            "first_name": "Case",
+            "middle_name": "Character",
+            "last_name": "Sensitive",
+            "hashed_password": "casesensitive",
+        },
+    )
+    response2 = client.post(
+        "/register",
+        json={
+            "email": "casesensitiveemail@example.com",  # Same email in different case
+            "first_name": "Case",
+            "middle_name": "Character",
+            "last_name": "Insensitive",
+            "hashed_password": "caseinsensitive",
+        },
+    )
+    assert response1.status_code == 200
+    assert response2.status_code == 400
+
+
 def test_login_user_not_found():
     response = client.post(
         "/login", json={"email": "nonexistent@example.com", "password": "any"}
