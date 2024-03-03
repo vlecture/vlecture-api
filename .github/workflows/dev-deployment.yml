@@ -1,0 +1,187 @@
+name: Dev Deployment
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  Dev-Deployment:
+    name: Dev Deployment
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout@v2
+
+    env:
+      DEV_CONFIG_ENV: ${{ secrets.DEV_CONFIG_ENV }}
+      PUB_REGISTRY: public.ecr.aws/x6v6j9u1
+      CONTAINER_IMAGE_NAME: vlecture-api-dev
+      # CONTAINER_IMAGE_NAME: sample # TESTING WHETHER WE ACTUALLY NEED THE CREATOR's ACCESS KEY OR NOT
+      AWS_REGION: us-west-2
+      IMAGE_TAG: ${{ github.sha }}
+    
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      # - name: Pre-Configure AWS Credentials 
+      #   id: creds
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-region: ${{ env.AWS_REGION }}
+      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      #     output-credentials: true
+      #     # role-session-name: samplerolesession
+
+      # - name: get caller identity 1
+      #   run: |
+      #     aws sts get-caller-identity
+
+      # us-east-1 for Container Registry
+      - name: Configure AWS Credentials 
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-duration-seconds: 1200
+          role-session-name: GithubConfigAWSCreds
+          role-skip-session-tagging: true
+
+      # - name: get caller identity2
+      #   run: |
+      #     aws sts get-caller-identity
+      # Old ver
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: 'true'
+          registry-type: public
+      
+      - name: Build, tag, and push image to AWS ECR
+        env:
+          # DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DEV_ECR_REGISTRY: ${{ env.PUB_REGISTRY }}
+          DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
+        run: |
+          docker build -t $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
+          docker tag "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
+
+          docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}
+          docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest
+
+      # - name: Pull from ECR
+      #   id: ecr
+      #   uses: jwalton/gh-ecr-push@v1
+      #   with:
+      #     access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     region: ${{ env.AWS_REGION }}
+      #     image: ${{ env.CONTAINER_IMAGE_NAME}}:${{ '${{ env.IMAGE_TAG }}' }}
+      #     local-image: ${{ env.CONTAINER_IMAGE_NAME}}
+      #     direction: pull
+      
+      # us-west-2 for running container on VM
+      - name: Configure AWS Credentials 2
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # aws-session-token: ${{ steps.creds.outputs.aws-session-token }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-duration-seconds: 1200
+          role-session-name: GithubConfigAWSCreds
+          role-skip-session-tagging: true
+
+      - name: Pull latest image from ECR and run container
+        uses: appleboy/ssh-action@v0.1.9
+        env:
+          DEV_ECR_REGISTRY: ${{ env.PUB_REGISTRY }}
+          # DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
+        with:
+          host: ${{ secrets.DEV_SSH_HOST }}
+          username: ${{ secrets.DEV_SSH_USER }}
+          key: ${{ secrets.DEV_SSH_PRIVATEKEY }}
+          port: ${{ secrets.DEV_SSH_PORT }}
+          debug: true
+          envs: DEV_CONFIG_ENV,AWS_SECRET_ACCESS_KEY,AWS_ACCESS_KEY_ID,DEV_ECR_REGISTRY,DEV_ECR_REPOSITORY
+          script: |
+            sudo apt-get update
+            sudo aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+            sudo docker stop ${{ env.CONTAINER_IMAGE_NAME }} || true
+            sudo docker rm ${{ env.CONTAINER_IMAGE_NAME }} || true
+            sudo docker pull "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
+            docker run -d --name ${{ env.CONTAINER_IMAGE_NAME }} \
+              --restart always \
+              -v "$(pwd)/.env:/app/${{ env.CONTAINER_IMAGE_NAME }}/.env:ro" \
+              -p "8080:8080" \
+              "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
+
+
+
+# sudo $(aws ecr get-login --no-include-email --region ${{ env.AWS_REGION }})
+#             (aws ecr get-login-password --region ${{ env.AWS_REGION }} |docker login --username AWS --password-stdin $DEV_ECR_REGISTRY)
+
+# PREV SCRIPT TAG
+# script: |
+#     mkdir -pv ./app/vlecture-api
+#     cd ./app/vlecture-api
+#     echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env
+
+#     if [ "$(docker ps -q -f name=vlecture-api)" ]; then
+#         sudo docker rm -f vlecture-api
+#     fi
+
+#     aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{ env.DEV_ECR_REGISTRY }}
+
+#     sudo docker pull "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
+#     echo "$(sudo docker ps)"
+#     sudo docker run -d --name vlecture-api \
+#       --restart always \
+#       -v "$(pwd)/.env:/app/vlecture-api/.env:ro" \
+#       -p "8080:8080" \
+#       "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
+
+
+# OLD STAGE CODE
+# - name: Pull latest image from ECR and run container
+#   uses: appleboy/ssh-action@v0.1.10
+#   env:
+#     DEV_ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#     DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
+#   with:
+#     host: ${{ secrets.DEV_SSH_HOST }}
+#     username: ${{ secrets.DEV_SSH_USER }}
+#     key: ${{ secrets.DEV_SSH_PRIVATEKEY }}
+#     envs: DEV_CONFIG_ENV,AWS_SECRET_ACCESS_KEY,AWS_ACCESS_KEY_ID,DEV_ECR_REGISTRY,DEV_ECR_REPOSITORY
+#     script: |
+#       mkdir -pv ./app/vlecture-api
+#       cd ./app/vlecture-api
+#       echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env
+#       aws ecr get-login-password | docker login -u AWS --password-stdin "https://$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.$(aws configure get region).amazonaws.com"
+
+#       docker rm -f vlecture-api
+#       docker pull "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
+#       docker run -d --name vlecture-api \
+#         --restart always \
+#         -v "$(pwd)/.env:/app/vlecture-api/.env:ro" \
+#         -p "8080:8080" \
+#         "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
+
+# Source: https://dev.to/slsbytheodo/configure-authentication-to-your-aws-account-in-your-github-actions-ci-13p3
+
+# NOTES
+# If stuck on aws credentials config, ensure that your Role Trust Relationship have 2 statements - 1 for ODIC Github Actions and 1 For the AWS Role with AssumeRole permission

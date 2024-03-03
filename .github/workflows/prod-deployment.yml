@@ -1,0 +1,67 @@
+name: Prod Deployment
+
+on:
+  workflow_dispatch:
+
+env:
+  CONFIG_ENV: ${{ secrets.CONFIG_ENV }}
+  CONTAINER_IMAGE_NAME: vlecture-api
+  REGISTRY: ${{ secrets.REGISTRY }}
+  REGISTRY_IMAGE: ${{ secrets.REGISTRY_IMAGE }}
+  REGISTRY_ACCESS_TOKEN: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
+
+jobs:
+  Prod-Deployment:
+    name: Production Deployment
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v3
+      
+      - name: Log in to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      
+      - name: Build and Tag Image
+        run: |
+          docker build \
+            -t "$REGISTRY/$REGISTRY_IMAGE:${{ github.sha }}" .
+          docker tag "$REGISTRY/$REGISTRY_IMAGE:${{ github.sha }}" "$REGISTRY/$REGISTRY_IMAGE:stable"
+        
+      - name: Publish to Container Registry
+        run: docker push "$REGISTRY/$REGISTRY_IMAGE:stable"
+        
+      - name: Pull Latest Image and Run Container
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATEKEY }}
+          envs: CONFIG_ENV,REGISTRY_ACCESS_TOKEN,REGISTRY,REGISTRY_IMAGE
+          script: |
+            mkdir -pv ./app/vlecture-api
+            cd ./app/vlecture-api
+            echo $CONFIG_ENV | tr ' ' '\n' > .env
+            
+            aws ecr get-login-password | docker login -u AWS --password-stdin "https://$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.$(aws configure get region).amazonaws.com"
+
+            docker rm -f vlecture-api
+            docker pull "$REGISTRY/$REGISTRY_IMAGE:stable"
+            docker run -d --name vlecture-api \
+              --restart always \
+              -v "$(pwd)/.env:/app/vlecture-api/.env:ro" \
+              -p "8081:8081" \
+              "$REGISTRY/$REGISTRY_IMAGE:stable"
+      
+      - name: Get Release Date
+        id: get_release_date
+        run: echo "RELEASE_DATE=$(TZ='Asia/Jakarta' date +'%A %d-%m-%Y %T WIB')" >> "$GITHUB_OUTPUT"
+      
+      - name: Mark as Stable
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          body: "Stable release updated at ${{ steps.get_release_date.outputs.RELEASE_DATE }}"
+          token: ${{ secrets.GH_TOKEN }}
+          tag: stable
