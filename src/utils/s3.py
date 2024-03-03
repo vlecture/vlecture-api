@@ -7,11 +7,11 @@ from botocore.exceptions import ClientError
 S3_CLIENT_NAME = "s3"
 DEFAULT_REGION = "us-west-2"
 
-class AWS_S3_Client:
+class AWSS3Client:
   def __init__(self):
     self._s3_client = boto3.client(S3_CLIENT_NAME)
   
-  def get_s3_client(self) -> Any:
+  def get_client(self) -> Any:
     return self._s3_client
   
   """https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-uploading-files.html"""

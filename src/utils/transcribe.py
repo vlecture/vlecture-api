@@ -8,9 +8,9 @@ from botocore.exceptions import ClientError
 CLIENT_NAME = "transcribe"
 DEFAULT_REGION = "us-west-2"
 
-class AWS_Transcribe_Client:
+class AWSTranscribeClient:
   def __init__(self):
     self._transcribe_client = boto3.client(CLIENT_NAME)
   
-  def get_transcribe_client(self) -> Any:
+  def get_client(self) -> Any:
     return self._transcribe_client
