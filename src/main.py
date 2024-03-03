@@ -110,7 +110,6 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    # TODO: check user already login or not as precondition
     try:
         allowed_types = ['audio/mp3', 'audio/mpeg']
         file_type, _ = mimetypes.guess_type(file.filename)
@@ -119,9 +118,6 @@ async def upload_file(file: UploadFile = File(...)):
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
             )
 
-        # TODO: Update the file name (waiting cookies implement)
-        # So that same file name won't be a problem
-        # file_name = "UUID(user)" + file.filename
         s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME,  file.filename)
 
     except HTTPException as e:
