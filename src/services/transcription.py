@@ -74,6 +74,6 @@ class TranscriptionService:
     except TimeoutError:
       return TimeoutError("Timeout when polling the transcription results")
     except ClientError:
-        return ClientError("Transcription Job failed.")
+        return ClientError("Transcription Job failed.", operation_name="start_transcription_job")
     
   
