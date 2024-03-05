@@ -24,6 +24,7 @@ from src.utils.settings import (
     AWS_SECRET_ACCESS_KEY,
     SENTRY_DSN,
 )
+from src.controllers import transcription
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
 from src.models.users import User
@@ -41,6 +42,7 @@ sentry_sdk.init(
 )
 
 app = FastAPI()
+app.include_router(transcription.transcription_router)
 
 # sentry trigger error test, comment when not needed
 # @app.get("/sentry-debug")
