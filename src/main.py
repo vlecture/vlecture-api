@@ -108,12 +108,12 @@ def logout(response: Response, payload: UserLogoutSchema = Body(), session: Sess
     user = None
     try:
         user = get_user_by_access_token(session=session, email=payload.access_token)
-        is_active: bool = user.is_active()
-        if not is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User is already inactive.",
-            )
+        # is_active: bool = user.is_active()
+        # if not is_active:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_401_UNAUTHORIZED,
+        #         detail="User is already inactive.",
+        #     )
         
         user.clear_token()
         response.delete_cookie("access_token")
