@@ -98,10 +98,11 @@ def login(
         return err
 
 
-def get_current_user(request: Request, db: Session = Depends(get_db)):
+def get_current_user(request: Request, session: Session = Depends(get_db)):
     access_token = request.cookies.get("access_token")
     if access_token:
-        user = db.query(User).filter(User.access_token == access_token).first()
+        user = session.query(User).filter(
+            User.access_token == access_token).first()
         if user:
             return user
     raise HTTPException(
