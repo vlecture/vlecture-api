@@ -1,8 +1,10 @@
 import mimetypes
+from random import randint
 import boto3
 from fastapi import (
     FastAPI,
     File,
+    Request,
     UploadFile,
     status,
     Response,
@@ -25,6 +27,7 @@ from src.utils.settings import (
 from src.controllers import transcription
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
+from src.models.users import User
 from src.services import auth
 
 sentry_sdk.init(
@@ -110,27 +113,49 @@ def login(
     return auth.login(response, session, payload)
 
 
+def get_current_user(request: Request, session: Session = Depends(get_db)):
+    access_token = request.cookies.get("access_token")
+    if access_token:
+        user = session.query(User).filter(
+            User.access_token == access_token).first()
+        if user:
+            return user
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(user: User = Depends(get_current_user), file: UploadFile = File(...)):
+    user_id = user.id
     try:
-        allowed_types = ["audio/mp3", "audio/mpeg"]
+        allowed_types = ['audio/mp3', 'audio/mpeg']
         file_type, _ = mimetypes.guess_type(file.filename)
         if file_type not in allowed_types:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only MP3 or M4A files are allowed",
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
             )
 
-        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file.filename)
-
+        file_name = str(user_id) + "_" + str(sha()) + "_" + file.filename
+        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME,  file_name)
     except HTTPException as e:
         return e
-
     except Exception as e:
         print("Error:", str(e))
-        raise HTTPException(status_code=500, detail="Error on uploading the file")
+        raise HTTPException(
+            status_code=500, detail='Error on uploading the file')
 
     finally:
         file.file.close()
 
-    return {"filename": file.filename}
+    return {"filename": file_name}
+
+
+def sha():
+    sha = ""
+    for _ in range(6):
+        x = randint(1, 2)
+        if x == 1:
+            sha += str(randint(1, 10))
+        else:
+            sha += str(chr(randint(97, 122)))
+    return sha
