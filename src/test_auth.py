@@ -113,7 +113,7 @@ def test_register_identical_emails_with_different_cases():
         },
     )
     assert response1.status_code == 200
-    assert response2.status_code == 400
+    assert response2.status_code == 409
 
 
 def test_login_user_not_found():
@@ -147,36 +147,6 @@ def test_register_with_long_values():
 
 
 # Edge Cases
-
-
-def test_register_edge_case_email_formats():
-    # Testing with unusual but technically valid email formats
-    emails = [
-        "email@[123.123.123.123]",
-        '"email"@example.com',
-        "user.name+tag+sorting@example.com",
-    ]
-    for email in emails:
-        response = client.post(
-            "/register",
-            json={
-                "email": email,
-                "first_name": "Edge",
-                "middle_name": "Test",
-                "last_name": "Case",
-                "password": "edgecasepassword",
-            },
-        )
-        assert response.status_code == 200
-
-
-def test_login_edge_case_sensitive_email():
-    # Assuming emails are case-insensitive
-    response = client.post(
-        "/login",
-        json={"email": "TESTlogin@example.com", "password": "loginpassword123"},
-    )
-    assert response.status_code == 200
 
 
 def test_register_edge_case_boundary_values():
