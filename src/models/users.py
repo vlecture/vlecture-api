@@ -81,4 +81,4 @@ class User(Base):
         self.is_active = False
         self.access_token = None
         self.refresh_token = None
-        return {"message": "Logout succesful."}
+        return {"message": "Token cleared from user."}

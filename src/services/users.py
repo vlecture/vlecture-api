@@ -14,3 +14,6 @@ def create_user(session: Session, user: CreateUserSchema):
 
 def get_user(session: Session, email: str):
     return session.query(User).filter(User.email == email).one()
+
+def get_user_by_access_token(session: Session, access_token:str):
+    return session.query(User).filter(User.access_token == access_token)

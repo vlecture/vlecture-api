@@ -26,3 +26,6 @@ class UserSchema(UserBaseSchema):
 class UserLoginSchema(BaseModel):
     email: EmailStr = Field()
     password: str
+
+class UserLogoutSchema(BaseModel):
+    access_token: str

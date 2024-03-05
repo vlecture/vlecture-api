@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status, HTTPException, Depends, Body
+from fastapi import FastAPI, status, HTTPException, Response, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.utils.db import Base, engine, get_db
-from src.schemas.users import CreateUserSchema, UserLoginSchema, UserSchema
+from src.schemas.users import CreateUserSchema, UserLoginSchema, UserLogoutSchema
 from src.models.users import User
-from src.services.users import create_user, get_user
+from src.services.users import create_user, get_user, get_user_by_access_token
 
 
 app = FastAPI()
@@ -104,21 +104,37 @@ def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db))
         return user.generate_token()
 
 @app.post("/logout", tags=[Tags.auth])
-def logout(payload: UserSchema = Body(), session: Session = Depends(get_db)):
+def logout(response: Response, payload: UserLogoutSchema = Body(), session: Session = Depends(get_db)):
     user = None
     try:
-        user = get_user(session=session, email=payload.email)
+        user = get_user_by_access_token(session=session, email=payload.access_token)
         is_active: bool = user.is_active()
         if not is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User is inactive.",
+                detail="User is already inactive.",
             )
         
-        return user.clear_token()
-    
+        user.clear_token()
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")
+
+        return {"message": "Logout successful."}
+
     except Exception:  
         if user is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User is not logged in!"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User is not logged in!"
             )
+        
+@app.post("/check", tags=[Tags.auth])      
+def check_logged_in_user_by_token(payload: UserLogoutSchema, session: Session = Depends(get_db)):
+    user = None
+    try:
+        user = get_user_by_access_token(session=session, email=payload.access_token)
+        return {"message": "User is still logged in"}
+    
+    except Exception:
+        if user is None:
+            return {"message": "User has logged out"}
