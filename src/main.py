@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 import sentry_sdk
 
+from src.controllers import transcription
 from src.utils.settings import AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY, SENTRY_DSN
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
@@ -25,7 +26,9 @@ sentry_sdk.init(
     profiles_sample_rate=1.0,
 )
 
+# Create app and its routers
 app = FastAPI()
+app.include_router(transcription.transcription_router)
 
 # sentry trigger error test, comment when not needed
 # @app.get("/sentry-debug")

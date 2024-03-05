@@ -45,12 +45,17 @@ async def transcribe_audio(s3_filename: str, language_code = "id-ID"):
     ) 
 
     return GenericResponseModel(
-      status_code=http.HTTPStatus.OK,
+      status_code=http.HTTPStatus.CREATED,
       message="Successfully created audio transcription",
       data=response
     )
-  except ClientError:
+  except TimeoutError:
     return GenericResponseModel(
       status_code=http.HTTPStatus.REQUEST_TIMEOUT,
       error="Timeout while processing transcription job.",
+    )
+  except ClientError:
+    return GenericResponseModel(
+      status_code=http.HTTPStatus.BAD_REQUEST,
+      error="Audio Transcription job failed.",
     )

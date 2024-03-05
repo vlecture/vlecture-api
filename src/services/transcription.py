@@ -23,6 +23,7 @@ class TranscriptionService:
    
    def poll_transcription_job(self, transcribe_client, job_name: str):
       max_tries = 60
+      is_done = False
 
       while max_tries > 0:
         max_tries -= 1
@@ -33,6 +34,7 @@ class TranscriptionService:
           print(f"Job {job_name} is {job_status}.")
           
           if job_status == "COMPLETED":
+            is_done = True
             print(
               f"Download the transcript from\n"
               f"\t{job['TranscriptionJob']['Transcript']['TranscriptFileUri']}."
@@ -43,6 +45,10 @@ class TranscriptionService:
         
         # Set interval to poll job status
         time.sleep(self.POLL_INTERVAL_SEC)
+      
+      if not is_done:
+        return TimeoutError("Timeout when polling the transcription results")
+
 
    def transcribe_file(self, transcribe_client: any, 
                        job_name: str, file_uri: str,
@@ -65,6 +71,8 @@ class TranscriptionService:
       print(res)
 
       return res
+    except TimeoutError:
+      return TimeoutError("Timeout when polling the transcription results")
     except ClientError:
         return ClientError("Transcription Job failed.")
     
