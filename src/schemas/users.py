@@ -9,10 +9,6 @@ class UserBaseSchema(BaseModel):
     last_name: str
 
 
-class CreateUserSchema(UserBaseSchema):
-    hashed_password: bytes = Field(alias="password")
-
-
 class UserSchema(UserBaseSchema):
     id: UUID4
     is_active: bool = Field(default=False)
