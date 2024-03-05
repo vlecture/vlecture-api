@@ -1,6 +1,17 @@
 from fastapi.testclient import TestClient
 
 from src.main import app
+from src.utils.db import get_db
+
+
+def override_get_db(test_db_session):
+    try:
+        yield test_db_session
+    finally:
+        test_db_session.close()
+
+
+app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
@@ -9,7 +20,7 @@ client = TestClient(app)
 # Positive Cases
 
 
-def test_register_positive():
+def test_register_positive(test_db_session):
     response = client.post(
         "/register",
         json={
@@ -24,7 +35,7 @@ def test_register_positive():
     assert response.json()["email"] == "positive@example.com"
 
 
-def test_login_positive():
+def test_login_positive(test_db_session):
     # Assuming a user "positive@example.com" already exists from the register test
     response = client.post(
         "/login", json={"email": "positive@example.com", "password": "positivepassword"}
@@ -37,7 +48,7 @@ def test_login_positive():
 # Negative Cases
 
 
-def test_register_missing_fields():
+def test_register_missing_fields(test_db_session):
     response = client.post(
         "/register",
         json={
@@ -47,7 +58,7 @@ def test_register_missing_fields():
     assert response.status_code == 422  # Unprocessable Entity
 
 
-def test_register_user_already_exists():
+def test_register_user_already_exists(test_db_session):
     # Assuming a user "positive@example.com" already exists from the register test
     response = client.post(
         "/register",
@@ -62,7 +73,7 @@ def test_register_user_already_exists():
     assert response.status_code == 409
 
 
-def test_register_with_invalid_email():
+def test_register_with_invalid_email(test_db_session):
     response = client.post(
         "/register",
         json={
@@ -76,7 +87,7 @@ def test_register_with_invalid_email():
     assert response.status_code == 422  # Invalid email format
 
 
-def test_register_with_special_characters_in_name():
+def test_register_with_special_characters_in_name(test_db_session):
     response = client.post(
         "/register",
         json={
@@ -90,7 +101,7 @@ def test_register_with_special_characters_in_name():
     assert response.status_code == 200
 
 
-def test_register_identical_emails_with_different_cases():
+def test_register_identical_emails_with_different_cases(test_db_session):
     # Testing case sensitivity in email uniqueness
     response1 = client.post(
         "/register",
@@ -116,14 +127,14 @@ def test_register_identical_emails_with_different_cases():
     assert response2.status_code == 400
 
 
-def test_login_user_not_found():
+def test_login_user_not_found(test_db_session):
     response = client.post(
         "/login", json={"email": "nonexistent@example.com", "password": "any"}
     )
     assert response.status_code == 404  # Not Found
 
 
-def test_login_wrong_password():
+def test_login_wrong_password(test_db_session):
     # Assuming a user "positive@example.com" already exists from the register test
     response = client.post(
         "/login", json={"email": "positive@example.com", "password": "wrongpassword"}
@@ -131,7 +142,7 @@ def test_login_wrong_password():
     assert response.status_code == 401  # Unauthorized
 
 
-def test_register_with_long_values():
+def test_register_with_long_values(test_db_session):
     long_string = "a" * 256  # Testing with exceeding the maximum length of 255
     response = client.post(
         "/register",
@@ -149,7 +160,7 @@ def test_register_with_long_values():
 # Edge Cases
 
 
-def test_register_edge_case_email_formats():
+def test_register_edge_case_email_formats(test_db_session):
     # Testing with unusual but technically valid email formats
     emails = [
         "email@[123.123.123.123]",
@@ -170,7 +181,7 @@ def test_register_edge_case_email_formats():
         assert response.status_code == 200
 
 
-def test_login_edge_case_sensitive_email():
+def test_login_edge_case_sensitive_email(test_db_session):
     # Assuming emails are case-insensitive
     response = client.post(
         "/login",
@@ -179,7 +190,7 @@ def test_login_edge_case_sensitive_email():
     assert response.status_code == 200
 
 
-def test_register_edge_case_boundary_values():
+def test_register_edge_case_boundary_values(test_db_session):
     # Testing boundary values for fields like 'first_name' and 'last_name'
     response = client.post(
         "/register",
