@@ -8,12 +8,13 @@ import sentry_sdk
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.utils.db import Base, engine, get_db
+from src.utils.settings import SENTRY_DSN
 from src.schemas.users import CreateUserSchema, UserLoginSchema
 from src.models.users import User
 from src.services.users import create_user, get_user
 
 sentry_sdk.init(
-    dsn="https://f549ed1816a0723660761eeee7df5759@o4506829505363968.ingest.sentry.io/4506829522337793",
+    dsn=SENTRY_DSN,
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
     traces_sample_rate=1.0,
