@@ -26,6 +26,9 @@ from src.utils.settings import (
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
 from src.services import auth
+from src.schemas.auth import LogoutSchema
+from src.models.users import User
+from src.services.users import get_user_by_access_token
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
@@ -37,10 +40,6 @@ sentry_sdk.init(
     # Sentry recommends adjusting this value in production.
     profiles_sample_rate=1.0,
 )
-from src.schemas.auth import LogoutSchema
-from src.models.users import User
-from src.services.users import get_user_by_access_token
-
 
 app = FastAPI()
 
