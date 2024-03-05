@@ -29,8 +29,9 @@ def register(session: Session, payload: RegisterSchema):
             detail="All required fields must be filled!",
         )
     try:
-        user = get_user(session=session, email=payload.email)
+        user = get_user(session=session, email=payload.email.lower())
     except Exception:
+        payload.email = payload.email.lower()
         payload.hashed_password = hash_password(payload.hashed_password)
         return create_user(session=session, user=payload)
     if user:
