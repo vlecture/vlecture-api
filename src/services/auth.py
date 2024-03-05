@@ -13,7 +13,7 @@ from starlette.status import (
 )
 from src.models.users import User
 from src.schemas.auth import LoginSchema, RegisterSchema
-from src.services.users import create_user, get_user
+from src.services.users import create_user, get_user, update_tokens
 
 
 def register(session: Session, payload: RegisterSchema):
@@ -54,8 +54,7 @@ def login(response: Response, session: Session, payload: LoginSchema):
     refresh_token = generate_refresh_token(user)
     access_token = generate_access_token(user)
 
-    user.update_refresh_token(refresh_token)
-    user.update_access_token(access_token)
+    update_tokens(session, user, access_token, refresh_token)
 
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
