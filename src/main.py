@@ -6,18 +6,37 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
-from src.utils.settings import AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY
-from src.utils.db import Base, engine, get_db
+import sentry_sdk
 
+from src.utils.settings import AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY, SENTRY_DSN
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
+from src.schemas.users import CreateUserSchema, UserLoginSchema
+from src.models.users import User
 from src.services import auth
+from src.services.users import create_user, get_user
+
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # Sentry recommends adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
 from src.schemas.auth import LogoutSchema
 from src.models.users import User
 from src.services.users import get_user_by_access_token
 
 
 app = FastAPI()
+
+# sentry trigger error test, comment when not needed
+# @app.get("/sentry-debug")
+# async def trigger_error():
+#     division_by_zero = 1 / 0
 
 # CORS
 origins = [
@@ -109,15 +128,6 @@ async def upload_file(file: UploadFile = File(...)):
         file.file.close()
 
     return {"filename": file.filename}
-    # else:
-    #     is_validated: bool = user.validate_password(payload.password)
-    #     if not is_validated:
-    #         raise HTTPException(
-    #             status_code=status.HTTP_401_UNAUTHORIZED,
-    #             detail="Invalid user credentials",
-    #         )
-
-    #     return user.generate_token()
 
 @app.post("/logout", tags=[Tags.auth])
 def logout(response: Response, payload: LogoutSchema = Body(), session: Session = Depends(get_db)):
