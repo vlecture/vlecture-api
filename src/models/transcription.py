@@ -42,7 +42,7 @@ class Transcription(Base):
   # Foreign key to User
   owner_id = Column(UUID, ForeignKey(User.id), nullable=False)
   
-  # TODO in case User gets a `transcriptions` field
+  # NOTE in case User gets a `transcriptions` field
   # owner = relationship("User", back_populates="transcriptions")
   
   title = Column(String(255), nullable=False, unique=False)
@@ -57,7 +57,6 @@ class Transcription(Base):
     """ Converts DB ORM object to Pydantic Model ('schema') """
     return TranscriptionSchema.model_validate(self)
   
-  # TODO DEBUG
   @classmethod
   def get_by_id(cls, uuid: UUID) -> TranscriptionSchema:
     base = super().get_by_id(uuid)

@@ -20,21 +20,10 @@ class TranscriptionService:
    def generate_file_uri(self, bucket_name: str, filename: str, extension: str):
     # NOTE - Can add subbuckets in the future
     return f"s3://{bucket_name}/{filename}.{extension}"
-
-   def transcribe_file(self, transcribe_client: any, 
-                       job_name: str, file_uri: str,
-                       file_format: str, language_code = "id-ID"):
-    try:
-      transcribe_client.start_transcription_job(
-        TranscriptionJobName=job_name,
-        Media={
-          "MediaFileUri": file_uri
-        },
-        MediaFormat=file_format,
-        LanguageCode=language_code,
-      )
-
+   
+   def poll_transcription_job(self, transcribe_client, job_name: str):
       max_tries = 60
+
       while max_tries > 0:
         max_tries -= 1
         job = transcribe_client.get_transcription_job(TranscriptionJobName=job_name)
@@ -54,14 +43,29 @@ class TranscriptionService:
         
         # Set interval to poll job status
         time.sleep(self.POLL_INTERVAL_SEC)
+
+   def transcribe_file(self, transcribe_client: any, 
+                       job_name: str, file_uri: str,
+                       file_format: str, language_code = "id-ID"):
+    try:
+      transcribe_client.start_transcription_job(
+        TranscriptionJobName=job_name,
+        Media={
+          "MediaFileUri": file_uri
+        },
+        MediaFormat=file_format,
+        LanguageCode=language_code,
+      )
+
+      job_status = self.poll_transcription_job(transcribe_client=transcribe_client, job_name=job_name)
       
-      status = job
-      content = requests.get(status['TranscriptionJob']['Transcript']['TranscriptFileUri'])
+      content = requests.get(job_status['TranscriptionJob']['Transcript']['TranscriptFileUri'])
       res = json.loads(content.content.decode('utf8'))['results']['transcripts'][0]['transcript']
       
-      # TODO delete
       print(res)
 
       return res
     except ClientError:
-      return ClientError("Transcription Job failed.")
+        return ClientError("Transcription Job failed.")
+    
+  
