@@ -7,10 +7,10 @@ from src.utils.settings import AWS_BUCKET_NAME
 from fastapi import APIRouter, Depends
 from botocore.exceptions import ClientError
 
-from schemas.base import GenericResponseModel
-from services.transcription import TranscriptionService
-from utils.aws.s3 import AWSS3Client
-from utils.aws.transcribe import AWSTranscribeClient
+from src.schemas.base import GenericResponseModel
+from src.services.transcription import TranscriptionService
+from src.utils.aws.s3 import AWSS3Client
+from src.utils.aws.transcribe import AWSTranscribeClient
 
 class TranscriptionRouterTags(Enum):
   transcribe = "transcribe"
