@@ -21,7 +21,7 @@ def test_logout_successful():
     assert "access_token" not in response.cookies
 
     # Access protected endpoint after logout should be unauthorized
-    response = client.get("/transcribe/upload_audio")
+    response = client.get("/home")
     assert response.status_code == 401  
 
 def test_logout_not_logged_in():
