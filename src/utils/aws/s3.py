@@ -2,20 +2,28 @@ import logging
 import boto3
 import os
 from typing import Any
+from os import environ as env
+
+
 from botocore.exceptions import ClientError
 
-S3_CLIENT_NAME = "s3"
+CLIENT_NAME = "s3"
 DEFAULT_REGION = "us-west-2"
 
 class AWSS3Client:
   def __init__(self):
-    self._s3_client = boto3.client(S3_CLIENT_NAME)
+    self._s3_client = boto3.client(
+                        CLIENT_NAME, 
+                        aws_access_key_id=env.get("AWS_SERVER_PUBLIC_KEY"), 
+                        aws_secret_access_key=env.get("AWS_SERVER_SECRET_KEY"), 
+                        region_name=DEFAULT_REGION
+                      )
   
   def get_client(self) -> Any:
     return self._s3_client
   
   """https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-uploading-files.html"""
-  def upload_file(file_name, bucket, object_name=None):
+  def upload_file(self, file_name, bucket, object_name=None):
     """Upload a file to an S3 bucket
 
     :param file_name: File to upload
@@ -29,9 +37,12 @@ class AWSS3Client:
         object_name = os.path.basename(file_name)
 
     # Upload the file
-    s3_client = boto3.client('s3')
+    s3_client = self.get_client()
     try:
         response = s3_client.upload_file(file_name, bucket, object_name)
+        
+        # TODO add logging
+        # logger.info(response)
     except ClientError as e:
         logging.error(e)
         return False

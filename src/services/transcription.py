@@ -3,7 +3,7 @@ import http
 import time
 import requests
 import json
-from os import environ as env
+
 
 from botocore.exceptions import ClientError
 
@@ -18,15 +18,12 @@ class TranscriptionService:
      return str(uuid.uuid4())
 
    def generate_file_uri(self, bucket_name: str, filename: str, extension: str):
-    #  return f"https://s3-{aws_region}.amazonaws.com/"
-    
-    # TODO - can add subbuckets in the future
+    # NOTE - Can add subbuckets in the future
     return f"s3://{bucket_name}/{filename}.{extension}"
 
-   def transcribe_file(self, transcribe_client: any, job_name: str, filename: str, file_format = "mp3", language_code = "id-ID"):
-    BUCKET_NAME = env.get("AWS_BUCKET_NAME")
-    file_uri = self.generate_file_uri(bucket_name=BUCKET_NAME, filename=filename, extension=file_format)
-    
+   def transcribe_file(self, transcribe_client: any, 
+                       job_name: str, file_uri: str,
+                       file_format: str, language_code = "id-ID"):
     try:
       transcribe_client.start_transcription_job(
         TranscriptionJobName=job_name,
