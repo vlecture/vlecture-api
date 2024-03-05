@@ -38,43 +38,6 @@ class User(Base):
 
     def update_access_token(self, token):
         self.access_token = token
-    def hash_password(password: bytes) -> bytes:
-        """Transforms password from it's raw textual form to
-        cryptographic hashes
-        """
-        return bcrypt.hashpw(password, bcrypt.gensalt())
-
-    def validate_password(self, password: str) -> bool:
-        """Confirms password validity"""
-        return bcrypt.checkpw(password.encode(), self.hashed_password)
-
-    def generate_token(self):
-        """Generate access token and refresh token for user"""
-        refresh_token = jwt.encode(
-            {
-                "first_name": self.first_name,
-                "email": self.email,
-                "exp": datetime.now(timezone.utc) + timedelta(days=7),
-            },
-            REFRESH_TOKEN_SECRET,
-        )
-        access_token = jwt.encode(
-            {
-                "first_name": self.first_name,
-                "email": self.email,
-                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
-            },
-            ACCESS_TOKEN_SECRET,
-        )
-        self.refresh_token = refresh_token
-        self.access_token = access_token
-        return {
-            "refresh_token": refresh_token,
-            "access_token": access_token,
-        }
-    
-    def is_active(self):
-        return self.is_active
     
     def clear_token(self):
         """Deactivate user as well as clear access token and refresh token upon logout"""

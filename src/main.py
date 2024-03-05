@@ -12,9 +12,9 @@ from src.utils.db import Base, engine, get_db
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
 from src.services import auth
-from src.schemas.users import UserLoginSchema, UserLogoutSchema
+from src.schemas.auth import LogoutSchema
 from src.models.users import User
-from src.services.users import create_user, get_user, get_user_by_access_token
+from src.services.users import get_user_by_access_token
 
 
 app = FastAPI()
@@ -120,16 +120,16 @@ async def upload_file(file: UploadFile = File(...)):
     #     return user.generate_token()
 
 @app.post("/logout", tags=[Tags.auth])
-def logout(response: Response, payload: UserLogoutSchema = Body(), session: Session = Depends(get_db)):
+def logout(response: Response, payload: LogoutSchema = Body(), session: Session = Depends(get_db)):
     user = None
     try:
         user = get_user_by_access_token(session=session, email=payload.access_token)
-        is_active: bool = user.is_active()
-        if not is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User is already inactive.",
-            )
+        # is_active: bool = user.is_active()
+        # if not is_active:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_401_UNAUTHORIZED,
+        #         detail="User is already inactive.",
+        #     )
         
         user.clear_token()
         response.delete_cookie("access_token")
@@ -145,7 +145,7 @@ def logout(response: Response, payload: UserLogoutSchema = Body(), session: Sess
             )
         
 @app.post("/check", tags=[Tags.auth])      
-def check_logged_in_user_by_token(payload: UserLogoutSchema, session: Session = Depends(get_db)):
+def check_logged_in_user_by_token(payload: LogoutSchema, session: Session = Depends(get_db)):
     user = None
     try:
         user = get_user_by_access_token(session=session, email=payload.access_token)

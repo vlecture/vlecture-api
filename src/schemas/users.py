@@ -17,11 +17,3 @@ class UserSchema(UserBaseSchema):
 
     class Config:
         from_attributes = True
-
-
-class UserLoginSchema(BaseModel):
-    email: EmailStr = Field()
-    password: str
-
-class UserLogoutSchema(BaseModel):
-    access_token: str

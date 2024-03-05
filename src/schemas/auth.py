@@ -9,3 +9,6 @@ class RegisterSchema(UserBaseSchema):
 class LoginSchema(BaseModel):
     email: EmailStr = Field()
     password: str
+
+class LogoutSchema(BaseModel):
+    access_token: str
