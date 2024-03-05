@@ -1,7 +1,12 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+IS_DEV = True
+
+if IS_DEV:
+    load_dotenv(".env.dev")
+else:
+    load_dotenv(".env")
 
 # Database url configuration
 DATABASE_URL = (
@@ -15,4 +20,10 @@ DATABASE_URL = (
 )
 
 REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET")
-ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
+ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")\
+
+AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+
+SENTRY_DSN = os.getenv("SENTRY_DSN")

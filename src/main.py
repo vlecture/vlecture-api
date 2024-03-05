@@ -1,17 +1,50 @@
-from fastapi import FastAPI, status, HTTPException, Depends, Body
+import mimetypes
+import boto3
+from fastapi import (
+    FastAPI,
+    File,
+    UploadFile,
+    status,
+    Response,
+    HTTPException,
+    Depends,
+    Body,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
-from starlette.status import HTTP_400_BAD_REQUEST
+import sentry_sdk
 
+from src.utils.settings import (
+    AWS_ACCESS_KEY_ID,
+    AWS_BUCKET_NAME,
+    AWS_SECRET_ACCESS_KEY,
+    SENTRY_DSN,
+)
+from src.controllers import transcription
 from src.utils.db import Base, engine, get_db
-from src.schemas.users import CreateUserSchema, UserLoginSchema
-from src.models.users import User
-from src.services.users import create_user, get_user
+from src.schemas.auth import RegisterSchema, LoginSchema
+from src.services import auth
 
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # Sentry recommends adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
 
 app = FastAPI()
+app.include_router(transcription.transcription_router)
+
+# sentry trigger error test, comment when not needed
+# @app.get("/sentry-debug")
+# async def trigger_error():
+#     division_by_zero = 1 / 0
 
 # CORS
 origins = [
@@ -31,6 +64,12 @@ app.add_middleware(
 
 Base.metadata.create_all(bind=engine)
 
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+)
+
 
 class Tags(Enum):
     auth = "auth"
@@ -46,59 +85,52 @@ def hi():
     return {"message": "Bonjour!"}
 
 
-@app.post("/signup", tags=[Tags.auth])
-def signup(payload: CreateUserSchema = Body(), session: Session = Depends(get_db)):
+# Authentication Endpoints
+
+
+@app.post("/register", tags=[Tags.auth])
+def register(payload: RegisterSchema = Body(), session: Session = Depends(get_db)):
     """Processes request to register user account."""
-    user = None
-    if (
-        len(payload.email) == 0
-        or len(payload.first_name) == 0
-        or (payload.last_name) == 0
-        or (payload.hashed_password) == 0
-    ):
-        raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail="All required fields must be filled!",
-        )
-    try:
-        user = get_user(session=session, email=payload.email)
-    except Exception:
-        payload.hashed_password = User.hash_password(payload.hashed_password)
-        return create_user(session, user=payload)
-    if user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User already exists!"
-        )
-    else:
-        payload.hashed_password = User.hash_password(payload.hashed_password)
-        return create_user(session, user=payload)
+    return auth.register(session, payload=payload)
 
 
 @app.post("/login", tags=[Tags.auth])
-def login(payload: UserLoginSchema = Body(), session: Session = Depends(get_db)):
+def login(
+    response: Response,
+    payload: LoginSchema = Body(),
+    session: Session = Depends(get_db),
+):
     """Processes user's authentication and returns a token
     on successful authentication.
 
     request body:
-
     - email,
-
     - password
     """
-    user = None
+    return auth.login(response, session, payload)
+
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
     try:
-        user = get_user(session=session, email=payload.email)
-    except Exception:
-        if user is None:
+        allowed_types = ["audio/mp3", "audio/mpeg"]
+        file_type, _ = mimetypes.guess_type(file.filename)
+        if file_type not in allowed_types:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found!"
-            )
-    else:
-        is_validated: bool = user.validate_password(payload.password)
-        if not is_validated:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid user credentials",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only MP3 or M4A files are allowed",
             )
 
-        return user.generate_token()
+        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file.filename)
+
+    except HTTPException as e:
+        return e
+
+    except Exception as e:
+        print("Error:", str(e))
+        raise HTTPException(status_code=500, detail="Error on uploading the file")
+
+    finally:
+        file.file.close()
+
+    return {"filename": file.filename}
