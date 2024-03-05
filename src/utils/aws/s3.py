@@ -1,8 +1,10 @@
 import logging
 import boto3
-import os
 from typing import Any
-from os import environ as env
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 from botocore.exceptions import ClientError
@@ -14,8 +16,8 @@ class AWSS3Client:
   def __init__(self):
     self._s3_client = boto3.client(
                         CLIENT_NAME, 
-                        aws_access_key_id=env.get("AWS_SERVER_PUBLIC_KEY"), 
-                        aws_secret_access_key=env.get("AWS_SERVER_SECRET_KEY"), 
+                        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), 
+                        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"), 
                         region_name=DEFAULT_REGION
                       )
   

@@ -10,7 +10,6 @@ import sentry_sdk
 from src.utils.settings import AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY, SENTRY_DSN
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
-from src.schemas.users import CreateUserSchema, UserLoginSchema
 from src.models.users import User
 from src.services import auth
 from src.services.users import create_user, get_user

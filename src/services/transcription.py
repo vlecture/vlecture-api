@@ -7,8 +7,8 @@ import json
 
 from botocore.exceptions import ClientError
 
-from src.utils.s3 import AWSS3Client
-from src.utils.transcribe import AWSTranscribeClient
+from src.utils.aws.s3 import AWSS3Client
+from src.utils.aws.transcribe import AWSTranscribeClient
 
 
 class TranscriptionService:

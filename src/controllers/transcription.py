@@ -9,8 +9,8 @@ from botocore.exceptions import ClientError
 
 from schemas.base import GenericResponseModel
 from services.transcription import TranscriptionService
-from utils.s3 import AWSS3Client
-from utils.transcribe import AWSTranscribeClient
+from utils.aws.s3 import AWSS3Client
+from utils.aws.transcribe import AWSTranscribeClient
 
 class TranscriptionRouterTags(Enum):
   transcribe = "transcribe"
@@ -21,15 +21,16 @@ transcription_router = APIRouter(
 )
 
 @transcription_router.post(
-  "/{s3_object_name}", 
+  "/{s3_filename}", 
   status_code=http.HTTPStatus.CREATED, 
   response_model=GenericResponseModel
 )
-async def transcribe_audio(s3_object_name: str, language_code = "id-ID"):
-  service = TranscriptionService()
+async def transcribe_audio(s3_filename: str, language_code = "id-ID"):
   transcribe_client = AWSTranscribeClient().get_client()
+  
+  service = TranscriptionService()
 
-  filename, file_format = s3_object_name.split(".")
+  filename, file_format = s3_filename.split(".")
   generated_job_name = service.generate_job_name()
 
   BUCKET_NAME = env.get("AWS_BUCKET_NAME")
