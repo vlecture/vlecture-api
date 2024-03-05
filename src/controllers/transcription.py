@@ -3,7 +3,7 @@ import uuid
 import http
 import requests
 
-from os import environ as env
+from src.utils.settings import AWS_BUCKET_NAME
 from fastapi import APIRouter, Depends
 from botocore.exceptions import ClientError
 
@@ -27,14 +27,13 @@ transcription_router = APIRouter(
 )
 async def transcribe_audio(s3_filename: str, language_code = "id-ID"):
   transcribe_client = AWSTranscribeClient().get_client()
-  
+
   service = TranscriptionService()
 
   filename, file_format = s3_filename.split(".")
   generated_job_name = service.generate_job_name()
 
-  BUCKET_NAME = env.get("AWS_BUCKET_NAME")
-  file_uri = service.generate_file_uri(bucket_name=BUCKET_NAME, filename=filename, extension=file_format)
+  file_uri = service.generate_file_uri(bucket_name=AWS_BUCKET_NAME, filename=filename, extension=file_format)
 
   try:
     response = service.transcribe_file(

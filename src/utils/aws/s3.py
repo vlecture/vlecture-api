@@ -2,10 +2,8 @@ import logging
 import boto3
 from typing import Any
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
-
+from src.utils.settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 
 from botocore.exceptions import ClientError
 
@@ -16,8 +14,8 @@ class AWSS3Client:
   def __init__(self):
     self._s3_client = boto3.client(
                         CLIENT_NAME, 
-                        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), 
-                        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"), 
+                        aws_access_key_id=AWS_ACCESS_KEY_ID, 
+                        aws_secret_access_key=AWS_SECRET_ACCESS_KEY, 
                         region_name=DEFAULT_REGION
                       )
   
