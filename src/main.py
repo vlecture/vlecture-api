@@ -1,5 +1,7 @@
 import mimetypes
 from random import randint
+import secrets
+import string
 import boto3
 from fastapi import (
     FastAPI,
@@ -153,9 +155,10 @@ async def upload_file(user: User = Depends(get_current_user), file: UploadFile =
 def sha():
     sha = ""
     for _ in range(6):
-        x = randint(1, 2)
-        if x == 1:
-            sha += str(randint(1, 10))
+        x = secrets.randbelow(2)
+        if x == 0:
+            sha += str(secrets.randbelow(10))
         else:
-            sha += str(chr(randint(97, 122)))
+            sha += secrets.choice(string.ascii_lowercase)
+
     return sha
