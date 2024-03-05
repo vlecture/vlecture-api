@@ -1,6 +1,6 @@
 import mimetypes
 import boto3
-from fastapi import FastAPI, File, UploadFile, status, Response, HTTPException, Depends, Body
+from fastapi import FastAPI, File, Request, UploadFile, status, Response, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
@@ -10,10 +10,8 @@ import sentry_sdk
 from src.utils.settings import AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY, SENTRY_DSN
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
-from src.schemas.users import CreateUserSchema, UserLoginSchema
 from src.models.users import User
 from src.services import auth
-from src.services.users import create_user, get_user
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
@@ -99,8 +97,20 @@ def login(
     except HTTPException as err:
         return err
 
+
+def get_current_user(request: Request, db: Session = Depends(get_db)):
+    access_token = request.cookies.get("access_token")
+    if access_token:
+        user = db.query(User).filter(User.access_token == access_token).first()
+        if user:
+            return user
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(user: User = Depends(get_current_user), file: UploadFile = File(...)):
+    user_id = user.id
     try:
         allowed_types = ['audio/mp3', 'audio/mpeg']
         file_type, _ = mimetypes.guess_type(file.filename)
@@ -108,12 +118,10 @@ async def upload_file(file: UploadFile = File(...)):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
             )
-
-        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME,  file.filename)
-
+        file_name = str(user_id) + "_" + file.filename
+        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME,  file_name)
     except HTTPException as e:
         return e
-
     except Exception as e:
         print("Error:", str(e))
         raise HTTPException(
@@ -122,4 +130,4 @@ async def upload_file(file: UploadFile = File(...)):
     finally:
         file.file.close()
 
-    return {"filename": file.filename}
+    return {"filename": file_name}
