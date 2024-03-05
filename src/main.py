@@ -29,9 +29,9 @@ sentry_sdk.init(
 app = FastAPI()
 
 # sentry trigger error test, comment when not needed
-@app.get("/sentry-debug")
-async def trigger_error():
-    division_by_zero = 1 / 0
+# @app.get("/sentry-debug")
+# async def trigger_error():
+#     division_by_zero = 1 / 0
 
 # CORS
 origins = [
