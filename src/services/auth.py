@@ -6,10 +6,10 @@ from jose import jwt
 from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
 
 from starlette.status import (
-    HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
+    HTTP_422_UNPROCESSABLE_ENTITY,
 )
 from src.models.users import User
 from src.schemas.auth import LoginSchema, RegisterSchema
@@ -25,12 +25,13 @@ def register(session: Session, payload: RegisterSchema):
         or (payload.hashed_password) == 0
     ):
         raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
             detail="All required fields must be filled!",
         )
     try:
-        user = get_user(session=session, email=payload.email)
+        user = get_user(session=session, email=payload.email.lower())
     except Exception:
+        payload.email = payload.email.lower()
         payload.hashed_password = hash_password(payload.hashed_password)
         return create_user(session=session, user=payload)
     if user:
