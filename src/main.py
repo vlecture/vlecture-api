@@ -11,7 +11,6 @@ from fastapi import (
     Body,
 )
 from fastapi import FastAPI, File, UploadFile, status, Response, HTTPException, Depends, Body
-from fastapi import FastAPI, status, HTTPException, Response, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
