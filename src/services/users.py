@@ -14,3 +14,10 @@ def create_user(session: Session, user: RegisterSchema):
 
 def get_user(session: Session, email: str):
     return session.query(User).filter(User.email == email).one()
+
+
+def update_tokens(session: Session, user, access_token: str, refresh_token: str):
+    user.access_token = access_token
+    user.refresh_token = refresh_token
+    user.is_active = True
+    session.commit()
