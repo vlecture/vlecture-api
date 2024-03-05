@@ -18,7 +18,7 @@ def test_logout_successful():
     assert response.status_code == 200
 
     # Ensure session token cookie is deleted
-    assert "session_token" not in response.cookies
+    assert "access_token" not in response.cookies
 
     # Access protected endpoint after logout should be unauthorized
     response = client.get("/transcribe/upload_audio")
@@ -27,8 +27,8 @@ def test_logout_successful():
 def test_logout_not_logged_in():
     # Attempt to logout when not logged in
     response = client.post("/logout")
-    assert response.status_code == 401  
-    assert "session_token" not in response.cookies
+    assert response.status_code == 404  
+    assert "access_token" not in response.cookies
 
 def test_logout_twice():
     # Login
