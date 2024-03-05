@@ -1,13 +1,29 @@
 import mimetypes
+from random import randint
 import boto3
-from fastapi import FastAPI, File, Request, UploadFile, status, Response, HTTPException, Depends, Body
+from fastapi import (
+    FastAPI,
+    File,
+    Request,
+    UploadFile,
+    status,
+    Response,
+    HTTPException,
+    Depends,
+    Body,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
 import sentry_sdk
 
-from src.utils.settings import AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY, SENTRY_DSN
+from src.utils.settings import (
+    AWS_ACCESS_KEY_ID,
+    AWS_BUCKET_NAME,
+    AWS_SECRET_ACCESS_KEY,
+    SENTRY_DSN,
+)
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
 from src.models.users import User
@@ -50,7 +66,10 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 s3_client = boto3.client(
-    "s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+)
 
 
 class Tags(Enum):
@@ -73,10 +92,7 @@ def hi():
 @app.post("/register", tags=[Tags.auth])
 def register(payload: RegisterSchema = Body(), session: Session = Depends(get_db)):
     """Processes request to register user account."""
-    try:
-        return auth.register(session, payload=payload)
-    except HTTPException as err:
-        return err
+    return auth.register(session, payload=payload)
 
 
 @app.post("/login", tags=[Tags.auth])
@@ -92,10 +108,7 @@ def login(
     - email,
     - password
     """
-    try:
-        return auth.login(response, session, payload)
-    except HTTPException as err:
-        return err
+    return auth.login(response, session, payload)
 
 
 def get_current_user(request: Request, session: Session = Depends(get_db)):
@@ -119,7 +132,8 @@ async def upload_file(user: User = Depends(get_current_user), file: UploadFile =
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
             )
-        file_name = str(user_id) + "_" + file.filename
+
+        file_name = str(user_id) + "_" + str(sha()) + "_" + file.filename
         s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME,  file_name)
     except HTTPException as e:
         return e
@@ -132,3 +146,14 @@ async def upload_file(user: User = Depends(get_current_user), file: UploadFile =
         file.file.close()
 
     return {"filename": file_name}
+
+
+def sha():
+    sha = ""
+    for _ in range(6):
+        x = randint(1, 2)
+        if x == 1:
+            sha += str(randint(1, 10))
+        else:
+            sha += str(chr(randint(97, 122)))
+    return sha

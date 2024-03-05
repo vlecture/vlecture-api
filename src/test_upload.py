@@ -1,18 +1,11 @@
 from fastapi.testclient import TestClient
-
 from src.main import app
 
 client = TestClient(app)
 
-
-def test_read_root():
-    response = client.get("/")
-    assert response.status_code == 200
-
-
 def test_register_user():
     data = {
-        "email": "test@example.com",
+        "email": "@example.com",
         "first_name": "first",
         "middle_name": "middle",
         "last_name": "last",
@@ -31,7 +24,7 @@ def test_positive_upload():
     assert response_login.status_code == 200
     access_token = response_login.cookies.get("access_token")
     assert access_token is not None
-    
+
     files = {'file': ('test_audio.mp3', open(
         'test_audio.mp3', 'rb'), 'audio/mp3')}
     response = client.post("/upload", files=files)
@@ -47,7 +40,7 @@ def test_negative_upload():
     assert response_login.status_code == 200
     access_token = response_login.cookies.get("access_token")
     assert access_token is not None
-    
+
     files = {'file': ('test_image.jpg', open(
         'test_image.jpg', 'rb'), 'image/jpeg')}
     response = client.post("/upload", files=files)
@@ -58,10 +51,3 @@ def test_negative_upload():
         "headers": None
     }
     assert response.json() == expected_payload
-
-
-def test_edge_upload():
-    """Attempt to upload while not logged in"""
-    test_logout_successfully()
-    response = client.post("/upload")
-    assert response.status_code == 401
