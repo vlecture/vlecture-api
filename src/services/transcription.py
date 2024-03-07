@@ -12,7 +12,7 @@ from src.utils.aws.transcribe import AWSTranscribeClient
 
 
 class TranscriptionService:
-   POLL_INTERVAL_SEC = 5
+   POLL_INTERVAL_SEC = 5 # 5sec  x 3%/sec
 
    def generate_job_name(self) -> str:
      return str(uuid.uuid4())
@@ -35,10 +35,10 @@ class TranscriptionService:
           
           if job_status == "COMPLETED":
             is_done = True
-            print(
-              f"Download the transcript from\n"
-              f"\t{job_result['TranscriptionJob']['Transcript']['TranscriptFileUri']}."
-            )
+            # print(
+            #   f"Download the transcript from\n"
+            #   f"\t{job_result['TranscriptionJob']['Transcript']['TranscriptFileUri']}."
+            # )
           break
         else:
           print(f"Waiting for Transcription Job: {job_name}. Current status is {job_status}.")

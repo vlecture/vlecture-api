@@ -80,11 +80,19 @@ jobs:
           debug: true
           envs: CONFIG_ENV,AWS_SECRET_ACCESS_KEY,AWS_ACCESS_KEY_ID,ECR_REGISTRY,ECR_REPOSITORY
           script: |
+            mkdir -pv ./app
+            cd ./app
+            echo $CONFIG_ENV | tr ' ' '\n' > .env
+
             sudo apt-get update
             sudo aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+
             sudo docker stop ${{ env.CONTAINER_IMAGE_NAME }} || true
-            sudo docker rm ${{ env.CONTAINER_IMAGE_NAME }} || true
+            sudo docker rm -f ${{ env.CONTAINER_IMAGE_NAME }} || true
+            
+            sudo docker rmi -f ${{ env.ECR_REGISTRY }}/${{ env.REGISTRY_ALIAS }}/${{ env.ECR_REPOSITORY }}:latest || true
             sudo docker pull "${{ env.ECR_REGISTRY }}/${{ env.REGISTRY_ALIAS }}/${{ env.ECR_REPOSITORY }}:latest"
+
             sudo docker run -d --name ${{ env.CONTAINER_IMAGE_NAME }} \
               --restart always \
               -v "$(pwd)/.env:/app/${{ env.CONTAINER_IMAGE_NAME }}/.env:ro" \
