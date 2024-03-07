@@ -34,18 +34,19 @@ jobs:
           role-session-name: GithubConfigAWSCreds
           role-skip-session-tagging: true
       
-      - name: Login to AWS ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-        with:
-          mask-password: 'true'
-          registry-type: public
+      # - name: Login to AWS ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
+      #   with:
+      #     mask-password: 'true'
+      #     registry-type: public
       
       - name: Build, tag, and push image to AWS ECR
         env:
           ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
           ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         run: |
+          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
           docker tag "$ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
@@ -74,7 +75,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATEKEY }}
           port: ${{ secrets.SSH_PORT }}
-          debug: true
+          debug: false
           envs: CONFIG_ENV,AWS_SECRET_ACCESS_KEY,AWS_ACCESS_KEY_ID,ECR_REGISTRY,ECR_REPOSITORY
           script: |
             sudo apt-get update
