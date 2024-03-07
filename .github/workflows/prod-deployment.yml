@@ -17,6 +17,13 @@ jobs:
     permissions:
       id-token: write # This is required for requesting the JWT
       contents: read # This is required for actions/checkout@v2
+
+    env:
+      CONFIG_ENV: ${{ secrets.CONFIG_ENV }}
+      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+      CONTAINER_IMAGE_NAME: vlecture-api-dev
+      AWS_REGION: us-west-2
+      IMAGE_TAG: ${{ github.sha }}
     
     steps:
       - name: Checkout Sources
@@ -43,7 +50,7 @@ jobs:
       
       - name: Build, tag, and push image to AWS ECR
         env:
-          ECR_REGISTRY: ${{ env.PUB_REGISTRY }}
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
           ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
