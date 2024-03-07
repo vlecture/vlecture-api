@@ -1,6 +1,6 @@
 
 # Select base image - Python 3.10
-FROM python:3.10-slim
+FROM python:3.10-slim AS builder
 
 # Set working directory to `app`
 WORKDIR /app
@@ -23,4 +23,5 @@ COPY . .
 EXPOSE 8080
 
 # Run FastAPI using uvicorn web server (src/main.py => app = FastAPI())
-CMD uvicorn src.main:app --host 0.0.0.0 --port $PORT
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
+

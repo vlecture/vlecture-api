@@ -19,7 +19,7 @@ class GenericResponseModel(BaseModel):
   status_code: Optional[Union[http.HTTPStatus, int]] = None
   error: Optional[str]
   message: Optional[str]
-  data: Any
+  data: Optional[Any]
 
 class DBBaseModel(BaseModel):
   """

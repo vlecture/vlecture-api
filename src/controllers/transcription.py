@@ -36,7 +36,7 @@ async def transcribe_audio(s3_filename: str, language_code = "id-ID"):
   file_uri = service.generate_file_uri(bucket_name=AWS_BUCKET_NAME, filename=filename, extension=file_format)
 
   try:
-    response = service.transcribe_file(
+    response = await service.transcribe_file(
       transcribe_client=transcribe_client,
       job_name=generated_job_name,
       file_uri=file_uri,
@@ -47,15 +47,20 @@ async def transcribe_audio(s3_filename: str, language_code = "id-ID"):
     return GenericResponseModel(
       status_code=http.HTTPStatus.CREATED,
       message="Successfully created audio transcription",
-      data=response
+      error="",
+      data=response,
     )
   except TimeoutError:
     return GenericResponseModel(
       status_code=http.HTTPStatus.REQUEST_TIMEOUT,
+      message="Error",
       error="Timeout while processing transcription job.",
+      data={},
     )
   except ClientError:
     return GenericResponseModel(
       status_code=http.HTTPStatus.BAD_REQUEST,
+      message="Error",
       error="Audio Transcription job failed.",
+      data={},
     )
