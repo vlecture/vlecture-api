@@ -75,7 +75,8 @@ jobs:
           DEV_ECR_REGISTRY: ${{ env.PUB_REGISTRY }}
           DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         with:
-          host: ${{ secrets.DEV_SSH_HOST }}
+          # host: ${{ secrets.DEV_SSH_HOST }}
+          host: ${{ secrets.DEV_BACKUP_SSH_HOST }}
           username: ${{ secrets.DEV_SSH_USER }}
           key: ${{ secrets.DEV_SSH_PRIVATEKEY }}
           port: ${{ secrets.DEV_SSH_PORT }}
