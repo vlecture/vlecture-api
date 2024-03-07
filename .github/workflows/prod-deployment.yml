@@ -3,13 +3,6 @@ name: Prod Deployment
 on:
   workflow_dispatch:
 
-env:
-  CONFIG_ENV: ${{ secrets.CONFIG_ENV }}
-  CONTAINER_IMAGE_NAME: vlecture-api
-  REGISTRY: ${{ secrets.REGISTRY }}
-  REGISTRY_IMAGE: ${{ secrets.REGISTRY_IMAGE }}
-  REGISTRY_ACCESS_TOKEN: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
-
 jobs:
   Prod-Deployment:
     name: Production Deployment
@@ -21,7 +14,7 @@ jobs:
     env:
       CONFIG_ENV: ${{ secrets.CONFIG_ENV }}
       ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-      CONTAINER_IMAGE_NAME: vlecture-api-dev
+      CONTAINER_IMAGE_NAME: vlecture-api
       AWS_REGION: us-west-2
       IMAGE_TAG: ${{ github.sha }}
     
