@@ -40,13 +40,15 @@ jobs:
       #   with:
       #     mask-password: 'true'
       #     registry-type: public
+
+      # # aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
       
       - name: Build, tag, and push image to AWS ECR
         env:
           ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
           ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         run: |
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+          sudo aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
           docker tag "$ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
