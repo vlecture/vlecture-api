@@ -42,16 +42,17 @@ jobs:
       # sudo aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
       - name: Build, tag, and push image to AWS ECR
         env:
-          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REGISTRY_ALIAS: x6v6j9u1
           ECR_REPOSITORY: vlecture-api
           IMAGE_TAG: ${{ github.sha }}
         run: |
           
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
-          docker tag "$ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+          docker build -t $ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
+          docker tag "$ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:latest"
 
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}
+          docker push $ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:latest
         
       # us-west-2 for running container on VM
       - name: Configure AWS Credentials 2
