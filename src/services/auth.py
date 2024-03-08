@@ -35,7 +35,7 @@ def register(session: Session, payload: RegisterSchema):
             detail="All required fields must be filled!",
         )
     try:
-        user = get_user(session=session, email=payload.email.lower())
+        user = get_user(session=session, field="email", value=payload.email.lower())
     except Exception:
         payload.email = payload.email.lower()
         payload.hashed_password = hash_password(payload.hashed_password)
@@ -49,7 +49,7 @@ def register(session: Session, payload: RegisterSchema):
 def login(response: Response, session: Session, payload: LoginSchema):
     user = None
     try:
-        user = get_user(session=session, email=payload.email)
+        user = get_user(session=session, field="email", value=payload.email.lower())
     except Exception:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found!")
     is_validated: bool = validate_password(user, payload.password)
@@ -74,7 +74,7 @@ def login(response: Response, session: Session, payload: LoginSchema):
     }
 
 
-def renew_access_token(request: Request, session: Session):
+def renew_access_token(request: Request, response: Response, session: Session):
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token is None:
         raise HTTPException(
@@ -85,14 +85,19 @@ def renew_access_token(request: Request, session: Session):
         decoded_refresh_token = jwt.decode(refresh_token, REFRESH_TOKEN_SECRET)
         new_access_token = jwt.encode(
             {
-                "first_name": decoded_refresh_token.first_name,
-                "email": decoded_refresh_token.email,
+                "first_name": decoded_refresh_token.get("first_name"),
+                "email": decoded_refresh_token.get("email"),
                 "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
             },
             ACCESS_TOKEN_SECRET,
         )
         try:
-            user = get_user(session=session, field=refresh_token)
+            user = get_user(session=session, field="refresh_token", value=refresh_token)
+
+            update_access_token(session, user, new_access_token)
+            response.set_cookie(
+                key="access_token", value=new_access_token, httponly=True
+            )
         except Exception:
             raise HTTPException(
                 status_code=HTTP_404_NOT_FOUND, detail="User not found!"
