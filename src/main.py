@@ -1,8 +1,12 @@
 import mimetypes
+from random import randint
+import secrets
+import string
 import boto3
 from fastapi import (
     FastAPI,
     File,
+    Request,
     UploadFile,
     status,
     Response,
@@ -23,8 +27,10 @@ from src.utils.settings import (
     AWS_SECRET_ACCESS_KEY,
     SENTRY_DSN,
 )
+from src.controllers import transcription
 from src.utils.db import Base, engine, get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
+from src.models.users import User
 from src.services import auth
 from src.schemas.auth import LogoutSchema
 from src.models.users import User
@@ -42,6 +48,7 @@ sentry_sdk.init(
 )
 
 app = FastAPI()
+app.include_router(transcription.transcription_router)
 
 # sentry trigger error test, comment when not needed
 # @app.get("/sentry-debug")
@@ -112,44 +119,66 @@ def login(
     return auth.login(response, session, payload)
 
 
+def get_current_user(request: Request, session: Session = Depends(get_db)):
+    access_token = request.cookies.get("access_token")
+    if access_token:
+        user = session.query(User).filter(
+            User.access_token == access_token).first()
+        if user:
+            return user
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(user: User = Depends(get_current_user), file: UploadFile = File(...)):
+    user_id = user.id
     try:
-        allowed_types = ["audio/mp3", "audio/mpeg"]
+        allowed_types = ['audio/mp3', 'audio/mpeg']
         file_type, _ = mimetypes.guess_type(file.filename)
         if file_type not in allowed_types:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only MP3 or M4A files are allowed",
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
             )
 
-        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file.filename)
-
+        file_name = str(user_id) + "_" + str(sha()) + "_" + file.filename
+        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME,  file_name)
     except HTTPException as e:
         return e
-
     except Exception as e:
         print("Error:", str(e))
-        raise HTTPException(status_code=500, detail="Error on uploading the file")
+        raise HTTPException(
+            status_code=500, detail='Error on uploading the file')
 
     finally:
         file.file.close()
 
     return {"filename": file.filename}
 
+def sha():
+    sha = ""
+    for _ in range(6):
+        x = secrets.randbelow(2)
+        if x == 0:
+            sha += str(secrets.randbelow(10))
+        else:
+            sha += secrets.choice(string.ascii_lowercase)
+
+    return sha
+
 @app.post("/logout", tags=[Tags.auth])
 def logout(response: Response, payload: LogoutSchema = Body(), session: Session = Depends(get_db)):
     user = None
     try:
-        user = get_user_by_access_token(session=session, email=payload.access_token)
-        # is_active: bool = user.is_active()
-        # if not is_active:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_401_UNAUTHORIZED,
-        #         detail="User is already inactive.",
-        #     )
+        user = get_user_by_access_token(session=session, access_token=payload.access_token)
+        is_active: bool = user.get_is_active()
+        if not is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User is not logged in!"
+            )
         
-        user.clear_token()
+        user.clear_token(session)
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
 
@@ -161,14 +190,3 @@ def logout(response: Response, payload: LogoutSchema = Body(), session: Session 
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User is not logged in!"
             )
-        
-@app.post("/check", tags=[Tags.auth])      
-def check_logged_in_user_by_token(payload: LogoutSchema, session: Session = Depends(get_db)):
-    user = None
-    try:
-        user = get_user_by_access_token(session=session, email=payload.access_token)
-        return {"message": "User is still logged in"}
-    
-    except Exception:
-        if user is None:
-            return {"message": "User has logged out"}

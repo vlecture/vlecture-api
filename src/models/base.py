@@ -1,12 +1,12 @@
 from datetime import datetime
 
-import uuid as uuid
+import uuid 
+from uuid import UUID
 from pytz import timezone
 from typing import Any
 
 from sqlalchemy import Column, TIMESTAMP, Boolean, Integer, create_engine
 from sqlalchemy.orm import Session
-from sqlalchemy.dialects.postgresql import UUID
 
 from src.utils.db import get_db
 

@@ -9,6 +9,7 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
+from sqlalchemy.orm import Session
 
 
 class User(Base):
@@ -39,9 +40,13 @@ class User(Base):
     def update_access_token(self, token):
         self.access_token = token
     
-    def clear_token(self):
+    def clear_token(self, session: Session):
         """Deactivate user as well as clear access token and refresh token upon logout"""
         self.is_active = False
         self.access_token = None
         self.refresh_token = None
+        session.commit()
         return {"message": "Token cleared from user."}
+
+    def get_is_active(self):
+        return self.is_active
