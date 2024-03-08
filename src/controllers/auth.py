@@ -1,5 +1,6 @@
 from fastapi import (
     APIRouter,
+    Request,
     Response,
     Depends,
     Body,
@@ -39,3 +40,12 @@ def login(
     - password
     """
     return auth.login(response, session, payload)
+
+
+@auth_router.post("/renew", tags=[AuthRouterTags.auth])
+def renew(
+    request: Request,
+    response: Response,
+    session: Session = Depends(get_db),
+):
+    return auth.renew_access_token(request, response, session)
