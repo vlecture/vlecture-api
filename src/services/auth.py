@@ -98,6 +98,7 @@ def renew_access_token(request: Request, response: Response, session: Session):
             response.set_cookie(
                 key="access_token", value=new_access_token, httponly=True
             )
+            return new_access_token
         except Exception:
             raise HTTPException(
                 status_code=HTTP_404_NOT_FOUND, detail="User not found!"
