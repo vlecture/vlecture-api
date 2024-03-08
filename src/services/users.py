@@ -16,8 +16,17 @@ def get_user(session: Session, email: str):
     return session.query(User).filter(User.email == email).one()
 
 
-def update_tokens(session: Session, user, access_token: str, refresh_token: str):
-    user.access_token = access_token
+def update_refresh_token(session: Session, user, refresh_token: str):
     user.refresh_token = refresh_token
     user.is_active = True
+    session.commit()
+
+
+def update_access_token(session: Session, user, access_token: str):
+    user.access_token = access_token
+    session.commit()
+
+
+def update_active_status(session: Session, user):
+    user.is_active = not user.is_active
     session.commit()

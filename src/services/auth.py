@@ -13,7 +13,13 @@ from starlette.status import (
 )
 from src.models.users import User
 from src.schemas.auth import LoginSchema, RegisterSchema
-from src.services.users import create_user, get_user, update_tokens
+from src.services.users import (
+    create_user,
+    get_user,
+    update_access_token,
+    update_active_status,
+    update_refresh_token,
+)
 
 
 def register(session: Session, payload: RegisterSchema):
@@ -55,7 +61,9 @@ def login(response: Response, session: Session, payload: LoginSchema):
     refresh_token = generate_refresh_token(user)
     access_token = generate_access_token(user)
 
-    update_tokens(session, user, access_token, refresh_token)
+    update_access_token(session, user, access_token)
+    update_refresh_token(session, user, refresh_token)
+    update_active_status(session, user)
 
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
@@ -66,7 +74,7 @@ def login(response: Response, session: Session, payload: LoginSchema):
     }
 
 
-def renew_access_token(request: Request):
+def renew_access_token(request: Request, session: Session):
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token is None:
         raise HTTPException(
@@ -83,6 +91,12 @@ def renew_access_token(request: Request):
             },
             ACCESS_TOKEN_SECRET,
         )
+        try:
+            user = get_user(session=session, field=refresh_token)
+        except Exception:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND, detail="User not found!"
+            )
     except Exception:
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
