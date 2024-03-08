@@ -15,7 +15,7 @@ RUN apt-get update \
 RUN pip install poetry 
 
 # Copy the pyproject.toml and poetry.lock filess into working directory
-COPY ./pyproject.toml ./poetry.lock* /tmp/
+COPY ./pyproject.toml ./poetry.lock* /app/
 
 # Generate the requirements.txt file.
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
