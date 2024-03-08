@@ -1,6 +1,6 @@
 import bcrypt
 from datetime import datetime, timedelta, timezone
-from fastapi import HTTPException, Response
+from fastapi import HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from jose import jwt
 from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
@@ -64,6 +64,30 @@ def login(response: Response, session: Session, payload: LoginSchema):
         "access_token": access_token,
         "refresh_token": refresh_token,
     }
+
+
+def renew_access_token(request: Request):
+    refresh_token = request.cookies.get("refresh_token")
+    if refresh_token is None:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized. Refresh token not provided!",
+        )
+    try:
+        decoded_refresh_token = jwt.decode(refresh_token, REFRESH_TOKEN_SECRET)
+        new_access_token = jwt.encode(
+            {
+                "first_name": decoded_refresh_token.first_name,
+                "email": decoded_refresh_token.email,
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+            },
+            ACCESS_TOKEN_SECRET,
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized. Invalid refresh token!",
+        )
 
 
 # Helper functions
