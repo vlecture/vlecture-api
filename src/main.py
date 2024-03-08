@@ -1,5 +1,4 @@
 import mimetypes
-from random import randint
 import secrets
 import string
 import boto3
@@ -9,10 +8,8 @@ from fastapi import (
     Request,
     UploadFile,
     status,
-    Response,
     HTTPException,
     Depends,
-    Body,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
@@ -26,11 +23,9 @@ from src.utils.settings import (
     AWS_SECRET_ACCESS_KEY,
     SENTRY_DSN,
 )
-from src.controllers import transcription
+from src.controllers import transcription, auth
 from src.utils.db import Base, engine, get_db
-from src.schemas.auth import RegisterSchema, LoginSchema
 from src.models.users import User
-from src.services import auth
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
@@ -45,6 +40,7 @@ sentry_sdk.init(
 
 app = FastAPI()
 app.include_router(transcription.transcription_router)
+app.include_router(auth.auth_router)
 
 # sentry trigger error test, comment when not needed
 # @app.get("/sentry-debug")
@@ -90,61 +86,38 @@ def hi():
     return {"message": "Bonjour!"}
 
 
-# Authentication Endpoints
-
-
-@app.post("/register", tags=[Tags.auth])
-def register(payload: RegisterSchema = Body(), session: Session = Depends(get_db)):
-    """Processes request to register user account."""
-    return auth.register(session, payload=payload)
-
-
-@app.post("/login", tags=[Tags.auth])
-def login(
-    response: Response,
-    payload: LoginSchema = Body(),
-    session: Session = Depends(get_db),
-):
-    """Processes user's authentication and returns a token
-    on successful authentication.
-
-    request body:
-    - email,
-    - password
-    """
-    return auth.login(response, session, payload)
-
-
 def get_current_user(request: Request, session: Session = Depends(get_db)):
     access_token = request.cookies.get("access_token")
     if access_token:
-        user = session.query(User).filter(
-            User.access_token == access_token).first()
+        user = session.query(User).filter(User.access_token == access_token).first()
         if user:
             return user
     raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+    )
 
 
 @app.post("/upload")
-async def upload_file(user: User = Depends(get_current_user), file: UploadFile = File(...)):
+async def upload_file(
+    user: User = Depends(get_current_user), file: UploadFile = File(...)
+):
     user_id = user.id
     try:
-        allowed_types = ['audio/mp3', 'audio/mpeg']
+        allowed_types = ["audio/mp3", "audio/mpeg"]
         file_type, _ = mimetypes.guess_type(file.filename)
         if file_type not in allowed_types:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Only MP3 or M4A files are allowed"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only MP3 or M4A files are allowed",
             )
 
         file_name = str(user_id) + "_" + str(sha()) + "_" + file.filename
-        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME,  file_name)
+        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file_name)
     except HTTPException as e:
         return e
     except Exception as e:
         print("Error:", str(e))
-        raise HTTPException(
-            status_code=500, detail='Error on uploading the file')
+        raise HTTPException(status_code=500, detail="Error on uploading the file")
 
     finally:
         file.file.close()
