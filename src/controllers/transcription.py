@@ -64,3 +64,42 @@ async def transcribe_audio(s3_filename: str, language_code = "id-ID"):
       error="Audio Transcription job failed.",
       data={},
     )
+
+@transcription_router.get(
+  "/{transcription_job_name}",
+  status_code=http.HTTPStatus.OK,
+  response_model=GenericResponseModel
+)
+async def poll_transcription_job(transcription_job_name: str):
+  transcribe_client = AWSTranscribeClient().get_client()
+
+  service = TranscriptionService()
+
+  try:
+    response = await service.poll_transcription_job(
+      transcribe_client=transcribe_client, 
+      job_name=transcription_job_name
+    )
+
+    return GenericResponseModel(
+      status_code=http.HTTPStatus.OK,
+      message="Successfully retrieved transcription status",
+      error="",
+      data=response,
+    )
+  except TimeoutError:
+    return GenericResponseModel(
+      status_code=http.HTTPStatus.REQUEST_TIMEOUT,
+      message="Error",
+      error="Timeout while processing transcription job.",
+      data={},
+    )
+  except ClientError:
+    return GenericResponseModel(
+      status_code=http.HTTPStatus.BAD_REQUEST,
+      message="Error",
+      error="Audio Transcription job failed.",
+      data={},
+    )
+
+  
