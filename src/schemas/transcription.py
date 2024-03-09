@@ -14,6 +14,14 @@ from src.schemas.base import DBBaseModel
 
 TRANSCRIPTION_DEFAULT_TITLE = "My Transcription"
 
+class TranscribeAudioRequestSchema(BaseModel):
+   s3_filename: str
+   job_name: str
+   language_code: str
+
+class PollTranscriptionRequestSchema(BaseModel):
+   job_name: str
+
 class TranscriptionResponseSchema(BaseModel):
   """
   Return type for Transcription object
