@@ -22,7 +22,7 @@ def override_get_db():
         db.close()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def test_db():
     Base.metadata.create_all(bind=engine)
     yield
