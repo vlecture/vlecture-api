@@ -51,7 +51,7 @@ jobs:
           DEV_ECR_REGISTRY: ${{ env.PUB_REGISTRY }}
           DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         run: |
-          docker build --platform linux/amd64 -t $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
+          docker build -t $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
           docker tag "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}" "$DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:latest"
 
           docker push $DEV_ECR_REGISTRY/$DEV_ECR_REPOSITORY:${{ env.IMAGE_TAG }}
@@ -98,7 +98,7 @@ jobs:
             sudo docker rmi -f ${{ env.DEV_ECR_REGISTRY }}/${{ env.CONTAINER_IMAGE_NAME }}:latest || true
             sudo docker pull "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
             
-            sudo docker run --platform linux/amd64 -d --name ${{ env.CONTAINER_IMAGE_NAME }} \
+            sudo docker run -d --name ${{ env.CONTAINER_IMAGE_NAME }} \
               --restart always \
               -p "8080:8080" \
               "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
