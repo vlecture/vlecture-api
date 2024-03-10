@@ -14,9 +14,6 @@ from src.utils.aws.transcribe import AWSTranscribeClient
 class TranscriptionService:
    POLL_INTERVAL_SEC = 5 # 5sec  x 3%/sec
 
-   def generate_job_name(self) -> str:
-     return str(uuid.uuid4())
-
    def generate_file_uri(self, bucket_name: str, filename: str, extension: str):
     # NOTE - Can add subbuckets in the future
     return f"s3://{bucket_name}/{filename}.{extension}"

@@ -1,11 +1,12 @@
 import os
 from dotenv import load_dotenv
 
-IS_DEV = True
+ENV_TYPE = os.getenv("ENV")
 
-if IS_DEV:
+if ENV_TYPE == "DEV":
     load_dotenv(".env.dev")
 else:
+    # Prod
     load_dotenv(".env")
 
 host = os.getenv("POSTGRES_HOST")
