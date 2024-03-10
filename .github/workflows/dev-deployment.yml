@@ -75,18 +75,16 @@ jobs:
           DEV_ECR_REGISTRY: ${{ env.PUB_REGISTRY }}
           DEV_ECR_REPOSITORY: ${{ env.CONTAINER_IMAGE_NAME}}
         with:
-          # host: ${{ secrets.DEV_SSH_HOST }}
-          host: ${{ secrets.DEV_BACKUP_SSH_HOST }}
+          host: ${{ secrets.DEV_SSH_HOST }}
           username: ${{ secrets.DEV_SSH_USER }}
-          # key: ${{ secrets.DEV_SSH_PRIVATEKEY }}
-          key: ${{ secrets.DEV_BACKUP_SSH_PRIVATEKEY }}
+          key: ${{ secrets.DEV_SSH_PRIVATEKEY }}
           port: ${{ secrets.DEV_SSH_PORT }}
           debug: true
           envs: DEV_CONFIG_ENV,AWS_SECRET_ACCESS_KEY,AWS_ACCESS_KEY_ID,DEV_ECR_REGISTRY,DEV_ECR_REPOSITORY
           script: |
             mkdir -pv ./app
             cd ./app
-            echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env
+            echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env.dev
 
             
             sudo apt-get update
@@ -100,6 +98,7 @@ jobs:
             
             sudo docker run -d --name ${{ env.CONTAINER_IMAGE_NAME }} \
               --restart always \
+              -v "$(pwd)/.env.dev:/app/.env.dev:ro" \
               -p "8080:8080" \
               "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
 
