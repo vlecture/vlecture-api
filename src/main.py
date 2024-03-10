@@ -49,6 +49,7 @@ app.include_router(auth.auth_router)
 
 # CORS
 origins = [
+    "http://localhost:3000",
     "http://localhost",
     "http://localhost:8080",
     "api.vlecture.com",
