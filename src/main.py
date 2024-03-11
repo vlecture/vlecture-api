@@ -24,8 +24,8 @@ sentry_sdk.init(
 )
 
 app = FastAPI()
-app.include_router(transcription.transcription_router)
 app.include_router(auth.auth_router)
+app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
 
 # sentry trigger error test, comment when not needed
