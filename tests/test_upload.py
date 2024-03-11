@@ -1,46 +1,59 @@
-from tests.utils.test_db import client
+from tests.utils.test_db import client, test_db
 
-def test_register_user():
+
+def test_register_user(test_db):
+
     data = {
-        "email": "@example.com",
-        "first_name": "first",
-        "middle_name": "middle",
-        "last_name": "last",
+        "email": "upload@example.com",
+        "first_name": "Upload",
+        "middle_name": "Audio",
+        "last_name": "File",
         "password": "StrongPassword123"
     }
 
-    response = client.post("/register", json=data)
+    response = client.post("v1/auth/register", json=data)
     assert response.status_code == 200
+    assert response.json()["email"] == "upload@example.com"
 
 
-def test_positive_upload():
-    """Attempt to upload an audio file"""
-    test_register_user()
+def get_access_token(test_db):
+    """Helper function to get the access token by logging in"""
     response_login = client.post(
-        "/login", json={"email": "test@example.com", "password": "StrongPassword123"})
+        "v1/auth/login", json={"email": "upload@example.com", "password": "StrongPassword123"})
     assert response_login.status_code == 200
     access_token = response_login.cookies.get("access_token")
     assert access_token is not None
+    return access_token
+
+
+def test_positive_upload(test_db):
+    """Attempt to upload an audio file"""
+
+    access_token = get_access_token(test_db)
+
+    headers = {"Authorization": f"Bearer {access_token}"}
 
     files = {'file': ('test_audio.mp3', open(
-        'test_audio.mp3', 'rb'), 'audio/mp3')}
-    response = client.post("/upload", files=files)
+        'tests/test_audio.mp3', 'rb'), 'audio/mp3')}
+
+    response = client.post("v1/upload", files=files, headers=headers)
+
+    # Assertions
     assert response.status_code == 200
     assert 'filename' in response.json()
 
 
-def test_negative_upload():
+def test_negative_upload(test_db):
     """Attempt to upload a non audio file"""
-    test_register_user()
-    response_login = client.post(
-        "/login", json={"email": "test@example.com", "password": "StrongPassword123"})
-    assert response_login.status_code == 200
-    access_token = response_login.cookies.get("access_token")
-    assert access_token is not None
+    access_token = get_access_token(test_db)
+
+    headers = {"Authorization": f"Bearer {access_token}"}
 
     files = {'file': ('test_image.jpg', open(
-        'test_image.jpg', 'rb'), 'image/jpeg')}
-    response = client.post("/upload", files=files)
+        'tests/test_image.jpg', 'rb'), 'audio/jpeg')}
+
+    response = client.post("v1/upload", files=files, headers=headers)
+
     assert response.status_code == 200
     expected_payload = {
         "status_code": 400,
