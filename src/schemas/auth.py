@@ -1,4 +1,5 @@
 from src.schemas.users import UserBaseSchema
+from typing import List
 from pydantic import BaseModel, Field, EmailStr
 
 
@@ -9,3 +10,9 @@ class RegisterSchema(UserBaseSchema):
 class LoginSchema(BaseModel):
     email: EmailStr = Field()
     password: str
+
+class EmailSchema(BaseModel):
+    email: List[EmailStr]
+
+class UserVerifySchema(BaseModel):
+    token: str
