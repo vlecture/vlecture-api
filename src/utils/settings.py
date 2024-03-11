@@ -12,10 +12,12 @@ db_name=os.getenv("POSTGRES_DB")
 username=os.getenv("POSTGRES_USER")
 password=os.getenv("POSTGRES_PASSWORD")
 
-if None in [host, port, db_name, username, password]:
-    raise ValueError(
-        "One or more environment variables for the database configuration are not set"
-    )
+# Check if any DB env vars are None
+env_vars = ['host', 'port', 'db_name', 'username', 'password']
+values = [os.environ.get(var) for var in env_vars]
+none_values = [var for var, val in zip(env_vars, values) if val is None]
+if none_values:
+    raise ValueError("One or more environment variables for the database configuration are not set: {}".format(', '.join(none_values)))
 
 # Database url configuration
 DATABASE_URL = (
