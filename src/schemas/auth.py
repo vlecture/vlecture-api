@@ -19,3 +19,11 @@ class CheckUserExistsSchema(BaseModel):
 
 class UserVerifySchema(BaseModel):
     token: str
+
+class OTPCreateSchema(BaseModel):
+    email: EmailStr
+    token: str
+
+class OTPCheckSchema(BaseModel):
+    email: EmailStr
+    token: str
