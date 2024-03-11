@@ -84,7 +84,7 @@ jobs:
           script: |
             mkdir -pv ./app
             cd ./app
-            echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env.dev
+            echo $DEV_CONFIG_ENV | tr ' ' '\n' > .env
 
             
             sudo apt-get update
@@ -98,7 +98,7 @@ jobs:
             
             sudo docker run -d --name ${{ env.CONTAINER_IMAGE_NAME }} \
               --restart always \
-              -v "$(pwd)/.env.dev:/app/.env.dev:ro" \
+              -v "$(pwd)/.env:/app/.env:ro" \
               -p "8080:8080" \
               "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
 
