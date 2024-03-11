@@ -3,9 +3,11 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from jose import jwt
+from src.exceptions.users import InvalidFieldName
 from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
 
 from starlette.status import (
+    HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
@@ -99,10 +101,12 @@ def renew_access_token(request: Request, response: Response, session: Session):
                 key="access_token", value=new_access_token, httponly=True
             )
             return new_access_token
-        except Exception:
+        except InvalidFieldName as e:
+            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        except Exception as e:
             raise HTTPException(
                 status_code=HTTP_404_NOT_FOUND, detail="User not found!"
-            )
+            ) from e
     except Exception:
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,

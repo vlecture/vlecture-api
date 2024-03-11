@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from src.exceptions.users import InvalidFieldName
 
 from src.models.users import User
 from src.schemas.auth import RegisterSchema
@@ -24,7 +25,7 @@ def get_user(session: Session, field: str, value: str):
         "refresh_token",
     ]
     if field not in fields:
-        raise ValueError("Invalid field name")
+        raise InvalidFieldName("Invalid field name provided")
     return session.query(User).filter(getattr(User, field) == value).one()
 
 
