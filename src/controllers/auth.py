@@ -1,3 +1,4 @@
+import http
 from fastapi import (
     APIRouter,
     Response,
@@ -8,13 +9,14 @@ from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
 from src.utils.db import get_db
-from src.schemas.auth import RegisterSchema, LoginSchema
-from src.services import auth
+from src.schemas.base import GenericResponseModel
+from src.schemas.auth import RegisterSchema, LoginSchema, EmailSchema
+
+from src.services import auth, email_verification
 
 
 class AuthRouterTags(Enum):
     auth = "auth"
-
 
 auth_router = APIRouter(prefix="/v1/auth", tags=[AuthRouterTags.auth])
 
@@ -39,3 +41,17 @@ def login(
     - password
     """
     return auth.login(response, session, payload)
+
+@auth_router.post("/verify")
+async def send_verif_email(payload: EmailSchema = Body()):
+    recipients = payload.model_dump().get("email")
+    token = email_verification.generate_token()
+
+    response = await email_verification.send_verif_email(
+        recipients=recipients,
+        token=token,
+    )
+
+    print(response)
+
+    return response
