@@ -1,5 +1,9 @@
 from tests.utils.test_db import client, test_db
 
+register_url = "/v1/auth/register"
+login_url = "/v1/auth/login"
+upload_url = "v1/upload"
+
 
 def test_register_user(test_db):
 
@@ -11,7 +15,7 @@ def test_register_user(test_db):
         "password": "StrongPassword123"
     }
 
-    response = client.post("v1/auth/register", json=data)
+    response = client.post(register_url, json=data)
     assert response.status_code == 200
     assert response.json()["email"] == "upload@example.com"
 
@@ -19,7 +23,7 @@ def test_register_user(test_db):
 def get_access_token(test_db):
     """Helper function to get the access token by logging in"""
     response_login = client.post(
-        "v1/auth/login", json={"email": "upload@example.com", "password": "StrongPassword123"})
+        login_url, json={"email": "upload@example.com", "password": "StrongPassword123"})
     assert response_login.status_code == 200
     access_token = response_login.cookies.get("access_token")
     assert access_token is not None
@@ -36,7 +40,7 @@ def test_positive_upload(test_db):
     files = {'file': ('test_audio.mp3', open(
         'tests/test_audio.mp3', 'rb'), 'audio/mp3')}
 
-    response = client.post("v1/upload", files=files, headers=headers)
+    response = client.post(upload_url, files=files, headers=headers)
 
     # Assertions
     assert response.status_code == 200
@@ -52,7 +56,7 @@ def test_negative_upload(test_db):
     files = {'file': ('test_image.jpg', open(
         'tests/test_image.jpg', 'rb'), 'audio/jpeg')}
 
-    response = client.post("v1/upload", files=files, headers=headers)
+    response = client.post(upload_url, files=files, headers=headers)
 
     assert response.status_code == 200
     expected_payload = {
