@@ -48,12 +48,22 @@ def login(
     return auth.login(response, session, payload)
 
 @auth_router.post("/verify")
-async def send_verif_email(payload: EmailSchema = Body()):
-    """Create email and Token based on template, and send it to user
+async def send_verif_email(payload: EmailSchema = Body(), session: Session = Depends(get_db)):
+    """Checks if user is new, create email and Token based on template, and send it to user
 
     request body:
     - "email": list of emails to be sent to
     """
+
+    is_user_exists = email_verification.verify_user_exists(session=session, payload=payload)
+
+    if (is_user_exists):
+        return GenericResponseModel(
+            status_code=http.HTTPStatus.CONFLICT,
+            error=True,
+            message="User already exists",
+            data={}
+        )
     
     recipients = payload.model_dump().get("email")
     token = email_verification.generate_token()

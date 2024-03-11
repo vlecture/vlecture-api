@@ -1,10 +1,34 @@
 import http
 from typing import List
+from fastapi import HTTPException, Response
+
+from sqlalchemy.orm import Session
 from fastapi_mail import MessageSchema, MessageType
 
 from src.schemas.base import GenericResponseModel
-from src.schemas.auth import EmailSchema
+from src.schemas.auth import EmailSchema, CheckUserExistsSchema
 from src.utils.mail import get_mail_client
+from src.services.users import create_user, get_user, update_tokens
+
+def verify_user_exists(session: Session, payload: CheckUserExistsSchema):
+    user = None
+
+    if (len(payload.email) == 0):
+       raise HTTPException(
+          status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
+          detail="Email field must be filled!"
+       )
+
+    try:
+       user = get_user(session=session, email=payload.email.lower())
+    except Exception:
+       return False
+    
+    if user:
+       return True
+    else:
+      return False
+   
 
 def generate_token():
     token = "EXAMPLE"
