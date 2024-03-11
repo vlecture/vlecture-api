@@ -10,7 +10,12 @@ from sqlalchemy.orm import Session
 
 from src.utils.db import get_db
 from src.schemas.base import GenericResponseModel
-from src.schemas.auth import RegisterSchema, LoginSchema, EmailSchema
+from src.schemas.auth import (
+  RegisterSchema, 
+  LoginSchema, 
+  EmailSchema,
+  UserVerifySchema
+)
 
 from src.services import auth, email_verification
 
@@ -44,6 +49,12 @@ def login(
 
 @auth_router.post("/verify")
 async def send_verif_email(payload: EmailSchema = Body()):
+    """Create email and Token based on template, and send it to user
+
+    request body:
+    - "email": list of emails to be sent to
+    """
+    
     recipients = payload.model_dump().get("email")
     token = email_verification.generate_token()
 
@@ -52,6 +63,18 @@ async def send_verif_email(payload: EmailSchema = Body()):
         token=token,
     )
 
-    print(response)
-
     return response
+
+@auth_router.post("/verify/check")
+def validate_user_token(payload: UserVerifySchema = Body()):
+    """Validates a user's inputted token against the generated token
+
+    request body:
+    - "token": user-inputted token
+    """
+
+    user_input = payload.model_dump().get("token")
+
+    # response = email_verification.
+    
+    

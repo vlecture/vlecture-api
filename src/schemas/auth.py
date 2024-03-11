@@ -13,3 +13,6 @@ class LoginSchema(BaseModel):
 
 class EmailSchema(BaseModel):
     email: List[EmailStr]
+
+class UserVerifySchema(BaseModel):
+    token: str

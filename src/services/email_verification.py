@@ -72,3 +72,6 @@ async def send_verif_email(recipients: List[EmailSchema], token: str):
           message="Unknown error while sending email",
           data={},
        )
+  
+# def validate_token(user_token: str):
+   

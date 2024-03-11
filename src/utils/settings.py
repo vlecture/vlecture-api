@@ -1,19 +1,16 @@
 import os
 from dotenv import load_dotenv
 
+load_dotenv(".env")
+
 ENV_TYPE = os.getenv("ENV")
+print(f"ENV: {ENV_TYPE}")
 
-if ENV_TYPE == "DEV":
-    load_dotenv(".env.dev")
-else:
-    # Prod
-    load_dotenv(".env")
-
-host = os.getenv("POSTGRES_HOST")
-port = os.getenv("POSTGRES_PORT")
-db_name = os.getenv("POSTGRES_DB")
-username = os.getenv("POSTGRES_USER")
-password = os.getenv("POSTGRES_PASSWORD")
+host=os.getenv("POSTGRES_HOST")
+port=os.getenv("POSTGRES_PORT")
+db_name=os.getenv("POSTGRES_DB")
+username=os.getenv("POSTGRES_USER")
+password=os.getenv("POSTGRES_PASSWORD")
 
 if None in [host, port, db_name, username, password]:
     raise ValueError(
@@ -21,7 +18,15 @@ if None in [host, port, db_name, username, password]:
     )
 
 # Database url configuration
-DATABASE_URL = f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{db_name}"
+DATABASE_URL = (
+    "postgresql+psycopg2://{username}:{password}@{host}:{port}/{db_name}".format(
+        host=host,
+        port=port,
+        db_name=db_name,
+        username=username,
+        password=password,
+    )
+)
 
 REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET")
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
