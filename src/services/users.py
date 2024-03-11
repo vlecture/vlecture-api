@@ -27,12 +27,17 @@ def update_tokens(session: Session, user, access_token: str, refresh_token: str)
 
 
 def get_current_user(request: Request, session: Session = Depends(get_db)):
-    access_token = request.cookies.get("access_token")
+    access_token = request.headers.get("Authorization")
     if access_token:
+        access_token = access_token.split(" ")[1]
+        access_token = access_token.replace('"', '')
+
         user = session.query(User).filter(
             User.access_token == access_token).first()
+
         if user:
             return user
+
     raise HTTPException(
         status_code=HTTP_401_UNAUTHORIZED, detail="Not authenticated"
     )
