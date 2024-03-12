@@ -35,18 +35,22 @@ app.include_router(upload.upload_router)
 
 # CORS
 origins = [
-    "http://localhost:3000",
     "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "http://localhost:8080",
-    "api.vlecture.com",
-    "vlecture-api-production.up.railway.app",
+    "http://127.0.0.1:8080",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "api.vlecture.tech",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

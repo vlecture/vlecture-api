@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from src.utils.db import get_db
 from src.schemas.auth import RegisterSchema, LoginSchema
+from src.services import auth
 
 
 class AuthRouterTags(Enum):

@@ -1,3 +1,3 @@
 @echo off
 echo Building the project...
-uvicorn src.main:app --reload
+uvicorn src.main:app --host 127.0.0.1 --port=8000
