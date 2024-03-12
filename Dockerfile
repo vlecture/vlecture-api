@@ -13,6 +13,7 @@ RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
     && pip install psycopg2
 
+
 # Install dependencies from .txt file
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
