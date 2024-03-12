@@ -35,4 +35,7 @@ class OTP(Base):
   created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
   expires_at = Column(TIMESTAMP(timezone=True), default=time_expiry, nullable=False)
 
+  def __str__(self):
+     return f"id: {self.id}\nemail: {self.email}\ntoken: {self.token}\ncreated_at: {self.created_at}\nexpires_at: {self.expires_at}\n"
+
 

@@ -1,13 +1,14 @@
 import http
+import uuid
 import secrets
 import string
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from typing import List
 from fastapi import HTTPException, Response
 
-from sqlalchemy import delete
+from sqlalchemy import delete, insert
 from sqlalchemy.orm import Session
 from fastapi_mail import MessageSchema, MessageType
 
@@ -63,15 +64,41 @@ def purge_user_otp(session: Session, email: str):
     return None
 
 def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
+    # otp_data_dict = otp_data.model_dump()
+    
     db_otp = OTP(**otp_data.model_dump())
+    {
+       id: Null,
+       email: "adavalue@",
+       token: "ABC",
+       created_at: Null,
+       expires_at: Null
+    }
+    try:
+        # with session.begin_nested():
 
-    session.add(db_otp)
-    session.commit()
-    session.refresh(db_otp)
+            # insert_stmt = insert(OTP).values(
+            #     id=uuid.uuid4(),
+            #     email=otp_data_dict["email"],
+            #     token=otp_data_dict["token"],
+            #     created_at=datetime.now(),
+            #     expires_at=datetime.now() + timedelta(seconds=int(OTP_LIFESPAN_SEC))
+            # )
 
-    print("Added token to db.")
+            # session.execute(insert_stmt)
 
-    return db_otp
+        session.add(db_otp)
+        session.commit()
+        session.refresh(db_otp)
+        print("Added token to db.")
+
+        return db_otp.__str__()
+    except Exception as e:
+        print(f"Error: {e}")
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
 def get_latest_valid_otp(session: Session, email: str):
     latest_otp = session.query(OTP) \
@@ -87,6 +114,8 @@ def is_token_valid(session: Session, otp_check_input: OTPCheckSchema) -> bool:
     if latest_otp is None:
        print("latest_otp == None")
        raise Exception("No OTP exists for user object")
+    else: 
+       print(f"latest_otp found: {latest_otp}")
     
     # Check if real OTP had expired
     if latest_otp.expires_at >= datetime.now():

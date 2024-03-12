@@ -79,6 +79,8 @@ async def send_verif_email(payload: EmailSchema = Body(), session: Session = Dep
         token=token
     )
 
+    print(f"session: {session.__str__()}")
+
     email_verification.insert_token_to_db(
         session=session,
         otp_data=otp_create_schema_obj
