@@ -23,6 +23,9 @@ from src.utils.settings import OTP_LIFESPAN_SEC, OTP_SECRET
 TOKEN_LENGTH = 6
 
 def is_user_exists(session: Session, payload: CheckUserExistsSchema) -> bool:
+    """
+    Check whether user exists in database
+    """
     user = None
 
     if (len(payload.email) == 0):
@@ -43,7 +46,7 @@ def is_user_exists(session: Session, payload: CheckUserExistsSchema) -> bool:
 
 def localize_to_utc(date: datetime):
    """
-   Generates WIB (Waktu Indonesia Barat) timezone-aware `datetime` object
+   Generates UTC timezone-aware `datetime` object
    """
    utc_tz = pytz.timezone("UTC")
 
@@ -70,6 +73,9 @@ def purge_user_otp(session: Session, email: str):
     return deleted_rows or None
 
 def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
+    """
+    Inserts a token to the OTP table
+    """
     db_otp = OTP(**otp_data.model_dump())
 
     try:
@@ -87,6 +93,9 @@ def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
         session.close()
 
 def get_latest_valid_otp(session: Session, email: str):
+    """
+    Get the latest valid OTP for a user's email
+    """
     latest_otp = session.query(OTP) \
       .filter(OTP.email == email) \
       .order_by(OTP.created_at.desc()) \
@@ -95,6 +104,9 @@ def get_latest_valid_otp(session: Session, email: str):
     return latest_otp
 
 def is_token_valid(session: Session, otp_check_input: OTPCheckSchema) -> bool:
+    """
+    Check whether an OTP is consumable or not
+    """
     latest_otp = get_latest_valid_otp(session, otp_check_input.email)
     
     if latest_otp is None:

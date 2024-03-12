@@ -64,10 +64,6 @@ class TranscriptionService:
       job_result = await self.poll_transcription_job(transcribe_client=transcribe_client, job_name=job_name)
 
       return job_result
-    
-      # Grab the transcription text
-      # content = requests.get(job_result['TranscriptionJob']['Transcript']['TranscriptFileUri'])
-      # res = json.loads(content.content.decode('utf8'))['results']['transcripts'][0]['transcript']
       
       # return res
     except TimeoutError:

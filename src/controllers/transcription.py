@@ -1,12 +1,10 @@
 from enum import Enum
-import uuid
 import http
-import requests
 
-from src.utils.settings import AWS_BUCKET_NAME
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from botocore.exceptions import ClientError
 
+from src.utils.settings import AWS_BUCKET_NAME
 from src.schemas.base import GenericResponseModel
 from src.schemas.transcription import (
   TranscribeAudioRequestSchema,
