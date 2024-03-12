@@ -1,4 +1,6 @@
 .env
+.env.dev
+.env.*
 .git
 env/
 .venv/
