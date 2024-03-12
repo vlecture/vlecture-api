@@ -92,3 +92,10 @@ class TranscriptionService:
             return ClientError(
                 "Transcription Job failed.", operation_name="start_transcription_job"
             )
+
+    async def delete_transcription_job(self, transcribe_client, job_name: str):
+        try:
+            response = transcribe_client.delete_transcription_job(TranscriptionJobName=job_name)
+            return response
+        except ClientError as e:
+            raise e
