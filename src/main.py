@@ -39,13 +39,13 @@ app.include_router(upload.upload_router)
 
 # CORS
 origins = [
+    "https://app.vlecture.tech",
+    "https://staging.app.vlecture.tech",
+    "https://api.vlecture.tech",
+    "https://staging.api.vlecture.tech",
     "http://localhost",
     "http://localhost:3000",
     "http://localhost:8080",
-    "https://api.vlecture.tech",
-    "https://staging.api.vlecture.tech",
-    "https://app.vlecture.tech",
-    "https://staging.app.vlecture.tech"
 ]
 
 app.add_middleware(
