@@ -1,15 +1,11 @@
 import http
-import uuid
 import secrets
 import string
 import pytz
-import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-from typing import List
-from fastapi import HTTPException, Response
+from fastapi import HTTPException
 
-from sqlalchemy import delete, insert
 from sqlalchemy.orm import Session
 from fastapi_mail import MessageSchema, MessageType
 
@@ -17,12 +13,14 @@ from src.models.otp import OTP
 from src.schemas.base import GenericResponseModel
 from src.schemas.auth import EmailSchema, CheckUserExistsSchema, OTPCreateSchema, OTPCheckSchema
 from src.utils.mail import get_mail_client
-from src.services.users import create_user, get_user, update_tokens
-from src.utils.settings import OTP_LIFESPAN_SEC, OTP_SECRET
+from src.services.users import get_user
 
 TOKEN_LENGTH = 6
 
 def is_user_exists(session: Session, payload: CheckUserExistsSchema) -> bool:
+    """
+    Check whether user exists in database
+    """
     user = None
 
     if (len(payload.email) == 0):
@@ -43,7 +41,7 @@ def is_user_exists(session: Session, payload: CheckUserExistsSchema) -> bool:
 
 def localize_to_utc(date: datetime):
    """
-   Generates WIB (Waktu Indonesia Barat) timezone-aware `datetime` object
+   Generates UTC timezone-aware `datetime` object
    """
    utc_tz = pytz.timezone("UTC")
 
@@ -70,6 +68,9 @@ def purge_user_otp(session: Session, email: str):
     return deleted_rows or None
 
 def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
+    """
+    Inserts a token to the OTP table
+    """
     db_otp = OTP(**otp_data.model_dump())
 
     try:
@@ -87,6 +88,9 @@ def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
         session.close()
 
 def get_latest_valid_otp(session: Session, email: str):
+    """
+    Get the latest valid OTP for a user's email
+    """
     latest_otp = session.query(OTP) \
       .filter(OTP.email == email) \
       .order_by(OTP.created_at.desc()) \
@@ -95,6 +99,9 @@ def get_latest_valid_otp(session: Session, email: str):
     return latest_otp
 
 def is_token_valid(session: Session, otp_check_input: OTPCheckSchema) -> bool:
+    """
+    Check whether an OTP is consumable or not
+    """
     latest_otp = get_latest_valid_otp(session, otp_check_input.email)
     
     if latest_otp is None:
@@ -158,20 +165,20 @@ async def send_verif_email(recipient: EmailSchema, token: str):
 
       return GenericResponseModel(
           status_code=http.HTTPStatus.OK,
-          message="Email has been sent",
+          message="Email has been sent.",
           error=False,
           data=None,
       )
     except ValueError:
        return GenericResponseModel(
-          status_code=http.HTTPStatus.BAD_REQUEST,
+          status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
           error=True,
           message="Invalid value when sending email.",
           data={},
        )
     except Exception:
        return GenericResponseModel(
-          status_code=http.HTTPStatus.BAD_REQUEST,
+          status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
           error=True,
           message="Unknown error while sending email",
           data={},

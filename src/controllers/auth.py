@@ -1,6 +1,7 @@
 import http
 from fastapi import (
     APIRouter,
+    Request,
     Response,
     Depends,
     Body,
@@ -15,7 +16,8 @@ from src.schemas.auth import (
   LoginSchema, 
   EmailSchema,
   OTPCreateSchema,
-  OTPCheckSchema
+  OTPCheckSchema,
+  LogoutSchema
 )
 
 from src.services import auth, email_verification
@@ -23,6 +25,7 @@ from src.services import auth, email_verification
 
 class AuthRouterTags(Enum):
     auth = "auth"
+
 
 auth_router = APIRouter(prefix="/v1/auth", tags=[AuthRouterTags.auth])
 
@@ -125,3 +128,21 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
     )
     
     
+@auth_router.post("/renew", tags=[AuthRouterTags.auth])
+def renew(
+    request: Request,
+    response: Response,
+    session: Session = Depends(get_db),
+):
+    return auth.renew_access_token(request, response, session)
+
+
+@auth_router.post("/logout", tags=[AuthRouterTags.auth])
+def logout(
+    response: Response,
+    payload: LogoutSchema = Body(),
+    session: Session = Depends(get_db),
+):
+    """Processes user's logout request."""
+
+    return auth.logout(response, session, payload)

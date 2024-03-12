@@ -32,6 +32,20 @@ def test_login_positive(test_db):
     assert "access_token" in response.json()
     assert "refresh_token" in response.json()
 
+def test_logout_successful():
+    # Login
+    client.post("/login", data={"username": "user", "password": "password"})
+
+    # Logout
+    response = client.post("/logout")
+    assert response.status_code == 200
+
+    # Ensure session token cookie is deleted
+    assert "access_token" not in response.cookies
+
+    # Access protected endpoint after logout should be unauthorized
+    response = client.get("/home")
+    assert response.status_code == 401 
 
 # Negative Cases
 
@@ -145,6 +159,12 @@ def test_register_with_long_values(test_db):
     )
     assert response.status_code == 422  # Data too long for one or more fields
 
+def test_logout_not_logged_in():
+    # Attempt to logout when not logged in
+    response = client.post("/logout")
+    assert response.status_code == 404  
+    assert "access_token" not in response.cookies
+
 
 # Edge Cases
 
@@ -164,3 +184,56 @@ def test_register_edge_case_boundary_values(test_db):
     assert (
         response.status_code == 422
     )  # Assuming empty 'first_name' is invalid and 'last_name' length is validated
+
+
+def test_logout_successful():
+    # Login
+    client.post("/login", data={"username": "user", "password": "password"})
+
+    # Logout
+    response = client.post("/logout")
+    assert response.status_code == 200
+
+    # Ensure session token cookie is deleted
+    assert "access_token" not in response.cookies
+
+    # Access protected endpoint after logout should be unauthorized
+    response = client.get("/home")
+    assert response.status_code == 401  
+
+def test_logout_not_logged_in():
+    # Attempt to logout when not logged in
+    response = client.post("/logout")
+    assert response.status_code == 404  
+    assert "access_token" not in response.cookies
+
+def test_logout_twice():
+    # Login
+    client.post("/login", data={"username": "user", "password": "password"})
+
+    # Logout once
+    response = client.post("/logout")
+    assert response.status_code == 200
+
+    # Attempt to logout again
+    response = client.post("/logout")
+    assert response.status_code == 404
+
+def test_logout_twice():
+    # Login
+    client.post("/login", data={"username": "user", "password": "password"})
+
+    # Logout once
+    response = client.post("/logout")
+    assert response.status_code == 200
+
+    # Attempt to logout again
+    response = client.post("/logout")
+    assert response.status_code == 404
+
+
+    
+
+
+    
+
