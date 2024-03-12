@@ -13,3 +13,5 @@ src/*/*/__pycache__
 
 archive/
 .env.dev
+
+.vscode

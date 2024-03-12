@@ -17,7 +17,7 @@ class GenericResponseModel(BaseModel):
   """
 
   status_code: Optional[Union[http.HTTPStatus, int]] = None
-  error: Optional[str]
+  error: Optional[bool | str] # TODO backlog - refactor to only accept bool later
   message: Optional[str]
   data: Optional[Any]
 
