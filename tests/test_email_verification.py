@@ -50,7 +50,7 @@ async def test_send_email_email_dne(test_db):
       }
     )
 
-    assert response.status_code == 500
+    assert response.status_code == 422
     assert response.json()['message'] == "Unknown error while sending email."
 
 @pytest.mark.anyio

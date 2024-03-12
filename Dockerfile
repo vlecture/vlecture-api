@@ -1,36 +1,21 @@
-# ----------- STEP 1: Build Dependencies  -----------
 
 # Select base image - Python 3.10
-FROM python:3.10-slim AS requirements-stage
+FROM python:3.10-slim AS builder
 
 # Set working directory to `app`
 WORKDIR /app
 
-# Install psycopg2 and required libs before installing the requirements and clean intermediate files
+# Copy requirements into working directory
+COPY requirements.txt .
+
+# Install psycopg2 and required libs before installing the requirements
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
-    && pip install psycopg2 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && pip install psycopg2
 
-# Install Poetry in this Docker stage.
-RUN pip install poetry uvicorn
 
-# Copy the pyproject.toml and poetry.lock filess into working directory
-COPY ./pyproject.toml ./poetry.lock* /app/
-
-# Generate the requirements.txt file.
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes \
-    && pip install --no-cache-dir --upgrade -r requirements.txt \
-    && rm -rf /tmp/*
-
-# ----------- STEP 2: Build Image  -----------
-FROM python:3.10-slim
-
-WORKDIR /app
-
-# Copy dependencies installed in the requirements stage
-COPY --from=requirements-stage /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+# Install dependencies from .txt file
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # Copy application code to container's working directory
 COPY . .
