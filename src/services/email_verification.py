@@ -45,7 +45,7 @@ def localize_to_utc(date: datetime):
    """
    utc_tz = pytz.timezone("UTC")
 
-   return utc_tz.localize(datetime)
+   return utc_tz.localize(date)
       
 
 def generate_token() -> str:
