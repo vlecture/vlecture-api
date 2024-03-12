@@ -16,7 +16,8 @@ from src.schemas.auth import (
   LoginSchema, 
   EmailSchema,
   OTPCreateSchema,
-  OTPCheckSchema
+  OTPCheckSchema,
+  LogoutSchema
 )
 
 from src.services import auth, email_verification
@@ -134,3 +135,14 @@ def renew(
     session: Session = Depends(get_db),
 ):
     return auth.renew_access_token(request, response, session)
+
+
+@auth_router.post("/logout", tags=[AuthRouterTags.auth])
+def logout(
+    response: Response,
+    payload: LogoutSchema = Body(),
+    session: Session = Depends(get_db),
+):
+    """Processes user's logout request."""
+
+    return auth.logout(response, session, payload)

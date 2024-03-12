@@ -24,3 +24,6 @@ class OTPCreateSchema(BaseModel):
 class OTPCheckSchema(BaseModel):
     email: EmailStr
     token: str
+    
+class LogoutSchema(BaseModel):
+    access_token: str
