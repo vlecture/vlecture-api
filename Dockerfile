@@ -14,7 +14,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Poetry in this Docker stage.
-RUN pip install poetry 
+RUN pip install poetry uvicorn
 
 # Copy the pyproject.toml and poetry.lock filess into working directory
 COPY ./pyproject.toml ./poetry.lock* /app/
