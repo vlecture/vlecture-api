@@ -80,9 +80,21 @@ class TranscriptionService:
             )
 
             return job_result
+
+            # Grab the transcription text
+            # content = requests.get(job_result['TranscriptionJob']['Transcript']['TranscriptFileUri'])
+            # res = json.loads(content.content.decode('utf8'))['results']['transcripts'][0]['transcript']
+
+            # return res
         except TimeoutError:
-          raise TimeoutError("Timeout when polling the transcription results")
+            return TimeoutError("Timeout when polling the transcription results")
         except ClientError:
             raise RuntimeError("Transcription Job failed.")
-      
-  
+
+
+    async def delete_transcription_job(self, transcribe_client, job_name: str):
+        try:
+            response = transcribe_client.delete_transcription_job(TranscriptionJobName=job_name)
+            return response
+        except ClientError as e:
+            raise e
