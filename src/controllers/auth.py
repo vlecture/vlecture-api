@@ -1,6 +1,6 @@
-import http
 from fastapi import (
     APIRouter,
+    Request,
     Response,
     Depends,
     Body,
@@ -23,6 +23,7 @@ from src.services import auth, email_verification
 
 class AuthRouterTags(Enum):
     auth = "auth"
+
 
 auth_router = APIRouter(prefix="/v1/auth", tags=[AuthRouterTags.auth])
 
@@ -125,3 +126,10 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
     )
     
     
+@auth_router.post("/renew", tags=[AuthRouterTags.auth])
+def renew(
+    request: Request,
+    response: Response,
+    session: Session = Depends(get_db),
+):
+    return auth.renew_access_token(request, response, session)

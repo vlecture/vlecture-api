@@ -8,6 +8,7 @@ from src.services.users import get_current_user
 
 from src.utils.settings import AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY
 from starlette.status import (
+    HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
@@ -50,4 +51,4 @@ async def upload_file(
     finally:
         file.file.close()
 
-    return {"filename": file_name}
+    return {"status_code": HTTP_200_OK, "filename": file_name}
