@@ -80,15 +80,9 @@ class TranscriptionService:
             )
 
             return job_result
-
-            # Grab the transcription text
-            # content = requests.get(job_result['TranscriptionJob']['Transcript']['TranscriptFileUri'])
-            # res = json.loads(content.content.decode('utf8'))['results']['transcripts'][0]['transcript']
-
-            # return res
         except TimeoutError:
-            return TimeoutError("Timeout when polling the transcription results")
+          raise TimeoutError("Timeout when polling the transcription results")
         except ClientError:
-            return ClientError(
-                "Transcription Job failed.", operation_name="start_transcription_job"
-            )
+            raise RuntimeError("Transcription Job failed.")
+      
+  

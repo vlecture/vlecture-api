@@ -8,11 +8,11 @@ ENV_TYPE = os.getenv("ENV")
 print(f"ENV: {ENV_TYPE}")
 
 try:
-    host = os.getenv("POSTGRES_HOST")
-    port = os.getenv("POSTGRES_PORT")
-    db_name = os.getenv("POSTGRES_DB")
-    username = os.getenv("POSTGRES_USER")
-    password = os.getenv("POSTGRES_PASSWORD")
+    host=os.getenv("POSTGRES_HOST")
+    port=os.getenv("POSTGRES_PORT")
+    db_name=os.getenv("POSTGRES_DB")
+    username=os.getenv("POSTGRES_USER")
+    password=os.getenv("POSTGRES_PASSWORD")
 
     # Database url configuration
     DATABASE_URL = (
