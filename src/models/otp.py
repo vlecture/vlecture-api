@@ -21,7 +21,7 @@ def time_now():
     return datetime.now(UTC)
 
 def time_expiry():
-   return datetime.now(UTC) + timedelta(seconds=OTP_LIFESPAN_SEC)
+   return datetime.now(UTC) + timedelta(seconds=int(OTP_LIFESPAN_SEC))
 
 class OTP(Base):
   __tablename__ = "otps"
@@ -31,7 +31,7 @@ class OTP(Base):
   )
 
   email = Column(String(225), nullable=False, unique=True)
-  token = Column(String(6), nullable=False, unique=True)
+  token = Column(String(6), nullable=False)
   created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
   expires_at = Column(TIMESTAMP(timezone=True), default=time_expiry, nullable=False)
 

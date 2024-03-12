@@ -24,6 +24,7 @@ try:
             password=password,
         )
     )
+
 except Exception:
     raise ValueError("Database config values are missing or incorrect.")
 

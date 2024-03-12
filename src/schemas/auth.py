@@ -12,13 +12,10 @@ class LoginSchema(BaseModel):
     password: str
 
 class EmailSchema(BaseModel):
-    email: List[EmailStr]
+    email: EmailStr
 
 class CheckUserExistsSchema(BaseModel):
     email: EmailStr
-
-class UserVerifySchema(BaseModel):
-    token: str
 
 class OTPCreateSchema(BaseModel):
     email: EmailStr

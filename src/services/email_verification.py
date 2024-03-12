@@ -44,7 +44,10 @@ def generate_token() -> str:
     """
     Generate a crypto-secure 6 digit alphanumeric token
     """
-    token = secrets.choice(string.ascii_uppercase + string.digits for i in range(TOKEN_LENGTH))
+    token = ""
+
+    for i in range(TOKEN_LENGTH):
+       token += str(secrets.choice(string.ascii_uppercase + string.digits))
 
     return token
 
@@ -65,6 +68,8 @@ def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
     session.add(db_otp)
     session.commit()
     session.refresh(db_otp)
+
+    print("Added token to db.")
 
     return db_otp
 
@@ -94,7 +99,11 @@ def is_token_valid(session: Session, otp_check_input: OTPCheckSchema) -> bool:
     return False
        
 
-async def send_verif_email(recipients: List[EmailSchema], token: str):
+async def send_verif_email(recipient: EmailSchema, token: str):
+    """
+    Generate token and send verification email to recipient. By default supports one recipient only
+    """
+
     MESSAGE_SUBJECT = "Your vlecture.tech verification token"
 
     MESSAGE_BODY = f"""
@@ -123,7 +132,7 @@ async def send_verif_email(recipients: List[EmailSchema], token: str):
     try:
       message = MessageSchema(
           subject=MESSAGE_SUBJECT,
-          recipients=recipients,
+          recipients=[recipient],
           body=MESSAGE_BODY,
           subtype=MessageType.html,
       )

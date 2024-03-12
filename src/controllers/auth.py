@@ -14,7 +14,8 @@ from src.schemas.auth import (
   RegisterSchema, 
   LoginSchema, 
   EmailSchema,
-  UserVerifySchema
+  OTPCreateSchema,
+  OTPCheckSchema
 )
 
 from src.services import auth, email_verification
@@ -49,13 +50,15 @@ def login(
 
 @auth_router.post("/verify")
 async def send_verif_email(payload: EmailSchema = Body(), session: Session = Depends(get_db)):
-    """Checks if user already exists or not, create email and Token based on template, and send it to user
+    """Checks if user already exists or not, create email and Token based on template, 
+    and send it to user
 
     request body:
     - "email": list of emails to be sent to
     """
 
     is_user_exists = email_verification.is_user_exists(session=session, payload=payload)
+    print(f"is_user_exists: {is_user_exists}")
 
     if (is_user_exists):
         return GenericResponseModel(
@@ -65,18 +68,31 @@ async def send_verif_email(payload: EmailSchema = Body(), session: Session = Dep
             data={}
         )
     
-    recipients = payload.model_dump().get("email")
+    recipient = payload.model_dump().get("email")
+    print(f"recipient: {recipient}")
+
     token = email_verification.generate_token()
+    print(f"token generated: {token}")
+
+    otp_create_schema_obj = OTPCreateSchema(
+        email=recipient,
+        token=token
+    )
+
+    email_verification.insert_token_to_db(
+        session=session,
+        otp_data=otp_create_schema_obj
+    )
 
     response = await email_verification.send_verif_email(
-        recipients=recipients,
+        recipient=recipient,
         token=token,
     )
 
     return response
 
 @auth_router.post("/verify/check")
-def validate_user_token(payload: UserVerifySchema = Body()):
+def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Depends(get_db)):
     """Validates a user's inputted token against the generated token
 
     request body:
@@ -84,7 +100,31 @@ def validate_user_token(payload: UserVerifySchema = Body()):
     """
 
     user_input = payload.model_dump().get("token")
+    user_email = payload.model_dump().get("email")
 
-    # response = email_verification.
+    is_answer_valid = email_verification.is_token_valid(
+        session=session,
+        otp_check_input=payload
+    )
+
+    if not is_answer_valid:
+        return GenericResponseModel(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            error=True,
+            message="The token inputted is invalid",
+            data={}
+        )
+    
+    email_verification.purge_user_otp(
+        session=session,
+        email=user_email
+    )
+
+    return GenericResponseModel(
+        status_code=http.HTTPStatus.OK,
+        error=False,
+        message="OTP input is valid",
+        data={}
+    )
     
     
