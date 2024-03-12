@@ -121,7 +121,7 @@ def logout(response: Response, session: Session, payload: LogoutSchema):
         is_active: bool = user.get_is_active()
         if not is_active:
             raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
+                status_code=HTTP_404_NOT_FOUND,
                 detail="User is not logged in!"
             )
         

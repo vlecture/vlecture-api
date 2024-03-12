@@ -69,28 +69,3 @@ def root():
 @app.get("/hi")
 def hi():
     return {"message": "Bonjour!"}
-
-@app.post("/logout", tags=[Tags.auth])
-def logout(response: Response, payload: LogoutSchema = Body(), session: Session = Depends(get_db)):
-    user = None
-    try:
-        user = get_user_by_access_token(session=session, access_token=payload.access_token)
-        is_active: bool = user.get_is_active()
-        if not is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User is not logged in!"
-            )
-        
-        user.clear_token(session)
-        response.delete_cookie("access_token")
-        response.delete_cookie("refresh_token")
-
-        return {"message": "Logout successful."}
-
-    except Exception:  
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User is not logged in!"
-            )
