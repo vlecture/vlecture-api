@@ -1,6 +1,6 @@
-import http
 from fastapi import (
     APIRouter,
+    Request,
     Response,
     Depends,
     Body,
@@ -23,6 +23,7 @@ from src.services import auth, email_verification
 
 class AuthRouterTags(Enum):
     auth = "auth"
+
 
 auth_router = APIRouter(prefix="/v1/auth", tags=[AuthRouterTags.auth])
 
