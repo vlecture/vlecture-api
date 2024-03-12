@@ -79,10 +79,10 @@ class TranscriptionService:
                 transcribe_client=transcribe_client, job_name=job_name
             )
 
-      return job_result
-    except TimeoutError:
-      return TimeoutError("Timeout when polling the transcription results")
-    except ClientError:
-        return ClientError("Transcription Job failed.", operation_name="start_transcription_job")
-    
+            return job_result
+        except TimeoutError:
+          raise TimeoutError("Timeout when polling the transcription results")
+        except ClientError:
+            raise RuntimeError("Transcription Job failed.")
+      
   

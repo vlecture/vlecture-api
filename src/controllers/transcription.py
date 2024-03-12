@@ -3,6 +3,7 @@ import http
 
 from fastapi import APIRouter
 from botocore.exceptions import ClientError
+import requests
 
 from src.utils.settings import AWS_BUCKET_NAME
 from src.schemas.base import GenericResponseModel

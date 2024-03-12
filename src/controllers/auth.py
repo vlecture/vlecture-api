@@ -1,3 +1,4 @@
+import http
 from fastapi import (
     APIRouter,
     Request,
@@ -94,7 +95,6 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
     """Validates a user's inputted token against the generated token
 
     request body:
-    - "email": the email of the user to be verified
     - "token": user-inputted token
     """
 
@@ -114,8 +114,6 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
             data={}
         )
     
-    # NOTE for now we only purge OTP when the user enters the correct token - we may need to purge OTPs on 
-    # other cases such as when user failed 5x
     email_verification.purge_user_otp(
         session=session,
         email=user_email
@@ -129,3 +127,10 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
     )
     
     
+@auth_router.post("/renew", tags=[AuthRouterTags.auth])
+def renew(
+    request: Request,
+    response: Response,
+    session: Session = Depends(get_db),
+):
+    return auth.renew_access_token(request, response, session)

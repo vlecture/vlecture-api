@@ -1,15 +1,11 @@
 import http
-import uuid
 import secrets
 import string
 import pytz
-import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-from typing import List
-from fastapi import HTTPException, Response
+from fastapi import HTTPException
 
-from sqlalchemy import delete, insert
 from sqlalchemy.orm import Session
 from fastapi_mail import MessageSchema, MessageType
 
@@ -17,8 +13,7 @@ from src.models.otp import OTP
 from src.schemas.base import GenericResponseModel
 from src.schemas.auth import EmailSchema, CheckUserExistsSchema, OTPCreateSchema, OTPCheckSchema
 from src.utils.mail import get_mail_client
-from src.services.users import create_user, get_user, update_tokens
-from src.utils.settings import OTP_LIFESPAN_SEC, OTP_SECRET
+from src.services.users import get_user
 
 TOKEN_LENGTH = 6
 
@@ -170,20 +165,20 @@ async def send_verif_email(recipient: EmailSchema, token: str):
 
       return GenericResponseModel(
           status_code=http.HTTPStatus.OK,
-          message="Email has been sent",
+          message="Email has been sent.",
           error=False,
           data=None,
       )
     except ValueError:
        return GenericResponseModel(
-          status_code=http.HTTPStatus.BAD_REQUEST,
+          status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
           error=True,
           message="Invalid value when sending email.",
           data={},
        )
     except Exception:
        return GenericResponseModel(
-          status_code=http.HTTPStatus.BAD_REQUEST,
+          status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
           error=True,
           message="Unknown error while sending email",
           data={},
