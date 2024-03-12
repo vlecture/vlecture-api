@@ -1,19 +1,28 @@
 import bcrypt
 from datetime import datetime, timedelta, timezone
-from fastapi import HTTPException, Response
+from fastapi import HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from jose import jwt
+from src.exceptions.users import InvalidFieldName
 from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
 
 from starlette.status import (
+    HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 from src.models.users import User
-from src.schemas.auth import LoginSchema, RegisterSchema
-from src.services.users import create_user, get_user, update_tokens
+from src.schemas.auth import LoginSchema, RegisterSchema, LogoutSchema
+from src.services.users import (
+    create_user,
+    get_user,
+    update_access_token,
+    update_active_status,
+    update_refresh_token,
+    get_user_by_access_token
+)
 
 
 def register(session: Session, payload: RegisterSchema):
@@ -29,7 +38,7 @@ def register(session: Session, payload: RegisterSchema):
             detail="All required fields must be filled!",
         )
     try:
-        user = get_user(session=session, email=payload.email.lower())
+        user = get_user(session=session, field="email", value=payload.email.lower())
     except Exception:
         payload.email = payload.email.lower()
         payload.hashed_password = hash_password(payload.hashed_password)
@@ -43,7 +52,7 @@ def register(session: Session, payload: RegisterSchema):
 def login(response: Response, session: Session, payload: LoginSchema):
     user = None
     try:
-        user = get_user(session=session, email=payload.email)
+        user = get_user(session=session, field="email", value=payload.email.lower())
     except Exception:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found!")
     is_validated: bool = validate_password(user, payload.password)
@@ -55,7 +64,9 @@ def login(response: Response, session: Session, payload: LoginSchema):
     refresh_token = generate_refresh_token(user)
     access_token = generate_access_token(user)
 
-    update_tokens(session, user, access_token, refresh_token)
+    update_access_token(session, user, access_token)
+    update_refresh_token(session, user, refresh_token)
+    update_active_status(session, user)
 
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
@@ -64,6 +75,68 @@ def login(response: Response, session: Session, payload: LoginSchema):
         "access_token": access_token,
         "refresh_token": refresh_token,
     }
+
+
+def renew_access_token(request: Request, response: Response, session: Session):
+    refresh_token = request.cookies.get("refresh_token")
+    if refresh_token is None:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized. Refresh token not provided!",
+        )
+    try:
+        decoded_refresh_token = jwt.decode(refresh_token, REFRESH_TOKEN_SECRET)
+        new_access_token = jwt.encode(
+            {
+                "first_name": decoded_refresh_token.get("first_name"),
+                "email": decoded_refresh_token.get("email"),
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+            },
+            ACCESS_TOKEN_SECRET,
+        )
+        try:
+            user = get_user(session=session, field="refresh_token", value=refresh_token)
+
+            update_access_token(session, user, new_access_token)
+            response.set_cookie(
+                key="access_token", value=new_access_token, httponly=True
+            )
+            return new_access_token
+        except InvalidFieldName as e:
+            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        except Exception as e:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND, detail="User not found!"
+            ) from e
+    except Exception:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized. Invalid refresh token!",
+        )
+    
+def logout(response: Response, session: Session, payload: LogoutSchema):
+    user = None
+    try:
+        user = get_user_by_access_token(session=session, access_token=payload.access_token)
+        is_active: bool = user.get_is_active()
+        if not is_active:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND,
+                detail="User is not logged in!"
+            )
+        
+        user.clear_token(session)
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")
+
+        return {"message": "Logout successful."}
+
+    except Exception:  
+        if user is None:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND,
+                detail="User is not logged in!"
+            )
 
 
 # Helper functions

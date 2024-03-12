@@ -13,6 +13,7 @@ RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
     && pip install psycopg2
 
+
 # Install dependencies from .txt file
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
@@ -24,4 +25,3 @@ EXPOSE 8080
 
 # Run FastAPI using uvicorn web server (src/main.py => app = FastAPI())
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
-

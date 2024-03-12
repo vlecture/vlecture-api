@@ -1,17 +1,15 @@
-from fastapi.testclient import TestClient
+from tests.utils.test_db import client, test_db
 
-from src.main import app
-
-client = TestClient(app)
-
+register_url = "/v1/auth/register"
+login_url = "/v1/auth/login"
 ## Authentication Tests ##
 
 # Positive Cases
 
 
-def test_register_positive():
+def test_register_positive(test_db):
     response = client.post(
-        "/register",
+        register_url,
         json={
             "email": "positive@example.com",
             "first_name": "Positive",
@@ -24,22 +22,37 @@ def test_register_positive():
     assert response.json()["email"] == "positive@example.com"
 
 
-def test_login_positive():
+def test_login_positive(test_db):
     # Assuming a user "positive@example.com" already exists from the register test
     response = client.post(
-        "/login", json={"email": "positive@example.com", "password": "positivepassword"}
+        login_url,
+        json={"email": "positive@example.com", "password": "positivepassword"},
     )
     assert response.status_code == 200
     assert "access_token" in response.json()
     assert "refresh_token" in response.json()
 
+def test_logout_successful():
+    # Login
+    client.post("/login", data={"username": "user", "password": "password"})
+
+    # Logout
+    response = client.post("/logout")
+    assert response.status_code == 200
+
+    # Ensure session token cookie is deleted
+    assert "access_token" not in response.cookies
+
+    # Access protected endpoint after logout should be unauthorized
+    response = client.get("/home")
+    assert response.status_code == 401 
 
 # Negative Cases
 
 
-def test_register_missing_fields():
+def test_register_missing_fields(test_db):
     response = client.post(
-        "/register",
+        register_url,
         json={
             # Omitting required fields like 'email', 'first_name', etc.
         },
@@ -47,10 +60,10 @@ def test_register_missing_fields():
     assert response.status_code == 422  # Unprocessable Entity
 
 
-def test_register_user_already_exists():
+def test_register_user_already_exists(test_db):
     # Assuming a user "positive@example.com" already exists from the register test
     response = client.post(
-        "/register",
+        register_url,
         json={
             "email": "positive@example.com",
             "first_name": "Positive",
@@ -62,9 +75,9 @@ def test_register_user_already_exists():
     assert response.status_code == 409
 
 
-def test_register_with_invalid_email():
+def test_register_with_invalid_email(test_db):
     response = client.post(
-        "/register",
+        register_url,
         json={
             "email": "notanemail",
             "first_name": "Invalid",
@@ -76,9 +89,9 @@ def test_register_with_invalid_email():
     assert response.status_code == 422  # Invalid email format
 
 
-def test_register_with_special_characters_in_name():
+def test_register_with_special_characters_in_name(test_db):
     response = client.post(
-        "/register",
+        register_url,
         json={
             "email": "specialchar@example.com",
             "first_name": "Speci@l",
@@ -90,10 +103,10 @@ def test_register_with_special_characters_in_name():
     assert response.status_code == 200
 
 
-def test_register_identical_emails_with_different_cases():
+def test_register_identical_emails_with_different_cases(test_db):
     # Testing case sensitivity in email uniqueness
     response1 = client.post(
-        "/register",
+        register_url,
         json={
             "email": "CaseSensitiveEmail@example.com",
             "first_name": "Case",
@@ -103,7 +116,7 @@ def test_register_identical_emails_with_different_cases():
         },
     )
     response2 = client.post(
-        "/register",
+        register_url,
         json={
             "email": "casesensitiveemail@example.com",  # Same email in different case
             "first_name": "Case",
@@ -116,25 +129,26 @@ def test_register_identical_emails_with_different_cases():
     assert response2.status_code == 409
 
 
-def test_login_user_not_found():
+def test_login_user_not_found(test_db):
     response = client.post(
-        "/login", json={"email": "nonexistent@example.com", "password": "any"}
+        login_url, json={"email": "nonexistent@example.com", "password": "any"}
     )
     assert response.status_code == 404  # Not Found
 
 
-def test_login_wrong_password():
+def test_login_wrong_password(test_db):
     # Assuming a user "positive@example.com" already exists from the register test
     response = client.post(
-        "/login", json={"email": "positive@example.com", "password": "wrongpassword"}
+        login_url,
+        json={"email": "positive@example.com", "password": "wrongpassword"},
     )
     assert response.status_code == 401  # Unauthorized
 
 
-def test_register_with_long_values():
+def test_register_with_long_values(test_db):
     long_string = "a" * 256  # Testing with exceeding the maximum length of 255
     response = client.post(
-        "/register",
+        register_url,
         json={
             "email": f"{long_string}@example.com",
             "first_name": long_string,
@@ -145,14 +159,20 @@ def test_register_with_long_values():
     )
     assert response.status_code == 422  # Data too long for one or more fields
 
+def test_logout_not_logged_in():
+    # Attempt to logout when not logged in
+    response = client.post("/logout")
+    assert response.status_code == 404  
+    assert "access_token" not in response.cookies
+
 
 # Edge Cases
 
 
-def test_register_edge_case_boundary_values():
+def test_register_edge_case_boundary_values(test_db):
     # Testing boundary values for fields like 'first_name' and 'last_name'
     response = client.post(
-        "/register",
+        register_url,
         json={
             "email": "boundary@example.com",
             "first_name": "",  # Empty string
@@ -164,3 +184,56 @@ def test_register_edge_case_boundary_values():
     assert (
         response.status_code == 422
     )  # Assuming empty 'first_name' is invalid and 'last_name' length is validated
+
+
+def test_logout_successful():
+    # Login
+    client.post("/login", data={"username": "user", "password": "password"})
+
+    # Logout
+    response = client.post("/logout")
+    assert response.status_code == 200
+
+    # Ensure session token cookie is deleted
+    assert "access_token" not in response.cookies
+
+    # Access protected endpoint after logout should be unauthorized
+    response = client.get("/home")
+    assert response.status_code == 401  
+
+def test_logout_not_logged_in():
+    # Attempt to logout when not logged in
+    response = client.post("/logout")
+    assert response.status_code == 404  
+    assert "access_token" not in response.cookies
+
+def test_logout_twice():
+    # Login
+    client.post("/login", data={"username": "user", "password": "password"})
+
+    # Logout once
+    response = client.post("/logout")
+    assert response.status_code == 200
+
+    # Attempt to logout again
+    response = client.post("/logout")
+    assert response.status_code == 404
+
+def test_logout_twice():
+    # Login
+    client.post("/login", data={"username": "user", "password": "password"})
+
+    # Logout once
+    response = client.post("/logout")
+    assert response.status_code == 200
+
+    # Attempt to logout again
+    response = client.post("/logout")
+    assert response.status_code == 404
+
+
+    
+
+
+    
+
