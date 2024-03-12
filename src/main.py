@@ -42,8 +42,10 @@ origins = [
     "http://localhost",
     "http://localhost:3000",
     "http://localhost:8080",
-    "api.vlecture.com",
-    "vlecture-api-production.up.railway.app",
+    "https://api.vlecture.tech",
+    "https://staging.api.vlecture.tech",
+    "https://app.vlecture.tech"
+    "https://staging.app.vlecture.tech"
 ]
 
 app.add_middleware(
