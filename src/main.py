@@ -4,7 +4,9 @@ from fastapi import (
     FastAPI,
 )
 from fastapi import FastAPI, File, UploadFile, status, Response, HTTPException, Depends, Body
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
+
 from sqlalchemy import Enum
 from src.utils.settings import (
     SENTRY_DSN,
@@ -27,7 +29,25 @@ sentry_sdk.init(
     profiles_sample_rate=1.0,
 )
 
-app = FastAPI()
+# Create middleware before init FastAPI server
+mdw = [
+    Middleware(
+        allow_origins=[
+            "https://app.vlecture.tech",
+            "https://staging.app.vlecture.tech",
+            "https://api.vlecture.tech",
+            "https://staging.api.vlecture.tech",
+            "http://localhost",
+            "http://localhost:3000",
+            "http://localhost:8080",
+        ],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+    )
+]
+
+app = FastAPI(middleware=mdw)
 app.include_router(auth.auth_router)
 app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
@@ -38,23 +58,31 @@ app.include_router(upload.upload_router)
 #     division_by_zero = 1 / 0
 
 # CORS
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    "http://localhost:8080",
-    "https://api.vlecture.tech",
-    "https://staging.api.vlecture.tech",
-    "https://app.vlecture.tech"
-    "https://staging.app.vlecture.tech"
-]
+# origins = [
+#     "https://app.vlecture.tech",
+#     "https://staging.app.vlecture.tech",
+#     "https://api.vlecture.tech",
+#     "https://staging.api.vlecture.tech",
+#     "http://localhost",
+#     "http://localhost:3000",
+#     "http://localhost:8080",
+# ]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=[
+#         "https://app.vlecture.tech",
+#         "https://staging.app.vlecture.tech",
+#         "https://api.vlecture.tech",
+#         "https://staging.api.vlecture.tech",
+#         "http://localhost",
+#         "http://localhost:3000",
+#         "http://localhost:8080",
+#     ],
+#     allow_credentials=True,
+#     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+#     allow_headers=["*"],
+# )
 
 Base.metadata.create_all(bind=engine)
 
