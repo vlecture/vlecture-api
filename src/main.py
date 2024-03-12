@@ -50,7 +50,15 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[
+        "https://app.vlecture.tech",
+        "https://staging.app.vlecture.tech",
+        "https://api.vlecture.tech",
+        "https://staging.api.vlecture.tech",
+        "http://localhost",
+        "http://localhost:3000",
+        "http://localhost:8080",
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
