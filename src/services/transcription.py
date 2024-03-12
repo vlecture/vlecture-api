@@ -89,9 +89,8 @@ class TranscriptionService:
         except TimeoutError:
             return TimeoutError("Timeout when polling the transcription results")
         except ClientError:
-            return ClientError(
-                "Transcription Job failed.", operation_name="start_transcription_job"
-            )
+            raise RuntimeError("Transcription Job failed.")
+
 
     async def delete_transcription_job(self, transcribe_client, job_name: str):
         try:

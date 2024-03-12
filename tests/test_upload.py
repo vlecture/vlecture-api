@@ -2,11 +2,16 @@ from tests.utils.test_db import client, test_db
 
 register_url = "/v1/auth/register"
 login_url = "/v1/auth/login"
-upload_url = "v1/upload"
+upload_url = "/v1/upload"
+
+file_audio = {'file': ('test_audio.mp3', open(
+    'tests/test_audio.mp3', 'rb'), 'audio/mp3')}
+file_non_audio = {'file': ('test_image.jpg', open(
+    'tests/test_image.jpg', 'rb'), 'audio/jpeg')}
 
 
 def test_register_user(test_db):
-
+    """Register a user to test upload functionality"""
     data = {
         "email": "upload@example.com",
         "first_name": "Upload",
@@ -30,19 +35,18 @@ def get_access_token(test_db):
     return access_token
 
 
+def get_headers(test_db):
+    access_token = get_access_token(test_db)
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return headers
+
+
 def test_positive_upload(test_db):
     """Attempt to upload an audio file"""
 
-    access_token = get_access_token(test_db)
+    response = client.post(upload_url, files=file_audio,
+                           headers=get_headers(test_db))
 
-    headers = {"Authorization": f"Bearer {access_token}"}
-
-    files = {'file': ('test_audio.mp3', open(
-        'tests/test_audio.mp3', 'rb'), 'audio/mp3')}
-
-    response = client.post(upload_url, files=files, headers=headers)
-
-    # Assertions
     assert response.status_code == 200
     assert 'filename' in response.json()
 
@@ -53,10 +57,8 @@ def test_negative_upload(test_db):
 
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    files = {'file': ('test_image.jpg', open(
-        'tests/test_image.jpg', 'rb'), 'audio/jpeg')}
-
-    response = client.post(upload_url, files=files, headers=headers)
+    response = client.post(upload_url, files=file_non_audio,
+                           headers=get_headers(test_db))
 
     assert response.status_code == 200
     expected_payload = {
@@ -65,3 +67,14 @@ def test_negative_upload(test_db):
         "headers": None
     }
     assert response.json() == expected_payload
+
+
+def logout_user(test_db):
+    response = client.post("/logout")
+    assert response.status_code == 200
+
+def test_edge_upload(test_db):
+    """Attempt to upload but not yet logged in"""
+    response = client.post(upload_url)
+    assert response.status_code == 401
+

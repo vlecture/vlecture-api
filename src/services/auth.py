@@ -14,13 +14,14 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 from src.models.users import User
-from src.schemas.auth import LoginSchema, RegisterSchema
+from src.schemas.auth import LoginSchema, RegisterSchema, LogoutSchema
 from src.services.users import (
     create_user,
     get_user,
     update_access_token,
     update_active_status,
     update_refresh_token,
+    get_user_by_access_token
 )
 
 
@@ -112,6 +113,30 @@ def renew_access_token(request: Request, response: Response, session: Session):
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Unauthorized. Invalid refresh token!",
         )
+    
+def logout(response: Response, session: Session, payload: LogoutSchema):
+    user = None
+    try:
+        user = get_user_by_access_token(session=session, access_token=payload.access_token)
+        is_active: bool = user.get_is_active()
+        if not is_active:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND,
+                detail="User is not logged in!"
+            )
+        
+        user.clear_token(session)
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")
+
+        return {"message": "Logout successful."}
+
+    except Exception:  
+        if user is None:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND,
+                detail="User is not logged in!"
+            )
 
 
 # Helper functions
