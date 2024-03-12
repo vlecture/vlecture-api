@@ -96,9 +96,9 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
     - "token": user-inputted token
     """
 
-    user_input = payload.model_dump().get("token")
     user_email = payload.model_dump().get("email")
 
+    # Check if OTP is valid
     is_answer_valid = email_verification.is_token_valid(
         session=session,
         otp_check_input=payload

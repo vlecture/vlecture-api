@@ -2,8 +2,9 @@ import http
 import uuid
 import secrets
 import string
+import pytz
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from typing import List
 from fastapi import HTTPException, Response
@@ -39,7 +40,15 @@ def is_user_exists(session: Session, payload: CheckUserExistsSchema) -> bool:
        return True
     else:
       return False
-   
+
+def localize_to_utc(date: datetime):
+   """
+   Generates WIB (Waktu Indonesia Barat) timezone-aware `datetime` object
+   """
+   utc_tz = pytz.timezone("UTC")
+
+   return utc_tz.localize(datetime)
+      
 
 def generate_token() -> str:
     """
@@ -53,34 +62,17 @@ def generate_token() -> str:
     return token
 
 def purge_user_otp(session: Session, email: str):
-    if is_user_exists(session, payload={ "email": email }) == False:
-        return
+    # Delete all user's OTP from otps table
+    deleted_rows = session.query(OTP).filter(OTP.email == email)
+    deleted_rows.delete()
+    session.commit()
    
-    #  Else, delete all user's OTP from db
-    delete_statement = delete(OTP).where(OTP.email.in_([email]))
-
-    session.execute(delete_statement)
-   
-    return None
+    return deleted_rows or None
 
 def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
-    # otp_data_dict = otp_data.model_dump()
-    
     db_otp = OTP(**otp_data.model_dump())
 
     try:
-        # with session.begin_nested():
-
-            # insert_stmt = insert(OTP).values(
-            #     id=uuid.uuid4(),
-            #     email=otp_data_dict["email"],
-            #     token=otp_data_dict["token"],
-            #     created_at=datetime.now(),
-            #     expires_at=datetime.now() + timedelta(seconds=int(OTP_LIFESPAN_SEC))
-            # )
-
-            # session.execute(insert_stmt)
-
         session.add(db_otp)
         session.commit()
         session.refresh(db_otp)
@@ -112,11 +104,19 @@ def is_token_valid(session: Session, otp_check_input: OTPCheckSchema) -> bool:
        print(f"latest_otp found: {latest_otp}")
     
     # Check if real OTP had expired
-    if latest_otp.expires_at >= datetime.now():
+    now_in_utc = datetime.now(tz=timezone.utc)
+
+    print(f"""
+    latest_otp.expires_at: {latest_otp.expires_at}\n
+    now_in_utc: {now_in_utc}
+    """)
+
+    # If now is past expiry time, then mark token as invalid
+    if now_in_utc >= latest_otp.expires_at:
        return False
     
-    # Check if user OTP matches the real OTP
-    if latest_otp == otp_check_input.token:
+    # Check if token in OTP object matches the real OTP
+    if latest_otp.token == otp_check_input.token:
        return True
     
     return False
