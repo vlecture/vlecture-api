@@ -58,7 +58,6 @@ async def send_verif_email(payload: EmailSchema = Body(), session: Session = Dep
     """
 
     is_user_exists = email_verification.is_user_exists(session=session, payload=payload)
-    print(f"is_user_exists: {is_user_exists}")
 
     if (is_user_exists):
         return GenericResponseModel(
@@ -69,17 +68,13 @@ async def send_verif_email(payload: EmailSchema = Body(), session: Session = Dep
         )
     
     recipient = payload.model_dump().get("email")
-    print(f"recipient: {recipient}")
 
     token = email_verification.generate_token()
-    print(f"token generated: {token}")
 
     otp_create_schema_obj = OTPCreateSchema(
         email=recipient,
         token=token
     )
-
-    print(f"session: {session.__str__()}")
 
     email_verification.insert_token_to_db(
         session=session,

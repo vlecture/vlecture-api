@@ -67,13 +67,7 @@ def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
     # otp_data_dict = otp_data.model_dump()
     
     db_otp = OTP(**otp_data.model_dump())
-    {
-       id: Null,
-       email: "adavalue@",
-       token: "ABC",
-       created_at: Null,
-       expires_at: Null
-    }
+
     try:
         # with session.begin_nested():
 
@@ -94,7 +88,7 @@ def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
 
         return db_otp.__str__()
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error while inserting token to DB: {e}")
         session.rollback()
         raise e
     finally:
@@ -168,9 +162,7 @@ async def send_verif_email(recipient: EmailSchema, token: str):
 
       client = get_mail_client()
 
-      response = await client.send_message(message)
-
-      print(f"send email repsonse: {response}\n")
+      await client.send_message(message)
 
       return GenericResponseModel(
           status_code=http.HTTPStatus.OK,

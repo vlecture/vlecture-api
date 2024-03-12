@@ -24,6 +24,7 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), autoincrement=False, nullable=False),
     sa.Column('email', sa.VARCHAR(length=225), autoincrement=False, nullable=False),
     sa.Column('first_name', sa.VARCHAR(length=225), autoincrement=False, nullable=True),
+    sa.Column('middle_name', sa.VARCHAR(length=225), autoincrement=False, nullable=True),
     sa.Column('last_name', sa.VARCHAR(length=225), autoincrement=False, nullable=True),
     sa.Column('hashed_password', postgresql.BYTEA(), autoincrement=False, nullable=False),
     sa.Column('refresh_token', sa.VARCHAR(length=225), autoincrement=False, nullable=True),
