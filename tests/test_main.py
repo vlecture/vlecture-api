@@ -1,8 +1,4 @@
-from fastapi.testclient import TestClient
-
-from src.main import app
-
-client = TestClient(app)
+from tests.utils.test_db import client
 
 
 def test_read_root():
