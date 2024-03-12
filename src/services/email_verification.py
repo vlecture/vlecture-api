@@ -14,6 +14,7 @@ from src.schemas.base import GenericResponseModel
 from src.schemas.auth import EmailSchema, CheckUserExistsSchema, OTPCreateSchema, OTPCheckSchema
 from src.utils.mail import get_mail_client
 from src.services.users import get_user
+from src.utils.errors import OTPError
 
 TOKEN_LENGTH = 6
 
@@ -45,7 +46,7 @@ def localize_to_utc(date: datetime):
    """
    utc_tz = pytz.timezone("UTC")
 
-   return utc_tz.localize(datetime)
+   return utc_tz.localize(date)
       
 
 def generate_token() -> str:
@@ -54,7 +55,7 @@ def generate_token() -> str:
     """
     token = ""
 
-    for i in range(TOKEN_LENGTH):
+    for _ in range(TOKEN_LENGTH):
        token += str(secrets.choice(string.ascii_uppercase + string.digits))
 
     return token
@@ -105,7 +106,7 @@ def is_token_valid(session: Session, otp_check_input: OTPCheckSchema) -> bool:
     latest_otp = get_latest_valid_otp(session, otp_check_input.email)
     
     if latest_otp is None:
-       raise Exception("No OTP exists for user object")
+       raise OTPError("No OTP exists for user object")
     
     # Check if real OTP had expired
     now_in_utc = datetime.now(tz=timezone.utc)
@@ -178,7 +179,7 @@ async def send_verif_email(recipient: EmailSchema, token: str):
        )
     except Exception:
        return GenericResponseModel(
-          status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
+          status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR,
           error=True,
           message="Unknown error while sending email",
           data={},
