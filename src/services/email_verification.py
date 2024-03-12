@@ -76,7 +76,7 @@ def insert_token_to_db(session: Session, otp_data: OTPCreateSchema):
         session.add(db_otp)
         session.commit()
         session.refresh(db_otp)
-        print("Added token to db.")
+        print("Success adding token to db.")
 
         return db_otp.__str__()
     except Exception as e:
@@ -98,18 +98,10 @@ def is_token_valid(session: Session, otp_check_input: OTPCheckSchema) -> bool:
     latest_otp = get_latest_valid_otp(session, otp_check_input.email)
     
     if latest_otp is None:
-       print("latest_otp == None")
        raise Exception("No OTP exists for user object")
-    else: 
-       print(f"latest_otp found: {latest_otp}")
     
     # Check if real OTP had expired
     now_in_utc = datetime.now(tz=timezone.utc)
-
-    print(f"""
-    latest_otp.expires_at: {latest_otp.expires_at}\n
-    now_in_utc: {now_in_utc}
-    """)
 
     # If now is past expiry time, then mark token as invalid
     if now_in_utc >= latest_otp.expires_at:
