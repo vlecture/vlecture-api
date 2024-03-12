@@ -12,7 +12,6 @@ from src.utils.settings import (
   USE_CREDENTIALS,
   VALIDATE_CERTS
 )
-from src.schemas.auth import EmailSchema
 
 conf = ConnectionConfig(
   MAIL_USERNAME=MAIL_USERNAME,

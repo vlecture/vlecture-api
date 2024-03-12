@@ -1,14 +1,7 @@
-import uuid
-from datetime import datetime, timedelta, timezone
-from __future__ import annotations
-from typing import List
-
 from src.utils.db import Base
 from src.models.base import DBBase
 from src.models.users import User
 from src.schemas.transcription import TranscriptionSchema, TranscriptionChunksSchema
-from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
-
 
 from sqlalchemy import (
     Column,
@@ -35,7 +28,7 @@ from sqlalchemy.orm import (
   relationship,
 )
 
-class Transcription(Base):
+class Transcription(Base, DBBase):
   __tablename__ = "transcription"
 
   ## Foreign Relationships
