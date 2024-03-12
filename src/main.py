@@ -4,7 +4,7 @@ from fastapi import (
     FastAPI,
 )
 from fastapi import FastAPI, File, UploadFile, status, Response, HTTPException, Depends, Body
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from src.utils.settings import (
     SENTRY_DSN,
