@@ -18,20 +18,10 @@ from src.schemas.auth import LogoutSchema
 from src.models.users import User
 from src.services.users import get_user_by_access_token
 
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # Sentry recommends adjusting this value in production.
-    profiles_sample_rate=1.0,
-)
-
 # Create middleware before init FastAPI server
 mdw = [
     Middleware(
+        CORSMiddleware,
         allow_origins=[
             "https://app.vlecture.tech",
             "https://staging.app.vlecture.tech",
@@ -46,6 +36,17 @@ mdw = [
         allow_headers=["*"],
     )
 ]
+
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # Sentry recommends adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
 
 app = FastAPI(middleware=mdw)
 app.include_router(auth.auth_router)
