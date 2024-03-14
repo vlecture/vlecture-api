@@ -61,7 +61,18 @@ app.add_middleware(
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Accept",
+        "Authorization",
+        "Cache-Control",
+        "Content-Type",
+        "DNT",
+        "If-Modified-Since",
+        "Keep-Alive",
+        "Origin",
+        "User-Agent",
+        "X-Requested-With"
+    ],
 )
 
 Base.metadata.create_all(bind=engine)
