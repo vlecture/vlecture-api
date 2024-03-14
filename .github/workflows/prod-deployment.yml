@@ -90,8 +90,8 @@ jobs:
             sudo docker stop ${{ env.CONTAINER_IMAGE_NAME }} || true
             sudo docker rm -f ${{ env.CONTAINER_IMAGE_NAME }} || true
 
-            sudo docker rmi -f ${{ env.DEV_ECR_REGISTRY }}/${{ env.CONTAINER_IMAGE_NAME }}:latest || true
-            sudo docker pull "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
+            sudo docker rmi -f ${{ env.ECR_REGISTRY }}/${{ env.CONTAINER_IMAGE_NAME }}:latest || true
+            sudo docker pull "${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest"
             
             sudo docker run -d --name ${{ env.CONTAINER_IMAGE_NAME }} \
               --restart always \
