@@ -28,14 +28,6 @@ sentry_sdk.init(
 )
 
 app = FastAPI()
-app.include_router(auth.auth_router)
-app.include_router(transcription.transcription_router)
-app.include_router(upload.upload_router)
-
-# sentry trigger error test, comment when not needed
-# @app.get("/sentry-debug")
-# async def trigger_error():
-#     division_by_zero = 1 / 0
 
 # CORS
 origins = [
@@ -74,6 +66,15 @@ app.add_middleware(
         "X-Requested-With"
     ],
 )
+
+app.include_router(auth.auth_router)
+app.include_router(transcription.transcription_router)
+app.include_router(upload.upload_router)
+
+# sentry trigger error test, comment when not needed
+# @app.get("/sentry-debug")
+# async def trigger_error():
+#     division_by_zero = 1 / 0
 
 Base.metadata.create_all(bind=engine)
 
