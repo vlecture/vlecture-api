@@ -14,7 +14,6 @@ from src.schemas.transcription import (
 from src.services.transcription import TranscriptionService
 from src.utils.aws.s3 import AWSS3Client
 from src.utils.aws.transcribe import AWSTranscribeClient
-from src.utils.errors import TIMEOUT_JOB_MSG, FAILED_JOB_MSG
 
 
 class TranscriptionRouterTags(Enum):
@@ -61,14 +60,14 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
         return GenericResponseModel(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
             message="Error",
-            error=TIMEOUT_JOB_MSG,
+            error="Timeout while processing transcription job.",
             data={},
         )
     except ClientError:
         return GenericResponseModel(
             status_code=http.HTTPStatus.BAD_REQUEST,
             message="Error",
-            error=FAILED_JOB_MSG,
+            error="Audio Transcription job failed.",
             data={},
         )
 
@@ -96,14 +95,14 @@ async def poll_transcription_job(req: PollTranscriptionRequestSchema):
         return GenericResponseModel(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
             message="Error",
-            error=TIMEOUT_JOB_MSG,
+            error="Timeout while processing transcription job.",
             data={},
         )
     except ClientError:
         return GenericResponseModel(
             status_code=http.HTTPStatus.BAD_REQUEST,
             message="Error",
-            error=FAILED_JOB_MSG,
+            error="Audio Transcription job failed.",
             data={},
         )
 
@@ -185,13 +184,47 @@ async def view_transcription(job_name: str):
         return GenericResponseModel(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
             message="Error",
-            error=TIMEOUT_JOB_MSG,
+            error="Timeout while processing transcription job.",
             data={},
         )
     except ClientError:
         return GenericResponseModel(
             status_code=http.HTTPStatus.BAD_REQUEST,
             message="Error",
-            error=FAILED_JOB_MSG,
+            error="Audio Transcription job failed.",
+            data={},
+        )
+
+@transcription_router.delete(
+    "/delete", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
+)
+async def delete_transcription(job_name: str):
+    transcribe_client = AWSTranscribeClient().get_client()
+
+    service = TranscriptionService()
+
+    try:
+        response = await service.delete_transcription_job(
+            transcribe_client=transcribe_client, job_name=job_name
+        )
+
+        return GenericResponseModel(
+            status_code=http.HTTPStatus.OK,
+            message="Successfully deleted transcription job",
+            error="",
+            data=response,
+        )
+    except TimeoutError:
+        return GenericResponseModel(
+            status_code=http.HTTPStatus.REQUEST_TIMEOUT,
+            message="Error",
+            error="Timeout while trying to delete transcription job.",
+            data={},
+        )
+    except ClientError as e:
+        return GenericResponseModel(
+            status_code=http.HTTPStatus.BAD_REQUEST,
+            message="Error",
+            error=f"Failed to delete transcription job: {e}",
             data={},
         )
