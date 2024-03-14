@@ -30,7 +30,7 @@ class OTP(Base):
           UUID(as_uuid=True), nullable=False, primary_key=True, default=uuid.uuid4
   )
 
-  email = Column(String(225), nullable=False, unique=True)
+  email = Column(String(225), nullable=False)
   token = Column(String(6), nullable=False)
   created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
   expires_at = Column(TIMESTAMP(timezone=True), default=time_expiry, nullable=False)
