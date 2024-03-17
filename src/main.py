@@ -67,6 +67,7 @@ app.add_middleware(
     ],
 )
 
+# Include routers after CORS middleware
 app.include_router(auth.auth_router)
 app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
@@ -75,25 +76,6 @@ app.include_router(upload.upload_router)
 # @app.get("/sentry-debug")
 # async def trigger_error():
 #     division_by_zero = 1 / 0
-
-# CORS
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    "http://localhost:8080",
-    "https://api.vlecture.tech",
-    "https://staging.api.vlecture.tech",
-    "https://app.vlecture.tech"
-    "https://staging.app.vlecture.tech"
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
-)
 
 Base.metadata.create_all(bind=engine)
 
