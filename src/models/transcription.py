@@ -35,7 +35,7 @@ def time_now():
     return datetime.now(UTC)
 
 class Transcription(Base):
-  __tablename__ = "transcription"
+  __tablename__ = "transcriptions"
 
   id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
   created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
@@ -68,7 +68,7 @@ class Transcription(Base):
 
 
 class TranscriptionChunk(Base):
-  __tablename__ = "transcription_chunk"
+  __tablename__ = "transcription_chunks"
 
   id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
   created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
