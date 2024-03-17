@@ -1,3 +1,8 @@
+import uuid
+from uuid import UUID
+from pytz import timezone
+from datetime import datetime
+
 from src.utils.db import Base
 from src.models.base import DBBase
 from src.models.users import User
@@ -6,14 +11,11 @@ from src.schemas.transcription import TranscriptionSchema, TranscriptionChunksSc
 from sqlalchemy import (
     Column,
     UUID,
+    TIMESTAMP,
     Integer,
     String,
     Float,
     Boolean,
-    LargeBinary,
-    PrimaryKeyConstraint,
-    DateTime,
-    UniqueConstraint,
     ForeignKey,
 )
 
@@ -28,8 +30,17 @@ from sqlalchemy.orm import (
   relationship,
 )
 
-class Transcription(Base, DBBase):
+UTC = timezone("UTC")
+def time_now():
+    return datetime.now(UTC)
+
+class Transcription(Base):
   __tablename__ = "transcription"
+
+  id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
+  created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
+  updated_at = Column(TIMESTAMP(timezone=True), default=time_now, onupdate=time_now, nullable=False)
+  is_deleted = Column(Boolean, default=False)
 
   ## Foreign Relationships
   # Foreign key to User
@@ -56,8 +67,13 @@ class Transcription(Base, DBBase):
     return base.__to_model() if base else None
 
 
-class TranscriptionChunk(Base, DBBase):
+class TranscriptionChunk(Base):
   __tablename__ = "transcription_chunk"
+
+  id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
+  created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
+  updated_at = Column(TIMESTAMP(timezone=True), default=time_now, onupdate=time_now, nullable=False)
+  is_deleted = Column(Boolean, default=False)
 
   # Extra fields
   duration = Column(Float(precision=1), default=0, nullable=False)
