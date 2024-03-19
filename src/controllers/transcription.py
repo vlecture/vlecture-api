@@ -26,7 +26,7 @@ transcription_router = APIRouter(
 
 
 @transcription_router.post(
-    "/create", status_code=http.HTTPStatus.CREATED, response_model=GenericResponseModel
+    "/create", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
 )
 async def transcribe_audio(req: TranscribeAudioRequestSchema):
     transcribe_client = AWSTranscribeClient().get_client()
@@ -51,7 +51,7 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
         )
 
         return GenericResponseModel(
-            status_code=http.HTTPStatus.CREATED,
+            status_code=http.HTTPStatus.OK,
             message="Successfully created audio transcription",
             error="",
             data=response,

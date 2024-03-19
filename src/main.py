@@ -4,7 +4,9 @@ from fastapi import (
     FastAPI,
 )
 from fastapi import FastAPI, File, UploadFile, status, Response, HTTPException, Depends, Body
+from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+
 from sqlalchemy import Enum
 from src.utils.settings import (
     SENTRY_DSN,
@@ -15,6 +17,25 @@ from src.utils.db import Base, engine
 from src.schemas.auth import LogoutSchema
 from src.models.users import User
 from src.services.users import get_user_by_access_token
+
+# Create middleware before init FastAPI server
+mdw = [
+    Middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "https://app.vlecture.tech",
+            "https://staging.app.vlecture.tech",
+            "https://api.vlecture.tech",
+            "https://staging.api.vlecture.tech",
+            "http://localhost",
+            "http://localhost:3000",
+            "http://localhost:8080",
+        ],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+    )
+]
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
@@ -27,46 +48,7 @@ sentry_sdk.init(
     profiles_sample_rate=1.0,
 )
 
-app = FastAPI()
-
-# CORS
-origins = [
-    "https://app.vlecture.tech",
-    "https://staging.app.vlecture.tech",
-    "https://api.vlecture.tech",
-    "https://staging.api.vlecture.tech",
-    "http://localhost",
-    "http://localhost:3000",
-    "http://localhost:8080",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://app.vlecture.tech",
-        "https://staging.app.vlecture.tech",
-        "https://api.vlecture.tech",
-        "https://staging.api.vlecture.tech",
-        "http://localhost",
-        "http://localhost:3000",
-        "http://localhost:8080",
-    ],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=[
-        "Accept",
-        "Authorization",
-        "Cache-Control",
-        "Content-Type",
-        "DNT",
-        "If-Modified-Since",
-        "Keep-Alive",
-        "Origin",
-        "User-Agent",
-        "X-Requested-With"
-    ],
-)
-
+app = FastAPI(middleware=mdw)
 app.include_router(auth.auth_router)
 app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
@@ -75,6 +57,33 @@ app.include_router(upload.upload_router)
 # @app.get("/sentry-debug")
 # async def trigger_error():
 #     division_by_zero = 1 / 0
+
+# CORS
+# origins = [
+#     "https://app.vlecture.tech",
+#     "https://staging.app.vlecture.tech",
+#     "https://api.vlecture.tech",
+#     "https://staging.api.vlecture.tech",
+#     "http://localhost",
+#     "http://localhost:3000",
+#     "http://localhost:8080",
+# ]
+
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=[
+#         "https://app.vlecture.tech",
+#         "https://staging.app.vlecture.tech",
+#         "https://api.vlecture.tech",
+#         "https://staging.api.vlecture.tech",
+#         "http://localhost",
+#         "http://localhost:3000",
+#         "http://localhost:8080",
+#     ],
+#     allow_credentials=True,
+#     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+#     allow_headers=["*"],
+# )
 
 Base.metadata.create_all(bind=engine)
 
