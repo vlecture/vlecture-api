@@ -3,7 +3,7 @@ import sentry_sdk
 from fastapi import (
     FastAPI,
 )
-from fastapi import FastAPI, File, UploadFile, status, Response, HTTPException, Depends, Body
+from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from src.utils.settings import (
@@ -11,10 +11,6 @@ from src.utils.settings import (
 )
 from src.controllers import transcription, auth, upload, flashcards
 from src.utils.db import Base, engine
-
-from src.schemas.auth import LogoutSchema
-from src.models.users import User
-from src.services.users import get_user_by_access_token
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
@@ -69,6 +65,7 @@ app.add_middleware(
     ],
 )
 
+# Include routers after CORS middleware
 app.include_router(auth.auth_router)
 app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
