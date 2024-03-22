@@ -91,6 +91,11 @@ class TranscriptionService:
         except ClientError:
             raise RuntimeError("Transcription Job failed.")
 
+    async def store_transcription_result(
+        self, 
+        
+    ):
+        pass
 
     async def delete_transcription_job(self, transcribe_client, job_name: str):
         try:

@@ -63,7 +63,7 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
             error="Timeout while processing transcription job.",
             data={},
         )
-    except ClientError:
+    except RuntimeError:
         return GenericResponseModel(
             status_code=http.HTTPStatus.BAD_REQUEST,
             message="Error",
