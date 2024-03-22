@@ -56,3 +56,11 @@ class FlashcardService:
             data.append(item)
 
         return data
+    
+    def get_set_owner(self, set_id, session):
+        set = session.query(FlashcardSet).filter(
+            FlashcardSet.set_id == set_id,
+            FlashcardSet.is_deleted == False
+        ).one()
+
+        return set.user_id

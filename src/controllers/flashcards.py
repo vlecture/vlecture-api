@@ -8,6 +8,7 @@ import requests
 from src.utils.db import get_db
 from src.schemas.base import GenericResponseModel
 from src.services.flashcards import FlashcardService
+from src.services.users import get_current_user
 from src.schemas.flashcards import (
     FlashcardSetsRequestSchema,
     FlashcardsRequestSchema   
@@ -34,6 +35,10 @@ def view_flashcard_sets(req: FlashcardSetsRequestSchema, session: Session = Depe
     )
 
     try:
+        current_user = get_current_user(req, session)
+        if (current_user.id != user_id): 
+            raise Exception
+        
         response = service.get_flashcard_sets_by_user(
             user_id=user_id,
             session=session
@@ -49,7 +54,7 @@ def view_flashcard_sets(req: FlashcardSetsRequestSchema, session: Session = Depe
          return GenericResponseModel(
             status_code=http.HTTPStatus.NOT_FOUND,
             message="Error",
-            error="Error fetching flashcard sets.",
+            error="You don't have access to these flashcard sets or flashcard sets don't exist.",
             data={},
         )
 
@@ -63,6 +68,11 @@ def view_flashcards(req: FlashcardsRequestSchema, session: Session = Depends(get
     note_id = req.note_id
 
     try:
+        user_id = service.get_set_owner(set_id)
+        current_user = get_current_user(req, session)
+        if (current_user.id != user_id): 
+            raise Exception
+        
         response = service.get_flashcards_by_set(
             set_id=set_id,
             note_id=note_id,
@@ -79,6 +89,6 @@ def view_flashcards(req: FlashcardsRequestSchema, session: Session = Depends(get
         return GenericResponseModel(
             status_code=http.HTTPStatus.NOT_FOUND,
             message="Error",
-            error="Error fetching flashcards in set.",
+            error="You don't have access to these flashcards or flashcards don't exist.",
             data={},
         )
