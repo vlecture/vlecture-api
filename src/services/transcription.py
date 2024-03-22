@@ -91,11 +91,54 @@ class TranscriptionService:
         except ClientError:
             raise RuntimeError("Transcription Job failed.")
 
+    # Helper function
+    def extract_query_params_from_transcribe_url(self, query_param_part: str) -> dict:
+        PARAM_DELIMITER = "="
+
+        query_params = {}
+
+        query_param_splitted = query_param_part.split(PARAM_DELIMITER)
+
+        for i in range(0, len(query_param_splitted), 2):
+            # Construct query_params key-value pair
+            key = query_param_splitted[i]
+            value = key = query_param_splitted[i+1]
+
+            query_params[key] = value
+
+        # TODO remove
+        print(f"extract_query_params_from_transcribe_url: {query_params}")
+
+        return query_params
+
     async def store_transcription_result(
         self, 
-        
+        transcription_job_response
     ):
-        pass
+        try:
+            URI_DELIMITER = "?"
+            
+            # Fetch Transcription JSON file using custom URL path and Headers
+            transcript_file_uri = transcription_job_response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
+            
+            res_path, res_query_params = transcript_file_uri.split(URI_DELIMITER)
+
+            query_params = self.extract_query_params_from_transcribe_url(res_query_params)
+
+            # Send GET request to AWS Endpoint (valid for 15 mins since completion time)
+            response = requests.get(url=res_path, params=query_params)
+
+            # TODO store to db async-ly
+
+            # TODO remove
+            print(f"store_transcription_result: {response}")
+
+            return response
+        except Exception as e:
+            print(e)
+            raise RuntimeError("Failed to save transcription")
+
+        
 
     async def delete_transcription_job(self, transcribe_client, job_name: str):
         try:

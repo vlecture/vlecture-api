@@ -42,6 +42,7 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
     )
 
     try:
+        # Transcribe audio
         response = await service.transcribe_file(
             transcribe_client=transcribe_client,
             job_name=job_name,
@@ -49,6 +50,13 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
             file_format=file_format,
             language_code=language_code,
         )
+
+        # Store created transcription to db
+        print("STORING TRANSCRIPTION TO DB....")
+        store_response = await service.store_transcription_result(transcription_job_response=response)
+
+        if (store_response):
+            print(f"store_response: {store_response}")
 
         return GenericResponseModel(
             status_code=http.HTTPStatus.CREATED,
