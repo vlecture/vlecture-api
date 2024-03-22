@@ -76,6 +76,16 @@ def upgrade() -> None:
 
         sa.PrimaryKeyConstraint('id', name='transcription_chunks_pkey'),
     )
+
+    op.create_table(
+        'waitlist',
+        sa.Column('email'),
+        sa.Column('date_waitlist'),
+        sa.Column('is_sent'),
+        sa.Column('date_sent'),
+
+        sa.PrimaryKeyConstraint('email', name='waitlist_pkey')
+    )
     # ### end Alembic commands ###
 
 
