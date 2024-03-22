@@ -93,17 +93,18 @@ class TranscriptionService:
 
     # Helper function
     def extract_query_params_from_transcribe_url(self, query_param_part: str) -> dict:
-        PARAM_DELIMITER = "="
+        KV_PAIR_DELIM = "&"
+        KEY_VALUE_DELIM = "="
 
         query_params = {}
 
-        query_param_splitted = query_param_part.split(PARAM_DELIMITER)
+        query_param_splitted = query_param_part.split(KV_PAIR_DELIM)
 
-        for i in range(0, len(query_param_splitted), 2):
+        for kv_pair in query_param_splitted:
+            # Split pair based on "="
+            [key, value] = kv_pair.split(KEY_VALUE_DELIM)
+
             # Construct query_params key-value pair
-            key = query_param_splitted[i]
-            value = key = query_param_splitted[i+1]
-
             query_params[key] = value
 
         # TODO remove
@@ -121,6 +122,7 @@ class TranscriptionService:
             # Fetch Transcription JSON file using custom URL path and Headers
             transcript_file_uri = transcription_job_response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
             
+            # Split by "="
             res_path, res_query_params = transcript_file_uri.split(URI_DELIMITER)
 
             query_params = self.extract_query_params_from_transcribe_url(res_query_params)
@@ -128,11 +130,13 @@ class TranscriptionService:
             # Send GET request to AWS Endpoint (valid for 15 mins since completion time)
             response = requests.get(url=res_path, params=query_params)
 
+            print(f"store_transcription_result: {response.__str__()}")
+            print(f"url: {response.url}")
+            print(f"json: {response.json()}")
+
             # TODO store to db async-ly
 
             # TODO remove
-            print(f"store_transcription_result: {response}")
-
             return response
         except Exception as e:
             print(e)
