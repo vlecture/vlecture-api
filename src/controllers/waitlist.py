@@ -1,8 +1,8 @@
-import http
 from fastapi import (
     APIRouter,
     Depends,
     Body,
+    HTTPException,
 )
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
@@ -23,19 +23,10 @@ waitlist_router = APIRouter(prefix="/v1/waitlist",
 
 
 @waitlist_router.post("/", tags=[WaitlistRouterTags.waitlist])
-def join_waitlist(payload: WaitlistSchema = Body(), session: Session = Depends(get_db)):
-    email = payload.email
-    return waitlist.join_waitlist(session, payload=payload)
+def join_waitlist(payload: WaitlistSchema, session: Session = Depends(get_db)):
 
-# @router.post("/join_waitlist/")
-# async def join_waitlist(wl_req: WaitlistRegistrationRequest, db: Session = Depends(get_db)):
-#     email = wl_req.email
-
-#     # Check if the email already exists in the waitlist
-#     if email_exists(db, email):
-#         raise HTTPException(status_code=400, detail="Email already exists in the waitlist")
-
-#     # If email doesn't exist, add it to the waitlist
-#     join_waitlist(db, email)
-
-#     return {"message": "Joined waitlist successfully"}
+    if waitlist.join_waitlist(session, payload):
+        return {"message": "Joined waitlist successfully"}
+    else:
+        raise HTTPException(
+            status_code=400, detail="Email already exists in the waitlist")

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 class WaitlistSchema(BaseModel):
-    email: str
+    email: EmailStr

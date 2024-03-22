@@ -1,17 +1,22 @@
-
 from sqlalchemy.orm import Session
-
 from src.models.waitlist import Waitlist
 from src.schemas.waitlist import WaitlistSchema
-from src.utils.db import get_db
 
-
-def join_waitlist(session: Session, waitlist: WaitlistSchema):
-    db_waitlist = Waitlist(waitlist.email)
-    session.add(db_waitlist)
-    session.commit()
-    session.refresh(db_waitlist)
-    return db_waitlist
 
 def email_exists(db: Session, email: str):
     return db.query(Waitlist).filter(Waitlist.email == email).first()
+
+
+def join_waitlist(db: Session, waitlist: WaitlistSchema):
+    email = waitlist.email
+
+    # Check if the email already exists in the waitlist
+    if email_exists(db, email):
+        return False
+    else:
+        # Create a new Waitlist instance
+        db_waitlist = Waitlist(email=email)
+        db.add(db_waitlist)
+        db.commit()
+        db.refresh(db_waitlist)
+        return True
