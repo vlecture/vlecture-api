@@ -23,6 +23,9 @@ def upgrade() -> None:
     op.create_table(
         'users',
         sa.Column('id', sa.UUID(), autoincrement=False, nullable=False),
+        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=False),
+
         sa.Column('email', sa.VARCHAR(length=225), autoincrement=False, nullable=False),
         sa.Column('first_name', sa.VARCHAR(length=225), autoincrement=False, nullable=True),
         sa.Column('middle_name', sa.VARCHAR(length=225), autoincrement=False, nullable=True),
@@ -33,19 +36,21 @@ def upgrade() -> None:
         sa.Column('is_active', sa.BOOLEAN(), autoincrement=False, nullable=True),
 
         sa.PrimaryKeyConstraint('id', name='pk_user_id'),
-        sa.UniqueConstraint('email', name='uq_user_email')
+        sa.UniqueConstraint('email', name='uq_user_email'),
     )
 
     op.create_table(
         'otps',
         sa.Column('id', sa.UUID(), nullable=False),
+
         sa.Column('email', sa.String(225), nullable=False),
         sa.Column('token', sa.String(6), nullable=False),
-        sa.Column('created_at', sa.TIMESTAMP(timezone=True),nullable=False),
+
+        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column('expires_at', sa.TIMESTAMP(timezone=True), nullable=False),
         
         sa.PrimaryKeyConstraint('id', name='pk_otp_id'),
-        sa.UniqueConstraint('email', name='uq_otp_token')
+        sa.UniqueConstraint('email', name='uq_otp_token'),
     )
     
     op.create_table(
@@ -58,6 +63,7 @@ def upgrade() -> None:
         
         sa.Column('owner_id', sa.UUID(), nullable=False),
         sa.Column('title', sa.String(255), nullable=False),
+        sa.Column('tags', sa.ARRAY(item_type=sa.String), nullable=True),
         sa.Column('duration', sa.Float(precision=1), nullable=False),
 
         sa.PrimaryKeyConstraint('id', name='transcriptions_pkey'),
@@ -79,10 +85,10 @@ def upgrade() -> None:
 
     op.create_table(
         'waitlist',
-        sa.Column('email'),
-        sa.Column('date_waitlist'),
-        sa.Column('is_sent'),
-        sa.Column('date_sent'),
+        sa.Column('email', sa.String(225), nullable=False),
+        sa.Column('date_waitlist', sa.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column('is_sent', sa.Boolean(), nullable=False),
+        sa.Column('date_sent', sa.TIMESTAMP(timezone=True), nullable=False),
 
         sa.PrimaryKeyConstraint('email', name='waitlist_pkey')
     )
