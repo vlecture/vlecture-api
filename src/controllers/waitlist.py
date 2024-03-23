@@ -27,7 +27,7 @@ waitlist_router = APIRouter(prefix="/v1/waitlist",
                             tags=[WaitlistRouterTags.waitlist])
 
 
-@waitlist_router.post("/", tags=[WaitlistRouterTags.waitlist])
+@waitlist_router.post("")
 def join_waitlist(payload: WaitlistSchema, session: Session = Depends(get_db)):
 
     if waitlist.join_waitlist(session, payload):
