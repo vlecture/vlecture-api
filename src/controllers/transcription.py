@@ -24,6 +24,9 @@ from src.utils.db import get_db
 
 from src.models.transcription import Transcription
 
+from src.models.users import User
+from src.services.users import get_current_user
+
 from src.utils.settings import AWS_BUCKET_NAME
 from src.schemas.base import GenericResponseModel
 from src.schemas.transcription import (
@@ -53,7 +56,11 @@ transcription_router = APIRouter(
     "/create", 
     status_code=http.HTTPStatus.CREATED
 )
-async def transcribe_audio(req: TranscribeAudioRequestSchema, session: Session = Depends(get_db)):
+async def transcribe_audio(
+    req: TranscribeAudioRequestSchema, 
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
     transcribe_client = AWSTranscribeClient().get_client()
 
     service = TranscriptionService()
@@ -102,8 +109,8 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema, session: Session =
         transcription_chunks = generate_chunks_response.chunks
         total_duration = generate_chunks_response.duration
 
-        # TODO fetch real owner ID - to be integrated with Auth
-        owner_id = "d59ebdac-aec5-4eef-895b-8670ca85107e"
+        # Fetch user id
+        owner_id = user.id
 
         # Store Transcription object to database
         tsc_create_schema = TranscriptionSchema(
@@ -128,6 +135,7 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema, session: Session =
 
 
         # Then, store TranscriptionChunk object to database, bcs it needs to maintain a ForeignKey
+        print(f"Storing Transcription Chunks to db...")
         for chunk in transcription_chunks:
             await service.insert_transcription_chunks(
                 session=session,

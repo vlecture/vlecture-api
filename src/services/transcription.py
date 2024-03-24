@@ -139,7 +139,6 @@ class TranscriptionService:
             session.add(db_tsc_chunk)
             session.commit()
             session.refresh(db_tsc_chunk)
-            print("Success adding Transcription Chunk to DB.")
 
             return db_tsc_chunk
         except Exception as e:
