@@ -106,7 +106,6 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema, session: Session =
 
             title=tsc_title,
             tags=req.tags,
-            is_edited=False,
             duration=total_duration,
         )
 

@@ -1,10 +1,10 @@
 import uuid
 from uuid import UUID
 
-import http
 import time
 import requests
-import json
+import pytz
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 from typing import List, Union
@@ -27,8 +27,8 @@ from src.schemas.transcription import (
 class TranscriptionService:
     POLL_INTERVAL_SEC = 5  # 5sec  x 3%/sec
 
-    def get_datetime_now_jkt():
-        TIMEZONE_JKT = pytz.timezone('Asia/Jakarta')
+    def get_datetime_now_jkt(self):
+        TIMEZONE_JKT = pytz.timezone(zone='Asia/Jakarta')
         return datetime.now(tz=TIMEZONE_JKT)
 
     def generate_file_uri(self, bucket_name: str, filename: str, extension: str):
@@ -244,7 +244,7 @@ class TranscriptionService:
 
         for item in items:
             datetime_now_jkt = self.get_datetime_now_jkt()
-            chunk_duration = float(item.duration)
+            chunk_duration = float(item["duration"])
 
             chunk = TranscriptionChunksSchema(
                 id=uuid.uuid4(),
@@ -253,14 +253,16 @@ class TranscriptionService:
                 is_deleted=False,
                 
                 transcription_id=transcription_id,
-                content=item.content,
-                start_time=float(item.start_time),
-                end_time=float(item.end_time),
+                content=item["content"],
+                start_time=float(item["start_time"]),
+                end_time=float(item["end_time"]),
                 duration=chunk_duration,
                 is_edited=False,
             )
 
-            chunks += chunk
+            # Use `append` to correctly add the object to chunks list
+            chunks.append(chunk)
+
             total_duration += chunk_duration
         
         response = GenerateTranscriptionChunksResponseSchema(

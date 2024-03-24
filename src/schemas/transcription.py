@@ -17,14 +17,15 @@ class TranscriptionChunksSchema(DBBaseModel, BaseModel):
   Schema for Transcription Chunks object
   """
   
+  duration: float = 0 # how many seconds in a chunk
+  is_edited: bool = False
   transcription_id: UUID
+  
   start_time: float
   end_time: float
 
-  duration: float = 0 # how many seconds in a chunk
   content: Optional[str] = ""
   
-  is_edited: bool = False
 
   @field_validator("duration")
   @classmethod
@@ -34,18 +35,6 @@ class TranscriptionChunksSchema(DBBaseModel, BaseModel):
     
     return dur
   
-  class Config:
-        orm_mode = True
-  
-  # def build_response_model(self) -> TranscriptionChunksResponseSchema:
-  #   return TranscriptionChunksResponseSchema( 
-  #         id=self.id,
-  #         transcription_id=self.transcription_id,
-  #         content=self.content,
-  #         created_at=self.created_at,
-  #         duration=self.duration,
-  #       )
-
 class TranscriptionSchema(DBBaseModel, BaseModel):
   """
   Input type & schema for Transcription
@@ -57,37 +46,10 @@ class TranscriptionSchema(DBBaseModel, BaseModel):
       return transcriptionResObj
     
   """
+  owner_id: UUID
   title: str
   tags: Optional[Union[List[str], str]] = []
-  is_edited: bool = False
   duration: float
-
-  # NOTE commented out because we don't need to insert this table to the db
-  # chunks: Optional[List[TranscriptionChunksSchema]] = []
-  # @computed_field
-  # @property
-  # def duration(self) -> float:
-  #   """Duration property is computed automatically"""
-  #   if len(self.chunks) == 0:
-  #     return 0
-    
-  #   total = 0
-
-  #   for chunk in self.chunks:
-  #     total += chunk.duration
-    
-  #   return total
-  
-  class Config:
-        orm_mode = True
-
-  # def build_response_model(self) -> TranscriptionResponseSchema:
-  #   return TranscriptionResponseSchema( 
-  #         id=self.id,
-  #         title=self.title,
-  #         created_at=self.created_at,
-  #         duration=self.duration,
-  #       )
 
 ### REQUEST SCHEMAS
 class TranscribeAudioRequestSchema(BaseModel):
@@ -96,7 +58,7 @@ class TranscribeAudioRequestSchema(BaseModel):
    language_code: str
 
    # NOTE Mar 24, newly added, backward-compatible field definitions
-   title: str | None
+   title: Optional[str]
    tags: Optional[Union[List[str], str]] = []
    
 
