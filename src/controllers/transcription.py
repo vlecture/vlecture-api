@@ -38,7 +38,9 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
     language_code = req.language_code
 
     file_uri = service.generate_file_uri(
-        bucket_name=AWS_BUCKET_NAME, filename=filename, extension=file_format
+        bucket_name=AWS_BUCKET_NAME, 
+        filename=filename, 
+        extension=file_format,
     )
 
     try:
@@ -53,7 +55,12 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
 
         # Store created transcription to db
         print("STORING TRANSCRIPTION TO DB....")
-        store_response = await service.store_transcription_result(transcription_job_response=response)
+
+        tsc_response = await service.get_all_transcriptions(
+            transcribe_client=transcribe_client, job_name=job_name
+        )
+
+        store_response = await service.store_transcription_result(transcription_job_response=tsc_response)
 
         if (store_response):
             print(f"store_response: {store_response}")
@@ -150,32 +157,7 @@ async def view_transcription(job_name: str):
 
         items = transcription_data.get("results", {}).get("items", [])
 
-        grouped_items = []
-        temp_group = []
-
-        for index, item in enumerate(items):
-            if item.get("type") == "pronunciation":
-                temp_group.append(item)
-
-                if len(temp_group) == 5 or index == len(items) - 1:
-                    contents = " ".join(
-                        [i.get("alternatives")[0].get("content") for i in temp_group]
-                    )
-
-                    start_time = temp_group[0].get("start_time")
-                    end_time = temp_group[-1].get("end_time")
-                    duration = float(end_time) - float(start_time)
-
-                    grouped_items.append(
-                        {
-                            "content": contents,
-                            "start_time": start_time,
-                            "end_time": end_time,
-                            "duration": "{:.2f}".format(duration),
-                        }
-                    )
-
-                    temp_group = []
+        grouped_items = service.generate_grouped_items(items=items)
 
         return GenericResponseModel(
             status_code=http.HTTPStatus.OK,
