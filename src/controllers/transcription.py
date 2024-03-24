@@ -196,7 +196,7 @@ async def poll_transcription_job(req: PollTranscriptionRequestSchema):
             content="Error: Audio Transcription job failed."
         )
 
-@transcription_router.get(
+@transcription_router.post(
     "/view", 
     status_code=http.HTTPStatus.OK
 )
