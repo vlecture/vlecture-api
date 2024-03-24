@@ -1,20 +1,47 @@
 from enum import Enum
 import http
+import uuid
+from datetime import datetime
+import pytz
 
-from fastapi import APIRouter
+from fastapi import (
+    APIRouter,
+    Request,
+    Response,
+    Depends,
+    Body,
+)
+
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
 from botocore.exceptions import ClientError
 import requests
+
+from sqlalchemy.orm import Session
+
+from src.utils.db import get_db
+
+from src.models.transcription import Transcription
+
+from src.models.users import User
+from src.services.users import get_current_user
 
 from src.utils.settings import AWS_BUCKET_NAME
 from src.schemas.base import GenericResponseModel
 from src.schemas.transcription import (
     TranscribeAudioRequestSchema,
     PollTranscriptionRequestSchema,
+    ViewTranscriptionRequestSchema,
+
+    TranscriptionSchema,
+    TranscriptionChunksSchema,
 )
 from src.services.transcription import TranscriptionService
 from src.utils.aws.s3 import AWSS3Client
-from src.utils.aws.transcribe import AWSTranscribeClient
-
+from src.utils.aws.transcribe import (
+    AWSTranscribeClient,
+)
 
 class TranscriptionRouterTags(Enum):
     transcribe = "transcribe"
@@ -26,9 +53,14 @@ transcription_router = APIRouter(
 
 
 @transcription_router.post(
-    "/create", status_code=http.HTTPStatus.CREATED, response_model=GenericResponseModel
+    "/create", 
+    status_code=http.HTTPStatus.CREATED
 )
-async def transcribe_audio(req: TranscribeAudioRequestSchema):
+async def transcribe_audio(
+    req: TranscribeAudioRequestSchema, 
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
     transcribe_client = AWSTranscribeClient().get_client()
 
     service = TranscriptionService()
@@ -38,11 +70,14 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
     language_code = req.language_code
 
     file_uri = service.generate_file_uri(
-        bucket_name=AWS_BUCKET_NAME, filename=filename, extension=file_format
+        bucket_name=AWS_BUCKET_NAME, 
+        filename=filename, 
+        extension=file_format,
     )
 
     try:
-        response = await service.transcribe_file(
+        # Transcribe audio
+        await service.transcribe_file(
             transcribe_client=transcribe_client,
             job_name=job_name,
             file_uri=file_uri,
@@ -50,30 +85,91 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
             language_code=language_code,
         )
 
-        return GenericResponseModel(
+        # Store created transcription to db
+        print("STORING TRANSCRIPTION TO DB....")
+
+        formatted_tsc_response = await service.retrieve_formatted_transcription_from_job_name(
+            transcribe_client=transcribe_client,
+            job_name=job_name
+        )
+        
+        # Transcription Fields
+        tsc_datetime_now = service.get_datetime_now_jkt()
+        chunk_items = formatted_tsc_response["results"]["items"]
+
+        tsc_id = uuid.uuid4()
+        tsc_title = req.title if req.title != None else "My Transcription"
+
+        # Generate the TranscriptionChunk objects, and calculate total_duration first
+        generate_chunks_response = service.generate_transcription_chunks(
+            transcription_id=tsc_id,
+            items=chunk_items
+        )
+
+        transcription_chunks = generate_chunks_response.chunks
+        total_duration = generate_chunks_response.duration
+
+        # Fetch user id
+        owner_id = user.id
+
+        # Store Transcription object to database
+        tsc_create_schema = TranscriptionSchema(
+            id=tsc_id,
+            created_at=tsc_datetime_now,
+            updated_at=tsc_datetime_now,
+            is_deleted=False,
+
+            owner_id=owner_id,
+            title=tsc_title,
+            tags=req.tags,
+            duration=total_duration,
+        )
+
+        store_tsc_response = await service.insert_transcription_result(
+            session=session,
+            transcription_data=tsc_create_schema
+        )
+
+        if (store_tsc_response):
+            print(f"Stored transcription object to db: {store_tsc_response.__str__()}")
+
+
+        # Then, store TranscriptionChunk object to database, bcs it needs to maintain a ForeignKey
+        print(f"Storing Transcription Chunks to db...")
+        for chunk in transcription_chunks:
+            await service.insert_transcription_chunks(
+                session=session,
+                transcription_chunk_data=chunk
+            )
+        
+        response = {
+            "transcription": tsc_create_schema,
+            "transcription_chunks": transcription_chunks,
+        }
+
+        return JSONResponse(
             status_code=http.HTTPStatus.CREATED,
-            message="Successfully created audio transcription",
-            error="",
-            data=response,
+            content=jsonable_encoder(response)
         )
     except TimeoutError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
-            message="Error",
-            error="Timeout while processing transcription job.",
-            data={},
+            content="Error: Timeout during audio transcription."
         )
-    except ClientError:
-        return GenericResponseModel(
+    except RuntimeError:
+        return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
-            message="Error",
-            error="Audio Transcription job failed.",
-            data={},
+            content="Error: Audio Transcription job failed."
         )
-
+    except Exception:
+        return JSONResponse(
+            status_code=http.HTTPStatus.BAD_REQUEST,
+            content="Error: Something went wrong while transcribing audio."
+        )
 
 @transcription_router.get(
-    "/poll", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
+    "/poll", 
+    status_code=http.HTTPStatus.OK
 )
 async def poll_transcription_job(req: PollTranscriptionRequestSchema):
     transcribe_client = AWSTranscribeClient().get_client()
@@ -85,114 +181,50 @@ async def poll_transcription_job(req: PollTranscriptionRequestSchema):
             transcribe_client=transcribe_client, job_name=req.job_name
         )
 
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.OK,
-            message="Successfully retrieved transcription status",
-            error="",
-            data=response,
+            content=jsonable_encoder(response)
         )
     except TimeoutError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
-            message="Error",
-            error="Timeout while processing transcription job.",
-            data={},
+            content="Error: Timeout while processing transcription job."
         )
     except ClientError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
-            message="Error",
-            error="Audio Transcription job failed.",
-            data={},
+            content="Error: Audio Transcription job failed."
         )
 
-
-@transcription_router.get(
-    "/view", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
+@transcription_router.post(
+    "/view", 
+    status_code=http.HTTPStatus.OK
 )
-async def view_transcription(job_name: str):
+async def view_transcription(req: ViewTranscriptionRequestSchema):
     transcribe_client = AWSTranscribeClient().get_client()
-
+    job_name = req.job_name
+    
     service = TranscriptionService()
 
     try:
-        response = await service.get_all_transcriptions(
-            transcribe_client=transcribe_client, job_name=job_name
+        response = await service.retrieve_formatted_transcription_from_job_name(
+            transcribe_client=transcribe_client,
+            job_name=job_name
         )
 
-        aws_link = requests.get(response)
-
-        transcription_data = aws_link.json()
-
-        job_name = transcription_data.get("jobName")
-        accountId = transcription_data.get("accountId")
-        status = transcription_data.get("status")
-        transcripts = transcription_data.get("results", {}).get("transcripts", [])
-
-        temp_transcripts = []
-
-        if transcripts:
-            for i in range(len(transcripts)):
-                transcript_text = transcripts[i].get("transcript")
-                temp_transcripts.append(transcript_text)
-        else:
-            print("No transcripts found in the response")
-
-        full_transcript = " ".join(temp_transcripts)
-
-        items = transcription_data.get("results", {}).get("items", [])
-
-        grouped_items = []
-        temp_group = []
-
-        for index, item in enumerate(items):
-            if item.get("type") == "pronunciation":
-                temp_group.append(item)
-
-                if len(temp_group) == 5 or index == len(items) - 1:
-                    contents = " ".join(
-                        [i.get("alternatives")[0].get("content") for i in temp_group]
-                    )
-
-                    start_time = temp_group[0].get("start_time")
-                    end_time = temp_group[-1].get("end_time")
-                    duration = float(end_time) - float(start_time)
-
-                    grouped_items.append(
-                        {
-                            "content": contents,
-                            "start_time": start_time,
-                            "end_time": end_time,
-                            "duration": "{:.2f}".format(duration),
-                        }
-                    )
-
-                    temp_group = []
-
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.OK,
-            message="Successfully retrieved transcription status",
-            error="",
-            data={
-                "jobName": job_name,
-                "accountId": accountId,
-                "status": status,
-                "results": {"transcripts": full_transcript, "items": grouped_items},
-            },
+            content=jsonable_encoder(response)
         )
     except TimeoutError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
-            message="Error",
-            error="Timeout while processing transcription job.",
-            data={},
+            content="Error: Timeout while processing transcription job."
         )
     except ClientError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
-            message="Error",
-            error="Audio Transcription job failed.",
-            data={},
+            content="Error: Audio Transcription job failed.."
         )
 
 @transcription_router.delete(
@@ -208,23 +240,17 @@ async def delete_transcription(job_name: str):
             transcribe_client=transcribe_client, job_name=job_name
         )
 
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.OK,
-            message="Successfully deleted transcription job",
-            error="",
-            data=response,
+            content=jsonable_encoder(response)
         )
     except TimeoutError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
-            message="Error",
-            error="Timeout while trying to delete transcription job.",
-            data={},
+            content="Error: Timeout while trying to delete transcription job."
         )
     except ClientError as e:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
-            message="Error",
-            error=f"Failed to delete transcription job: {e}",
-            data={},
+            content=f"Error: Failed to delete transcription job: {e}",
         )
