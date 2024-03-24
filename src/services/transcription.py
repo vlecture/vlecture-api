@@ -147,18 +147,17 @@ class TranscriptionService:
         finally:
             session.close()
 
+    async def _fetch_transcription_data(self, transcribe_client, job_name: str):
+        response = await self.get_all_transcriptions(transcribe_client=transcribe_client, job_name=job_name)
+        aws_link = requests.get(response)
+        return aws_link.json()
+
     async def retrieve_formatted_transcription_from_job_name(
         self,
         transcribe_client,
         job_name: str
     ):
-        response = await self.get_all_transcriptions(
-            transcribe_client=transcribe_client, job_name=job_name
-        )
-
-        aws_link = requests.get(response)
-
-        transcription_data = aws_link.json()
+        transcription_data = await self._fetch_transcription_data(transcribe_client, job_name)
 
         job_name = transcription_data.get("jobName")
         accountId = transcription_data.get("accountId")

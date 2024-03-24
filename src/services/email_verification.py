@@ -151,37 +151,18 @@ class EmailVerificationService:
       """
 
 
-      try:
-         message = MessageSchema(
-            subject=MESSAGE_SUBJECT,
-            recipients=[recipient],
-            body=MESSAGE_BODY,
-            subtype=MessageType.html,
-         )
+      message = MessageSchema(
+         subject=MESSAGE_SUBJECT,
+         recipients=[recipient],
+         body=MESSAGE_BODY,
+         subtype=MessageType.html,
+      )
 
-         client = get_mail_client()
+      client = get_mail_client()
 
-         await client.send_message(message)
+      await client.send_message(message)
 
-         return GenericResponseModel(
-            status_code=http.HTTPStatus.OK,
-            message="Email has been sent.",
-            error=False,
-            data=None,
-         )
-      except ValueError:
-         return GenericResponseModel(
-            status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
-            error=True,
-            message="Invalid value when sending email.",
-            data={},
-         )
-      except Exception:
-         return GenericResponseModel(
-            status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
-            error=True,
-            message="Unknown error while sending email",
-            data={},
-         )
+      return message
+
   
    

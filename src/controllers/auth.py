@@ -10,7 +10,6 @@ from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
 from src.utils.db import get_db
-from src.schemas.base import GenericResponseModel
 from src.schemas.auth import (
   RegisterSchema, 
   LoginSchema, 
@@ -19,6 +18,8 @@ from src.schemas.auth import (
   OTPCheckSchema,
   LogoutSchema
 )
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 
 from src.services import auth
 from src.services.email_verification import EmailVerificationService
@@ -66,11 +67,9 @@ async def send_verif_email(payload: EmailSchema = Body(), session: Session = Dep
     is_user_exists = service.is_user_exists(session=session, payload=payload)
 
     if (is_user_exists):
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            error=True,
-            message="User already exists",
-            data={}
+            content="Error: User already exists!"
         )
     
     recipient = payload.model_dump().get("email")
@@ -82,17 +81,31 @@ async def send_verif_email(payload: EmailSchema = Body(), session: Session = Dep
         token=token
     )
 
-    service.insert_token_to_db(
-        session=session,
-        otp_data=otp_create_schema_obj
-    )
+    try:
+        service.insert_token_to_db(
+            session=session,
+            otp_data=otp_create_schema_obj
+        )
 
-    response = await service.send_verif_email(
-        recipient=recipient,
-        token=token,
-    )
+        response = await service.send_verif_email(
+            recipient=recipient,
+            token=token,
+        )
 
-    return response
+        return JSONResponse(
+            status_code=http.HTTPStatus.OK,
+            content=jsonable_encoder(response)
+        )
+    except ValueError:
+        return JSONResponse(
+            status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
+            content="Error: Invalid value when sending email."
+        )
+    except Exception as err:
+        return JSONResponse(
+            status_code=http.HTTPStatus.BAD_REQUEST,
+            content="Error: Unknown problem while sending email."
+        )
 
 @auth_router.post("/verify/check")
 def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Depends(get_db)):
@@ -113,11 +126,9 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
     )
 
     if not is_answer_valid:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
-            error=True,
-            message="The token inputted is invalid",
-            data={}
+            content="Error: The inputted token is invalid."
         )
     
     service.purge_user_otp(
@@ -125,13 +136,11 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
         email=user_email
     )
 
-    return GenericResponseModel(
+    return JSONResponse(
         status_code=http.HTTPStatus.OK,
-        error=False,
-        message="OTP input is valid",
-        data={}
+        content="OTP input is valid."
     )
-    
+
     
 @auth_router.post("/renew", tags=[AuthRouterTags.auth])
 def renew(
