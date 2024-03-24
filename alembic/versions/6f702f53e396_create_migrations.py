@@ -88,7 +88,7 @@ def upgrade() -> None:
         sa.Column('email', sa.String(225), nullable=False),
         sa.Column('date_waitlist', sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column('is_sent', sa.Boolean(), nullable=False),
-        sa.Column('date_sent', sa.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column('date_sent', sa.TIMESTAMP(timezone=True), nullable=True),
 
         sa.PrimaryKeyConstraint('email', name='waitlist_pkey')
     )
