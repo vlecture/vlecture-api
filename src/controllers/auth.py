@@ -20,7 +20,8 @@ from src.schemas.auth import (
   LogoutSchema
 )
 
-from src.services import auth, email_verification
+from src.services import auth
+from src.services.email_verification import EmailVerificationService
 
 
 class AuthRouterTags(Enum):
@@ -60,7 +61,9 @@ async def send_verif_email(payload: EmailSchema = Body(), session: Session = Dep
     - "email": list of emails to be sent to
     """
 
-    is_user_exists = email_verification.is_user_exists(session=session, payload=payload)
+    service = EmailVerificationService()
+
+    is_user_exists = service.is_user_exists(session=session, payload=payload)
 
     if (is_user_exists):
         return GenericResponseModel(
@@ -72,19 +75,19 @@ async def send_verif_email(payload: EmailSchema = Body(), session: Session = Dep
     
     recipient = payload.model_dump().get("email")
 
-    token = email_verification.generate_token()
+    token = service.generate_token()
 
     otp_create_schema_obj = OTPCreateSchema(
         email=recipient,
         token=token
     )
 
-    email_verification.insert_token_to_db(
+    service.insert_token_to_db(
         session=session,
         otp_data=otp_create_schema_obj
     )
 
-    response = await email_verification.send_verif_email(
+    response = await service.send_verif_email(
         recipient=recipient,
         token=token,
     )
@@ -99,10 +102,12 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
     - "token": user-inputted token
     """
 
+    service = EmailVerificationService()
+
     user_email = payload.model_dump().get("email")
 
     # Check if OTP is valid
-    is_answer_valid = email_verification.is_token_valid(
+    is_answer_valid = service.is_token_valid(
         session=session,
         otp_check_input=payload
     )
@@ -115,7 +120,7 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
             data={}
         )
     
-    email_verification.purge_user_otp(
+    service.purge_user_otp(
         session=session,
         email=user_email
     )
