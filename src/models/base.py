@@ -1,11 +1,10 @@
 from datetime import datetime
 
 import uuid 
-from uuid import UUID
 from pytz import timezone
 from typing import Any
 
-from sqlalchemy import Column, TIMESTAMP, Boolean, Integer, create_engine
+from sqlalchemy import Column, TIMESTAMP, Boolean, Integer, create_engine, UUID
 from sqlalchemy.orm import Session
 
 from src.utils.db import get_db
