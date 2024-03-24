@@ -14,7 +14,6 @@ VALID_NOTE_ID = "5acb2e38-0636-4b71-a468-fd695b5d4a26"
 VALID_SET_ID = "5acb2e38-0636-4b71-a468-fd695b5d4a25"
 
 # Positive Cases
-@pytest.mark.anyio
 def test_fetch_flashcard_sets_positive(test_db):
     response = requests.get(
         test_server + fetch_flashcard_sets_url, 
@@ -25,7 +24,6 @@ def test_fetch_flashcard_sets_positive(test_db):
     assert response.status_code == 200
     assert response.json()['message'] == "Succesfully fetched all flashcard sets from current user."
 
-@pytest.mark.anyio
 def test_fetch_flashcards_positive(test_db):
     response = requests.get(
         test_server + fetch_flashcards_url, 
@@ -37,7 +35,6 @@ def test_fetch_flashcards_positive(test_db):
     assert response.json()['message'] == "Succesfully fetched all flashcards from set."
     
 # Negative Cases
-@pytest.mark.anyio
 def test_fetch_flashcard_sets_not_logged_in(test_db):
     response = requests.get(
         test_server + fetch_flashcard_sets_url, 
@@ -47,7 +44,6 @@ def test_fetch_flashcard_sets_not_logged_in(test_db):
     assert response.status_code == 401 
     assert response.json()['error'] == "You don't have access to these flashcard sets or flashcard sets don't exist."
 
-@pytest.mark.anyio
 def test_fetch_flashcards_not_logged_in(test_db):
     response = requests.get(
         test_server + fetch_flashcards_url, 
@@ -58,7 +54,6 @@ def test_fetch_flashcards_not_logged_in(test_db):
     assert response.json()['error'] == "You don't have access to these flashcards or flashcards don't exist."
 
 # Edge Cases
-@pytest.mark.anyio
 def test_fetch_flashcard_sets_no_sets(test_db):
     response = requests.get(
         test_server + fetch_flashcard_sets_url, 
