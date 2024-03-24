@@ -1,5 +1,4 @@
 import uuid
-from uuid import UUID
 from pytz import timezone
 from datetime import datetime
 

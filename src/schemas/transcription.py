@@ -146,7 +146,7 @@ class TranscriptionChunkItemSchema(BaseModel):
    end_time: str
 
 # STORE TRANSCRIPTION SERVICE
-class ServiceRetrieveTranscriptionChunkItemSchema:
+class ServiceRetrieveTranscriptionChunkItemSchema(BaseModel):
    """
    The returned response from `service.retrieve_transcription_from_job_name`
    """
