@@ -52,7 +52,7 @@ def view_flashcard_sets(req: FlashcardSetsRequestSchema, session: Session = Depe
         )
     except Exception:
          return GenericResponseModel(
-            status_code=http.HTTPStatus.NOT_FOUND,
+            status_code=http.HTTPStatus.UNAUTHORIZED,
             message="Error",
             error="You don't have access to these flashcard sets or flashcard sets don't exist.",
             data={},
@@ -87,7 +87,7 @@ def view_flashcards(req: FlashcardsRequestSchema, session: Session = Depends(get
         )
     except Exception as e:
         return GenericResponseModel(
-            status_code=http.HTTPStatus.NOT_FOUND,
+            status_code=http.HTTPStatus.UNAUTHORIZED,
             message="Error",
             error="You don't have access to these flashcards or flashcards don't exist.",
             data={},
