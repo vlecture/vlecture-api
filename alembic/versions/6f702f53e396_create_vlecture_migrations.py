@@ -79,6 +79,11 @@ def upgrade() -> None:
         sa.Column('duration', sa.Float(precision=1), nullable=False),
         sa.Column('is_edited', sa.Boolean, nullable=False),
         sa.Column('transcription_id', sa.UUID(), nullable=False),
+        
+        sa.Column('start_time', sa.Float(precision=1), nullable=False),
+        sa.Column('end_time', sa.Float(precision=1), nullable=False),
+
+        sa.Column('content', sa.String(255), nullable=False),
 
         sa.PrimaryKeyConstraint('id', name='transcription_chunks_pkey'),
     )
