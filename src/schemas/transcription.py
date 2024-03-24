@@ -5,7 +5,6 @@ from uuid import UUID
 
 from pydantic import (
   BaseModel, 
-  Field, 
   computed_field,
   field_validator,
 )
@@ -14,16 +13,7 @@ from src.schemas.base import DBBaseModel
 
 TRANSCRIPTION_DEFAULT_TITLE = "My Transcription"
 
-class TranscriptionChunkItemAlternativesSchema(BaseModel):
-   confidence: str
-   content: str
-
-class TranscriptionChunkItemSchema(BaseModel):
-   item_type: str
-   alternatives: List[TranscriptionChunkItemAlternativesSchema]
-   start_time: str
-   end_time: str
-
+### REQUEST SCHEMAS
 class TranscribeAudioRequestSchema(BaseModel):
    s3_filename: str
    job_name: str
@@ -32,6 +22,10 @@ class TranscribeAudioRequestSchema(BaseModel):
 class PollTranscriptionRequestSchema(BaseModel):
    job_name: str
 
+class ViewTranscriptionRequestSchema(BaseModel):
+   job_name: str
+
+### RESPONSE SCHEMAS
 class TranscriptionResponseSchema(BaseModel):
   """
   Return type for Transcription object
@@ -55,6 +49,18 @@ class TranscriptionChunksResponseSchema(BaseModel):
   created_at: datetime
   duration: float
 
+# GENERIC SCHEMAS
+class TranscriptionChunkItemAlternativesSchema(BaseModel):
+   confidence: str
+   content: str
+
+class TranscriptionChunkItemSchema(BaseModel):
+   item_type: str
+   alternatives: List[TranscriptionChunkItemAlternativesSchema]
+   start_time: str
+   end_time: str
+
+# DATABASE OBJECT SCHEMA
 class TranscriptionChunksSchema(DBBaseModel, BaseModel):
   """
   Schema for Transcription Chunks object

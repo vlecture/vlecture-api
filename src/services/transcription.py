@@ -79,80 +79,10 @@ class TranscriptionService:
             )
 
             return job_result
-
-            # Grab the transcription text
-            # content = requests.get(job_result['TranscriptionJob']['Transcript']['TranscriptFileUri'])
-            # res = json.loads(content.content.decode('utf8'))['results']['transcripts'][0]['transcript']
-
-            # return res
         except TimeoutError:
             return TimeoutError("Timeout when polling the transcription results")
         except ClientError:
             raise RuntimeError("Transcription Job failed.")
-
-    # TODO debug - Helper function
-    # def extract_query_params_from_transcribe_url(self, query_param_part: str) -> dict:
-    #     KV_PAIR_DELIM = "&"
-    #     KEY_VALUE_DELIM = "="
-
-    #     query_params = {}
-
-    #     query_param_splitted = query_param_part.split(KV_PAIR_DELIM)
-
-    #     for kv_pair in query_param_splitted:
-    #         # Split pair based on "="
-    #         [key, value] = kv_pair.split(KEY_VALUE_DELIM)
-
-    #         # Construct query_params key-value pair
-    #         query_params[key] = value
-
-    #     # Extra steps: Format, %2F -> "/" to avoid "Malformed Error"
-    #     query_params["X-Amz-Credential"] = query_params["X-Amz-Credential"].replace(r"%2F", "/")
-
-    #     return query_params
-
-    # async def store_transcription_result(
-    #     self, 
-    #     transcription_job_response
-    # ):
-    #     try:
-    #         URI_DELIMITER = "?"
-            
-    #         # Fetch Transcription JSON file using custom URL path and Headers
-    #         transcript_file_uri = transcription_job_response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
-            
-    #         # Split by "="
-    #         res_path, res_query_params = transcript_file_uri.split(URI_DELIMITER)
-
-    #         query_params = self.extract_query_params_from_transcribe_url(res_query_params)
-
-    #         print(f"\nquery_params: {query_params}\n\n")
-
-    #         # Send GET request to AWS Endpoint (valid for 15 mins since completion time)
-    #         response = requests.get(
-    #             # url=res_path, 
-    #             url=transcript_file_uri,
-    #             # params=query_params,
-    #         )
-
-    #         data = {}
-
-    #         print(f"store_transcription_result: {response.__str__()}")
-    #         print(f"url: {response.url}")
-            
-    #         if (response.json()):
-    #             data = response.json()
-    #             print(f"json: {data}")
-
-    #         # TODO store to db async-ly
-
-    #         # TODO remove
-    #         return data
-    #     except Exception as e:
-    #         print(e)
-    #         raise RuntimeError("Failed to save transcription")
-
-    
 
     async def store_transcription_result(
         self, 
@@ -160,6 +90,51 @@ class TranscriptionService:
     ):
         pass
 
+    async def retrieve_transcription_from_job_name(
+        self,
+        transcribe_client,
+        job_name: str
+    ):
+        response = await self.get_all_transcriptions(
+            transcribe_client=transcribe_client, job_name=job_name
+        )
+
+        aws_link = requests.get(response)
+
+        transcription_data = aws_link.json()
+
+        job_name = transcription_data.get("jobName")
+        accountId = transcription_data.get("accountId")
+        status = transcription_data.get("status")
+        transcripts = transcription_data.get("results", {}).get("transcripts", [])
+
+        temp_transcripts = []
+
+        if transcripts:
+            for i in range(len(transcripts)):
+                transcript_text = transcripts[i].get("transcript")
+                temp_transcripts.append(transcript_text)
+        else:
+            print("No transcripts found in the response")
+
+        full_transcript = " ".join(temp_transcripts)
+
+        items = transcription_data.get("results", {}).get("items", [])
+
+        grouped_items = self.generate_grouped_items(items=items)
+
+        response = {
+            "jobName": job_name,
+            "accountId": accountId,
+            "status": status,
+            "results": {
+                "transcripts": full_transcript, 
+                "items": grouped_items
+            },
+        }
+
+        return response
+        
     def generate_grouped_items(
         self,
         items: Union[List[TranscriptionChunkItemSchema], None],
