@@ -116,7 +116,6 @@ class TranscriptionService:
             session.add(db_tsc)
             session.commit()
             session.refresh(db_tsc)
-            print("Success adding Transcription to DB.")
 
             return db_tsc
         except Exception as e:

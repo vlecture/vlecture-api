@@ -64,6 +64,14 @@ class Transcription(Base):
   def get_by_id(cls, uuid: UUID) -> TranscriptionSchema:
     base = super().get_by_id(uuid)
     return base.__to_model() if base else None
+  
+  def __str__(self):
+    return f"""
+      Transcription\n
+      ===
+      id: {self.id}\n
+      title: {self.title}
+    """
 
 
 class TranscriptionChunk(Base):
@@ -75,7 +83,7 @@ class TranscriptionChunk(Base):
   is_deleted = Column(Boolean, default=False)
 
   # Extra fields
-  duration = Column(Float(precision=1), default=0, nullable=False)
+  duration = Column(Float(precision=1),nullable=False)
 
   is_edited = Column(Boolean, default=False)
 
@@ -85,6 +93,19 @@ class TranscriptionChunk(Base):
 
   # One to many relationship with Transcription
   transcription_parent = relationship("Transcription", back_populates="chunks")
+
+  start_time = Column(Float(precision=1), nullable=False)
+  end_time = Column(Float(precision=1), nullable=False)
+
+  content = Column(String(255), nullable=True)
+
+  def __str__(self):
+    return f"""
+    Transcription Chunk\n
+    ===
+    id: {self.id}\n
+    content: {self.content}
+    """
 
   def __to_model(self) -> TranscriptionChunksSchema:
     """ Converts DB ORM object to Pydantic Model ('schema') """
