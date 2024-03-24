@@ -29,6 +29,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://vlecture.tech",
         "https://app.vlecture.tech",
         "https://staging.app.vlecture.tech",
         "https://api.vlecture.tech",
