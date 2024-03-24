@@ -1,9 +1,25 @@
 from enum import Enum
 import http
+import uuid
+from datetime import datetime
+import pytz
 
-from fastapi import APIRouter
+from fastapi import (
+    APIRouter,
+    Request,
+    Response,
+    Depends,
+    Body,
+)
+
 from botocore.exceptions import ClientError
 import requests
+
+from sqlalchemy.orm import Session
+
+from src.utils.db import get_db
+
+from src.models.transcription import Transcription
 
 from src.utils.settings import AWS_BUCKET_NAME
 from src.schemas.base import GenericResponseModel
@@ -11,11 +27,13 @@ from src.schemas.transcription import (
     TranscribeAudioRequestSchema,
     PollTranscriptionRequestSchema,
     ViewTranscriptionRequestSchema,
+
+    TranscriptionSchema,
+    TranscriptionChunksSchema,
 )
 from src.services.transcription import TranscriptionService
 from src.utils.aws.s3 import AWSS3Client
 from src.utils.aws.transcribe import AWSTranscribeClient
-
 
 class TranscriptionRouterTags(Enum):
     transcribe = "transcribe"
@@ -29,7 +47,7 @@ transcription_router = APIRouter(
 @transcription_router.post(
     "/create", status_code=http.HTTPStatus.CREATED, response_model=GenericResponseModel
 )
-async def transcribe_audio(req: TranscribeAudioRequestSchema):
+async def transcribe_audio(req: TranscribeAudioRequestSchema, session: Session = Depends(get_db)):
     transcribe_client = AWSTranscribeClient().get_client()
 
     service = TranscriptionService()
@@ -46,7 +64,7 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
 
     try:
         # Transcribe audio
-        response = await service.transcribe_file(
+        created_tsc_response = await service.transcribe_file(
             transcribe_client=transcribe_client,
             job_name=job_name,
             file_uri=file_uri,
@@ -57,20 +75,66 @@ async def transcribe_audio(req: TranscribeAudioRequestSchema):
         # Store created transcription to db
         print("STORING TRANSCRIPTION TO DB....")
 
-        tsc_response = await service.get_all_transcriptions(
-            transcribe_client=transcribe_client, job_name=job_name
+        formatted_tsc_response = await service.retrieve_formatted_transcription_from_job_name(
+            transcribe_client=transcribe_client,
+            job_name=job_name
+        )
+        
+        # Transcription Fields
+        tsc_datetime_now = service.get_datetime_now_jkt()
+        chunk_items = formatted_tsc_response["results"]["items"]
+
+        tsc_id = uuid.uuid4()
+        tsc_title = req.title if req.title != None else "My Transcription"
+
+        # Generate the TranscriptionChunk objects, and calculate total_duration first
+        generate_chunks_response = service.generate_transcription_chunks(
+            transcription_id=tsc_id,
+            items=chunk_items
         )
 
-        store_response = await service.store_transcription_result(transcription_job_response=tsc_response)
+        total_duration = generate_chunks_response.duration
+        chunks = generate_chunks_response.chunks
 
-        if (store_response):
-            print(f"store_response: {store_response}")
+        # Store Transcription object to database
+        ## No need to insert chunk column bcs there aren't any
+        tsc_create_schema = TranscriptionSchema(
+            id=tsc_id,
+            created_at=tsc_datetime_now,
+            updated_at=tsc_datetime_now,
+            is_deleted=False,
+
+            title=tsc_title,
+            tags=req.tags,
+            is_edited=False,
+            duration=total_duration,
+        )
+
+
+        store_tsc_response = await service.insert_transcription_result(
+            session=session,
+            transcription_data=tsc_create_schema
+        )
+
+        if (store_tsc_response):
+            print(f"Stored transcription object to db: {store_tsc_response.__str__()}")
+
+
+        # Then, store TranscriptionChunk object to database, bcs it needs to maintain a ForeignKey
+        for chunk in chunks:
+            store_tsc_chunk_response = await service.insert_transcription_chunks(
+                session=session,
+                transcription_chunk_data=chunk
+            )
+
+            if (store_tsc_response):
+                print(f"Stored chunk {store_tsc_chunk_response.id} to db")
 
         return GenericResponseModel(
             status_code=http.HTTPStatus.CREATED,
             message="Successfully created audio transcription",
             error="",
-            data=response,
+            data=created_tsc_response,
         )
     except TimeoutError:
         return GenericResponseModel(
@@ -133,7 +197,7 @@ async def view_transcription(req: ViewTranscriptionRequestSchema):
     service = TranscriptionService()
 
     try:
-        response = await service.retrieve_transcription_from_job_name(
+        response = await service.retrieve_formatted_transcription_from_job_name(
             transcribe_client=transcribe_client,
             job_name=job_name
         )
