@@ -4,11 +4,10 @@ import time
 import requests
 import json
 
-from fastapi import Response
+from typing import List, Union
 from botocore.exceptions import ClientError
 
-from src.utils.aws.s3 import AWSS3Client
-from src.utils.aws.transcribe import AWSTranscribeClient
+from src.schemas.transcription import TranscriptionChunkItemSchema
 
 
 class TranscriptionService:
@@ -91,58 +90,108 @@ class TranscriptionService:
         except ClientError:
             raise RuntimeError("Transcription Job failed.")
 
-    # Helper function
-    def extract_query_params_from_transcribe_url(self, query_param_part: str) -> dict:
-        KV_PAIR_DELIM = "&"
-        KEY_VALUE_DELIM = "="
+    # TODO debug - Helper function
+    # def extract_query_params_from_transcribe_url(self, query_param_part: str) -> dict:
+    #     KV_PAIR_DELIM = "&"
+    #     KEY_VALUE_DELIM = "="
 
-        query_params = {}
+    #     query_params = {}
 
-        query_param_splitted = query_param_part.split(KV_PAIR_DELIM)
+    #     query_param_splitted = query_param_part.split(KV_PAIR_DELIM)
 
-        for kv_pair in query_param_splitted:
-            # Split pair based on "="
-            [key, value] = kv_pair.split(KEY_VALUE_DELIM)
+    #     for kv_pair in query_param_splitted:
+    #         # Split pair based on "="
+    #         [key, value] = kv_pair.split(KEY_VALUE_DELIM)
 
-            # Construct query_params key-value pair
-            query_params[key] = value
+    #         # Construct query_params key-value pair
+    #         query_params[key] = value
 
-        # TODO remove
-        print(f"extract_query_params_from_transcribe_url: {query_params}")
+    #     # Extra steps: Format, %2F -> "/" to avoid "Malformed Error"
+    #     query_params["X-Amz-Credential"] = query_params["X-Amz-Credential"].replace(r"%2F", "/")
 
-        return query_params
+    #     return query_params
+
+    # async def store_transcription_result(
+    #     self, 
+    #     transcription_job_response
+    # ):
+    #     try:
+    #         URI_DELIMITER = "?"
+            
+    #         # Fetch Transcription JSON file using custom URL path and Headers
+    #         transcript_file_uri = transcription_job_response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
+            
+    #         # Split by "="
+    #         res_path, res_query_params = transcript_file_uri.split(URI_DELIMITER)
+
+    #         query_params = self.extract_query_params_from_transcribe_url(res_query_params)
+
+    #         print(f"\nquery_params: {query_params}\n\n")
+
+    #         # Send GET request to AWS Endpoint (valid for 15 mins since completion time)
+    #         response = requests.get(
+    #             # url=res_path, 
+    #             url=transcript_file_uri,
+    #             # params=query_params,
+    #         )
+
+    #         data = {}
+
+    #         print(f"store_transcription_result: {response.__str__()}")
+    #         print(f"url: {response.url}")
+            
+    #         if (response.json()):
+    #             data = response.json()
+    #             print(f"json: {data}")
+
+    #         # TODO store to db async-ly
+
+    #         # TODO remove
+    #         return data
+    #     except Exception as e:
+    #         print(e)
+    #         raise RuntimeError("Failed to save transcription")
+
+    
 
     async def store_transcription_result(
         self, 
         transcription_job_response
     ):
-        try:
-            URI_DELIMITER = "?"
-            
-            # Fetch Transcription JSON file using custom URL path and Headers
-            transcript_file_uri = transcription_job_response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
-            
-            # Split by "="
-            res_path, res_query_params = transcript_file_uri.split(URI_DELIMITER)
+        pass
 
-            query_params = self.extract_query_params_from_transcribe_url(res_query_params)
+    def generate_grouped_items(
+        self,
+        items: Union[List[TranscriptionChunkItemSchema], None],
+    ):
+        grouped_items = []
+        temp_group = []
 
-            # Send GET request to AWS Endpoint (valid for 15 mins since completion time)
-            response = requests.get(url=res_path, params=query_params)
+        for index, item in enumerate(items):
+            if item.get("type") == "pronunciation":
+                temp_group.append(item)
 
-            print(f"store_transcription_result: {response.__str__()}")
-            print(f"url: {response.url}")
-            print(f"json: {response.json()}")
+                if len(temp_group) == 5 or index == len(items) - 1:
+                    contents = " ".join(
+                        [i.get("alternatives")[0].get("content") for i in temp_group]
+                    )
 
-            # TODO store to db async-ly
+                    start_time = temp_group[0].get("start_time")
+                    end_time = temp_group[-1].get("end_time")
+                    duration = float(end_time) - float(start_time)
 
-            # TODO remove
-            return response
-        except Exception as e:
-            print(e)
-            raise RuntimeError("Failed to save transcription")
+                    grouped_items.append(
+                        {
+                            "content": contents,
+                            "start_time": start_time,
+                            "end_time": end_time,
+                            "duration": "{:.2f}".format(duration),
+                        }
+                    )
 
+                    temp_group = []
         
+        return grouped_items
 
     async def delete_transcription_job(self, transcribe_client, job_name: str):
         try:

@@ -14,6 +14,16 @@ from src.schemas.base import DBBaseModel
 
 TRANSCRIPTION_DEFAULT_TITLE = "My Transcription"
 
+class TranscriptionChunkItemAlternativesSchema(BaseModel):
+   confidence: str
+   content: str
+
+class TranscriptionChunkItemSchema(BaseModel):
+   item_type: str
+   alternatives: List[TranscriptionChunkItemAlternativesSchema]
+   start_time: str
+   end_time: str
+
 class TranscribeAudioRequestSchema(BaseModel):
    s3_filename: str
    job_name: str
