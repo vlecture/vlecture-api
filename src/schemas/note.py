@@ -59,3 +59,8 @@ class NoteSchema(BaseModel):
     }
   )
 
+# REQUEST SCHEMAS
+class GenerateNoteRequestSchema(BaseModel):
+  transcript: str
+
+# RESPONSE SCHEMAS

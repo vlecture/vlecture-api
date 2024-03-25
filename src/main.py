@@ -15,7 +15,13 @@ from src.utils.settings import (
     MONGODB_DB_NAME,
     MONGODB_COLLECTION_NAME,
 )
-from src.controllers import transcription, auth, upload, waitlist
+from src.controllers import (
+    transcription, 
+    auth, 
+    upload, 
+    waitlist,
+    note
+)
 from src.utils.db import Base, engine
 
 
@@ -66,7 +72,7 @@ app.include_router(auth.auth_router)
 app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
 app.include_router(waitlist.waitlist_router)
-
+app.include_router(note.note_router)
 
 
 # Connect to MongoDB on startup
@@ -74,6 +80,7 @@ app.include_router(waitlist.waitlist_router)
 def startup_mongodb_client():
     app.mongodb_client = MongoClient(MONGODB_URL)
     app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
+    app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
     print("Connected to MongoDB Database.")
 
 @app.on_event("shutdown")
