@@ -3,14 +3,21 @@ import sentry_sdk
 from fastapi import (
     FastAPI,
 )
+
+from pymongo import MongoClient
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from src.utils.settings import (
     SENTRY_DSN,
+    MONGODB_URL,
+    MONGODB_DB_NAME,
+    MONGODB_COLLECTION_NAME,
 )
 from src.controllers import transcription, auth, upload, waitlist
 from src.utils.db import Base, engine
+
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
@@ -59,6 +66,22 @@ app.include_router(auth.auth_router)
 app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
 app.include_router(waitlist.waitlist_router)
+
+
+
+# Connect to MongoDB on startup
+@app.on_event("startup")
+def startup_mongodb_client():
+    app.mongodb_client = MongoClient(MONGODB_URL)
+    app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
+    print("Connected to MongoDB Database.")
+
+@app.on_event("shutdown")
+def shutdown_db_client():
+    app.mongodb_client.close()
+    print("Closed MongoDB Connection")
+
+
 # sentry trigger error test, comment when not needed
 # @app.get("/sentry-debug")
 # async def trigger_error():
