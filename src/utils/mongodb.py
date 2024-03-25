@@ -1,4 +1,6 @@
-import motor.motor_asyncio
+from pymongo import (
+  MongoClient
+)
 
 from src.utils.settings import (
   MONGODB_URL,
@@ -6,6 +8,6 @@ from src.utils.settings import (
   MONGODB_COLLECTION_NAME
 )
 
-client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
+client = MongoClient(MONGODB_URL)
 db = client.get_database(MONGODB_DB_NAME)
 note_collection = db.get_collection(MONGODB_COLLECTION_NAME)
