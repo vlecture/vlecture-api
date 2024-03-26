@@ -21,10 +21,14 @@ from typing import (
 from src.models.users import User
 from src.services.users import get_current_user
 
+from src.services.note import (
+  NoteService
+)
 
 from src.schemas.note import (
   NoteSchema,
-  GenerateNoteRequestSchema,
+  GenerateVlectureNoteRequestSchema,
+  GenerateNoteServiceRequestSchema,
 )
 
 class NoteRouterTags(Enum):
@@ -43,25 +47,36 @@ note_router = APIRouter(
 )
 def generate_vlecture_note(
   request: Request, 
-  transcript: GenerateNoteRequestSchema = Body(),
+  payload: GenerateVlectureNoteRequestSchema = Body(),
   user: User = Depends(get_current_user),
 ):
-  transcript = jsonable_encoder(transcript)
+  service = NoteService()
+  payload = jsonable_encoder(payload)
+  
+  transcript = payload.transcript
+  title = payload.title
 
-  # Process Note Generation here...
-  # ...
+  # Convert Transcript into vlecture Note object
+  req_generate_note = GenerateNoteServiceRequestSchema(
+    transcript=transcript,
+    title=title,
+    owner_id=user.id,
+  )
 
-  # Generate object to be inserted to mdb
-  mdb_note_schema = {}
+  created_note_schema = service.generate_note_from_transcription(
+    payload=req_generate_note
+  )
 
-  # Store to MongoDB
-  new_note = request.app.note_collection.insert_one(mdb_note_schema)
-
-  created_note = request.app.note_collection.find_one({
-    "_id": new_note.inserted_id
+  # Store Note to database
+  # NOTE should this be convered to JSON first?
+  new_note_document = request.app.note_collection.insert_one(created_note_schema)
+  
+  # Retrieve newly created item
+  created_note_document = request.app.note_collection.find_one({
+    "_id": new_note_document.inserted_id
   })
 
-  return created_note
+  return created_note_document
 
 @note_router.get(
   "/all",
