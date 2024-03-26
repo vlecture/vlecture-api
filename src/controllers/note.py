@@ -18,6 +18,8 @@ from typing import (
   List
 )
 
+from bson.objectid import ObjectId
+
 from src.models.users import User
 from src.services.users import get_current_user
 
@@ -110,11 +112,13 @@ def get_all_notes(
   response_model=NoteSchema,
 )
 def get_a_note(
+  note_id: str,
   request: Request,
-  user: User = Depends(get_current_user)
+  user: User = Depends(get_current_user),
 ):
-  my_note = request.app.note_collection.find({
-    "owner_id": user.id
+  note_id = ObjectId(note_id)
+  my_note = request.app.note_collection.find_one({
+    "_id": note_id
   })
 
   return my_note
