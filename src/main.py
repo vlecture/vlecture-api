@@ -1,4 +1,5 @@
 import sentry_sdk
+import certifi
 
 from fastapi import (
     FastAPI,
@@ -78,7 +79,7 @@ app.include_router(note.note_router)
 # Connect to MongoDB on startup
 @app.on_event("startup")
 def startup_mongodb_client():
-    app.mongodb_client = MongoClient(MONGODB_URL)
+    app.mongodb_client = MongoClient(MONGODB_URL, tlsCAFile=certifi.where())
     app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
     app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
     print("Connected to MongoDB Database.")

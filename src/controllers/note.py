@@ -53,8 +53,8 @@ def generate_vlecture_note(
   service = NoteService()
   payload = jsonable_encoder(payload)
   
-  transcript = payload.transcript
-  title = payload.title
+  transcript = payload["transcript"]
+  title = payload["title"]
 
   # Convert Transcript into vlecture Note object
   req_generate_note = GenerateNoteServiceRequestSchema(
@@ -67,8 +67,10 @@ def generate_vlecture_note(
     payload=req_generate_note
   )
 
+  # Convert new note Pydantic object into JSON
+  created_note_schema = jsonable_encoder(created_note_schema)
+
   # Store Note to database
-  # NOTE should this be convered to JSON first?
   new_note_document = request.app.note_collection.insert_one(created_note_schema)
   
   # Retrieve newly created item

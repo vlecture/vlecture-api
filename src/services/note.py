@@ -23,12 +23,7 @@ from src.schemas.note import (
   NoteBlockSchema,
 
   # REQ SCHEMA
-  GenerateVlectureNoteRequestSchema,
-  GenerateBlockNoteFromCornellJsonRequestSchema,
   GenerateNoteServiceRequestSchema,
-
-  # RES SCHEMA
-  GenerateNoteResponseSchema,
 )
 
 from src.utils.time import get_datetime_now_jkt
@@ -128,15 +123,13 @@ class NoteService:
   
   def format_cornell_section_into_blocknote_array(
       self, 
-      payload: GenerateBlockNoteFromCornellJsonRequestSchema
+      payload: List[str]
   ) -> List[NoteBlockSchema]:
-    cornell_json = payload.cornell_json_section
-
     blocknote_json: List[NoteBlockSchema] = []
 
     # Create an array of regular Paragraph Block components
-    for text_chunk in cornell_json:
-      blocknote_chunk_json = self.create_paragraph_block_from_text(text=text_chunk)
+    for text_chunk in payload:
+      blocknote_chunk_json = self.create_paragraph_block_from_text(text=str(text_chunk))
 
       blocknote_json.append(blocknote_chunk_json)
 

@@ -22,7 +22,7 @@ class NoteBlockSchema(BaseModel):
   Object Schema for a vlecture Note Block  
   """
 
-  id: str
+  id: UUID
   type: str
   props: Optional[dict]
   content: Optional[List[dict]]
@@ -41,7 +41,7 @@ class NoteSchema(BaseModel):
   owner_id: UUID
   
   title: Optional[str] = Field(max_length=255, min_length=3)
-  subtitle: Optional[str] = Field(max_length=255, min_length=1)
+  subtitle: Optional[str] = Field(max_length=255, min_length=0)
 
   created_at: datetime
   updated_at: datetime
@@ -67,23 +67,16 @@ class LLMCornellNoteFromTranscript(BaseModel):
 
 # REQUEST SCHEMAS
 class GenerateVlectureNoteRequestSchema(BaseModel):
-  transcript: str
   title: str
+  transcript: str
 
 class GenerateNoteServiceRequestSchema(BaseModel):
   transcript: str
   title: str
   owner_id: UUID
 
-class GenerateBlockNoteFromCornellJsonRequestSchema(BaseModel):
-  cornell_json_section: List[str]
-
 class BlockNoteCornellSchema(BaseModel):
   main: Optional[List[NoteBlockSchema]]
   cues: Optional[List[NoteBlockSchema]]
   summary: Optional[List[NoteBlockSchema]]
-
-# RESPONSE SCHEMAS
-class GenerateNoteResponseSchema(BaseModel):
-  note: NoteSchema
 

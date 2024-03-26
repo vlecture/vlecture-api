@@ -15,7 +15,7 @@ def construct_system_instructions(context: str):
     Your answer SHOULD BE IN JSON FORMAT, with three (3) keys namely "main", "cues", and "summary". Each keys will correspond to ARRAY OF STRINGS values only. Each item within the array correspond to a single text block (e.g. a paragraph of text).
 
     An example of the return values (EXAMPLE ONLY - DO NOT USE THIS AS YOUR REFERENCE!)
-    {
+    {{
       "main": [
         "Aphantasia is a condition where some people are unable to visualize mental images, described as having a blind mind's eye.",
         "Niel Kenmuir, who has aphantasia, cannot remember images, but is good at remembering facts and faces.",
@@ -35,7 +35,7 @@ def construct_system_instructions(context: str):
       "summary": [
         "Aphantasia is a condition where individuals are unable to visualize mental images, while hyperphantasia is at the opposite end of the spectrum with vivid mental imagery. This condition affects up to 1 in 50 people and does not affect dreams. Aphantasia does not necessarily impact one's daily life negatively, as some individuals with the condition have excellent memory for facts and faces. Professor Adam Zeman is interested in studying the differences between aphantasia and hyperphantasia."
       ]
-    }
+    }}
     
     THE CONTEXT (LECTURE TRANSCRIPTION) IS ADDED BELOW:
     {context}
