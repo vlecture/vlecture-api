@@ -16,6 +16,7 @@ from pydantic import (
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
+# OBJECT SCHEMAS
 class NoteBlockSchema(BaseModel):
   """
   Object Schema for a vlecture Note Block  
@@ -23,8 +24,8 @@ class NoteBlockSchema(BaseModel):
 
   id: str
   type: str
-  props: Optional[Any]
-  content: Optional[List[Any]]
+  props: Optional[dict]
+  content: Optional[List[dict]]
   children: Optional[List[Any]]
 
 
@@ -33,6 +34,9 @@ class NoteSchema(BaseModel):
   Mongodb Collection Schema for a vlecture Note
   """
 
+  # The primary key for the NoteSchema, stored as a `str` on the instance.
+  # This will be aliased to `_id` when sent to MongoDB,
+  # but provided as `id` in the API requests and responses.
   id: Optional[PyObjectId] = Field(alias="_id", default=None)
   owner_id: UUID
   
@@ -46,7 +50,7 @@ class NoteSchema(BaseModel):
   is_edited: bool = Field(default=False)
   is_published: bool = Field(default=False)
 
-  content: Optional[List[NoteBlockSchema]]
+  main: Optional[List[NoteBlockSchema]]
   cues: Optional[List[NoteBlockSchema]]
   summary: Optional[List[NoteBlockSchema]]
 
@@ -54,13 +58,32 @@ class NoteSchema(BaseModel):
   model_config = ConfigDict(
     populate_by_name=True,
     arbitrary_types_allowed=True,
-    json_schema_extra={
-
-    }
   )
 
+class LLMCornellNoteFromTranscript(BaseModel):
+  main: Optional[List[str]]
+  cues: Optional[List[str]]
+  summary: Optional[List[str]]
+
 # REQUEST SCHEMAS
-class GenerateNoteRequestSchema(BaseModel):
+class GenerateVlectureNoteRequestSchema(BaseModel):
   transcript: str
+  title: str
+
+class GenerateNoteServiceRequestSchema(BaseModel):
+  transcript: str
+  title: str
+  owner_id: UUID
+
+class GenerateBlockNoteFromCornellJsonRequestSchema(BaseModel):
+  cornell_json_section: List[str]
+
+class BlockNoteCornellSchema(BaseModel):
+  main: Optional[List[NoteBlockSchema]]
+  cues: Optional[List[NoteBlockSchema]]
+  summary: Optional[List[NoteBlockSchema]]
 
 # RESPONSE SCHEMAS
+class GenerateNoteResponseSchema(BaseModel):
+  note: NoteSchema
+
