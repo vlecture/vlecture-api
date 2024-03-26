@@ -68,10 +68,16 @@ def generate_vlecture_note(
   )
 
   # Convert new note Pydantic object into JSON
-  created_note_schema = jsonable_encoder(created_note_schema)
+  # created_note_schema = jsonable_encoder(created_note_schema)
 
   # Store Note to database
-  new_note_document = request.app.note_collection.insert_one(created_note_schema)
+  new_note_document = request.app.note_collection.insert_one(
+    created_note_schema.model_dump(
+      # NOTE important - exlucdes ID when creating documents to avoid "_id": null errors
+      by_alias=True,
+      exclude=["id"]
+    )
+  )
   
   # Retrieve newly created item
   created_note_document = request.app.note_collection.find_one({

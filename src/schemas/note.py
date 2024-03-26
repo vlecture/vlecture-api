@@ -37,6 +37,7 @@ class NoteSchema(BaseModel):
   # The primary key for the NoteSchema, stored as a `str` on the instance.
   # This will be aliased to `_id` when sent to MongoDB,
   # but provided as `id` in the API requests and responses.
+  # NOTE use note.model_dump(by_alias=True, exclude=["id"]) to exclude ID when creating a new document
   id: Optional[PyObjectId] = Field(alias="_id", default=None)
   owner_id: UUID
   
