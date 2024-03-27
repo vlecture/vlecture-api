@@ -9,7 +9,7 @@ from sqlalchemy import Enum
 from src.utils.settings import (
     SENTRY_DSN,
 )
-from src.controllers import transcription, auth, upload, waitlist
+from src.controllers import transcription, auth, upload, flashcards, waitlist
 from src.utils.db import Base, engine
 
 sentry_sdk.init(
@@ -26,6 +26,17 @@ sentry_sdk.init(
 app = FastAPI()
 
 # CORS
+origins = [
+    "https://app.vlecture.tech",
+    "https://staging.app.vlecture.tech",
+    "https://api.vlecture.tech",
+    "https://staging.api.vlecture.tech",
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "http://localhost:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -37,6 +48,7 @@ app.add_middleware(
         "http://localhost",
         "http://localhost:3000",
         "http://localhost:8080",
+        "http://localhost:8000",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -58,7 +70,9 @@ app.add_middleware(
 app.include_router(auth.auth_router)
 app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
+app.include_router(flashcards.flashcards_router)
 app.include_router(waitlist.waitlist_router)
+
 # sentry trigger error test, comment when not needed
 # @app.get("/sentry-debug")
 # async def trigger_error():
