@@ -29,11 +29,6 @@ def view_flashcard_sets(req: FlashcardSetsRequestSchema, session: Session = Depe
 
     user_id = req.user_id
 
-    response = service.get_flashcard_sets_by_user(
-        user_id=user_id,
-        session=session
-    )
-
     try:
         current_user = get_current_user(req, session)
         if (current_user.id != user_id): 
