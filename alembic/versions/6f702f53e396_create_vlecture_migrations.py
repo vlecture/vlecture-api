@@ -111,6 +111,19 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('set_id', name="flashcard_sets_pkey")
     )
 
+    op.create_table(
+        'flashcards',
+        sa.Column('flashcard_id', sa.UUID(), nullable=False),
+        sa.Column('set_id', sa.UUID(), nullable=False),
+        sa.Column('note_id', sa.UUID(), nullable=False),
+        sa.Column('front', sa.String(255), nullable=False),
+        sa.Column('back', sa.String(255), nullable=False),
+        sa.Column('is_deleted', sa.BOOLEAN(), nullable=False),
+        sa.Column('rated_difficulty', sa.Enum('hard', 'good', 'easy', name='difficulty_enum'), nullable=False, default='good'),
+
+        sa.PrimaryKeyConstraint('flashcard_id', name="flashcards_pkey")
+    )
+
     # ### end Alembic commands ###
 
 
