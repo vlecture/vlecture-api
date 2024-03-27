@@ -23,13 +23,11 @@ from src.schemas.transcription import (
   GenerateTranscriptionChunksResponseSchema,
 )
 
+from src.utils.time import get_datetime_now_jkt
+
 
 class TranscriptionService:
     POLL_INTERVAL_SEC = 5  # 5sec  x 3%/sec
-
-    def get_datetime_now_jkt(self):
-        TIMEZONE_JKT = pytz.timezone(zone='Asia/Jakarta')
-        return datetime.now(tz=TIMEZONE_JKT)
 
     def generate_file_uri(self, bucket_name: str, filename: str, extension: str):
         # NOTE - Can add subbuckets in the future
@@ -240,7 +238,7 @@ class TranscriptionService:
         chunks: List[TranscriptionChunksSchema] = []
 
         for item in items:
-            datetime_now_jkt = self.get_datetime_now_jkt()
+            datetime_now_jkt = get_datetime_now_jkt()
             chunk_duration = float(item["duration"])
 
             chunk = TranscriptionChunksSchema(
