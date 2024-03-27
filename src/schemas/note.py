@@ -55,6 +55,9 @@ class NoteSchema(BaseModel):
   cues: Optional[List[NoteBlockSchema]]
   summary: Optional[List[NoteBlockSchema]]
 
+  language: str = "id"
+  main_word_count: Optional[int]
+
   # To ensure Python and Mongodb `_id` compatibility
   model_config = ConfigDict(
     populate_by_name=True,
@@ -70,11 +73,14 @@ class LLMCornellNoteFromTranscript(BaseModel):
 class GenerateVlectureNoteRequestSchema(BaseModel):
   title: str
   transcript: str
+  language: Optional[str]
 
 class GenerateNoteServiceRequestSchema(BaseModel):
   transcript: str
   title: str
   owner_id: UUID
+  language: str
+  subtitle: str
 
 class BlockNoteCornellSchema(BaseModel):
   main: Optional[List[NoteBlockSchema]]

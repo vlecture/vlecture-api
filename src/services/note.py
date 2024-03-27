@@ -2,6 +2,7 @@ from openai import (
   OpenAI
 )
 
+import re
 import uuid
 from uuid import UUID
 
@@ -53,11 +54,15 @@ class NoteService:
   
   def convert_text_into_cornell_json(
       self, 
-      transcript: str
+      transcript: str,
+      language: str,
   ) -> LLMCornellNoteFromTranscript:
     client = self.get_openai()
 
-    SYSTEM_PROMPT = construct_system_instructions(context=transcript)
+    SYSTEM_PROMPT = construct_system_instructions(
+      context=transcript,
+      language=language,
+    )
     
     chat_completion = client.chat.completions.create(
       model=OPENAI_MODEL_NAME,
@@ -98,10 +103,12 @@ class NoteService:
       self, 
       owner_id: UUID,
       title: str,
+      main_word_count: int,
       main: List[NoteBlockSchema],
       cues: List[NoteBlockSchema],
       summary: List[NoteBlockSchema],
-      subtitle: str = "",
+      language: str,
+      subtitle: str,
   ) -> NoteSchema:
     datetime_now_jkt = get_datetime_now_jkt()
 
@@ -117,6 +124,8 @@ class NoteService:
       main=main,
       cues=cues,
       summary=summary,
+      main_word_count=main_word_count,
+      language=language,
     )
 
     return new_note_object
@@ -135,19 +144,32 @@ class NoteService:
 
     return blocknote_json
   
-  def store_note_to_mongodb(self, note: BlockNoteCornellSchema):
-    # TODO
-    pass
+  def get_word_count_str_array(self, str_list: List[str]) -> int:
+    total_word = 0
 
+    for sentence in str_list:
+      sentence_word = len(re.findall(r"\w+", sentence))
+      total_word += sentence_word
+    
+    return total_word
+  
   def generate_note_from_transcription(
       self, 
       payload: GenerateNoteServiceRequestSchema
   ) -> NoteSchema:
     transcript = payload.transcript
     title = payload.title
+    subtitle = payload.subtitle
     owner_id = payload.owner_id 
+    language = payload.language
 
-    note_json = self.convert_text_into_cornell_json(transcript=transcript)
+    note_json = self.convert_text_into_cornell_json(
+      transcript=transcript,
+      language=language,
+    )
+
+    # Calculate word length for main section
+    main_word_count = self.get_word_count_str_array(note_json["main"])
 
     main_blocknote = self.format_cornell_section_into_blocknote_array(payload=note_json["main"])
 
@@ -162,7 +184,9 @@ class NoteService:
       main=main_blocknote,
       cues=cues_blocknote,
       summary=summary_blocknote,
-      subtitle="", # Init subtitle to empty
+      subtitle=subtitle,
+      main_word_count=main_word_count,
+      language=language,
     )
 
     return new_note_object

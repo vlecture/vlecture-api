@@ -57,12 +57,15 @@ def generate_vlecture_note(
   
   transcript = payload["transcript"]
   title = payload["title"]
+  language = payload["language"] if "language" in payload else "id"
 
   # Convert Transcript into vlecture Note object
   req_generate_note = GenerateNoteServiceRequestSchema(
     transcript=transcript,
     title=title,
     owner_id=user.id,
+    language=language,
+    subtitle="",
   )
 
   created_note_schema = service.generate_note_from_transcription(
