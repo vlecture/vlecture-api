@@ -14,7 +14,8 @@ from sqlalchemy import (
     DateTime,
     CheckConstraint,
     func,
-    TIMESTAMP
+    TIMESTAMP,
+    text
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
@@ -75,9 +76,10 @@ class FlashcardSet(Base):
     max_tag_length = 50 
 
     __table_args__ = (
-        CheckConstraint(func.cardinality(tags) <= max_tags, name='max_tags_constraint'),
-        CheckConstraint(func.every(func.length(tags) <= max_tag_length), name='max_tag_length_constraint')
-        
+        CheckConstraint(
+            text(f"array_length(tags, 1) IS NULL OR array_length(tags, 1) <= {max_tag_length}"),
+            name='max_tag_length_constraint'
+        ),
     )
 
 

@@ -108,8 +108,11 @@ def upgrade() -> None:
         sa.Column('tags', sa.ARRAY(sa.String), nullable=True, unique=False), 
         sa.Column('is_deleted', sa.BOOLEAN(), nullable=False),
 
-        sa.PrimaryKeyConstraint('set_id', name="flashcard_sets_pkey")
+        sa.PrimaryKeyConstraint('set_id', name="flashcard_sets_pkey"),
+        sa.CheckConstraint("cardinality(tags) <= 10", name="max_tags_constraint"),
+        sa.CheckConstraint("array_length(tags, 1) <= 50", name="max_tag_length_constraint")
     )
+
 
     op.create_table(
         'flashcards',
