@@ -89,15 +89,19 @@ def verify_access_token(request: Request, session: Session):
         decoded_access_token = jwt.decode(access_token, ACCESS_TOKEN_SECRET)
         try:
             user = get_user(session=session, field="access_token", value=access_token)
-            print(decoded_access_token.get("exp"))
 
-            if datetime.now(timezone.utc) > decoded_access_token.get("exp"):
+            if int(datetime.now(timezone.utc).timestamp()) > decoded_access_token.get(
+                "exp"
+            ):
                 raise HTTPException(
                     status_code=HTTP_401_UNAUTHORIZED,
                     detail="Unauthorized. Token expired!",
                 )
             else:
-                return HTTP_200_OK
+                return {
+                    "status_code": HTTP_200_OK,
+                    "content": "Access token authorized!",
+                }
         except InvalidFieldName as e:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
         except Exception as e:
@@ -107,7 +111,7 @@ def verify_access_token(request: Request, session: Session):
     except Exception:
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized. Invalid refresh token!",
+            detail="Unauthorized. Invalid access token!",
         )
 
 
