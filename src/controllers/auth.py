@@ -71,7 +71,7 @@ async def send_verif_email(payload: EmailSchema = Body(), session: Session = Dep
             status_code=http.HTTPStatus.CONFLICT,
             content="Error: User already exists!"
         )
-    
+
     recipient = payload.model_dump().get("email")
 
     token = service.generate_token()
@@ -130,7 +130,7 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="Error: The inputted token is invalid."
         )
-    
+
     service.purge_user_otp(
         session=session,
         email=user_email
@@ -141,7 +141,7 @@ def validate_user_token(payload: OTPCheckSchema = Body(), session: Session = Dep
         content="OTP input is valid."
     )
 
-    
+
 @auth_router.post("/renew", tags=[AuthRouterTags.auth])
 def renew(
     request: Request,
@@ -160,6 +160,7 @@ def logout(
     """Processes user's logout request."""
 
     return auth.logout(response, session, payload)
+
 @auth_router.post("/forgot-password", tags=[AuthRouterTags.auth])
 def forgot_password(
         response: Response,
@@ -169,6 +170,7 @@ def forgot_password(
     """Initiates the password reset process for a user by sending them a reset token via email."""
 
     return auth.forgot_password(response, session, payload)
+
 
 @auth_router.post("/reset-password", tags=[AuthRouterTags.auth])
 def reset_password(

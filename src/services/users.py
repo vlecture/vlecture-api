@@ -34,6 +34,10 @@ def get_user(session: Session, field: str, value: str):
 def get_user_by_access_token(session: Session, access_token:str):
     return session.query(User).filter(User.access_token == access_token).one()
 
+
+def get_user_by_email(session: Session, email: str):
+    return session.query(User).filter(User.email == email).one()
+
 def update_refresh_token(session: Session, user, refresh_token: str):
     user.refresh_token = refresh_token
     user.is_active = True
