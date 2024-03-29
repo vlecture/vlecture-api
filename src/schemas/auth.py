@@ -27,3 +27,13 @@ class OTPCheckSchema(BaseModel):
     
 class LogoutSchema(BaseModel):
     access_token: str
+
+from pydantic import BaseModel, EmailStr, Field
+
+class ForgotPasswordSchema(BaseModel):
+    email: EmailStr
+
+class ResetPasswordSchema(BaseModel):
+    token: str
+    new_password: str
+    retype_password: str
