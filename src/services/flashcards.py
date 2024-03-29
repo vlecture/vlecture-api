@@ -3,11 +3,18 @@ from sqlalchemy.orm import Session
 from pydantic import UUID4
 from typing import List
 
+from starlette.status import HTTP_400_BAD_REQUEST
+
 from src.models.flashcards import Flashcard, FlashcardSet
+from src.schemas.flashcards import GenerateFlashcardRequestSchema
 from src.utils.db import get_db
 
 
 class FlashcardService:
+    def generate_flashcard_sets(self, payload: GenerateFlashcardRequestSchema):
+        if self.check_word_count(payload.main_word_count, payload.num_of_flashcards):
+            pass
+
     def get_flashcard_sets_by_user(
         self, user_id: UUID4, session: Session = Depends(get_db)
     ):
@@ -72,3 +79,11 @@ class FlashcardService:
         )
 
         return set.user_id
+
+    def check_word_count(self, word_count, num_of_flashcards):
+        if word_count // 50 < num_of_flashcards:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST, detail="Note too short!"
+            )
+        else:
+            return True

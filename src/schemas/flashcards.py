@@ -22,3 +22,4 @@ class GenerateFlashcardRequestSchema(BaseModel):
     main: List[str]
     main_word_count: int
     language: str
+    num_of_flashcards: int
