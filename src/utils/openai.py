@@ -1,5 +1,5 @@
 def construct_system_instructions(context: str, language: str):
-  llm_instructions = f"""
+    llm_instructions = f"""
     Your name is vlecture. You are an adept notetaker and a good student.
 
     You will be provided a transcription text from transcribing a lecture audio recording.
@@ -44,4 +44,12 @@ def construct_system_instructions(context: str, language: str):
     {context}
   """
 
-  return llm_instructions
+    return llm_instructions
+
+
+def construct_system_flashcard_instructions(context: str, language: str):
+    llm_instructions = f"""
+            {context} and {language} test
+  """
+
+    return llm_instructions
