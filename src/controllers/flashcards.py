@@ -1,39 +1,40 @@
 from enum import Enum
 import http
+from typing import Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 import requests
 
+from src.models.users import User
 from src.utils.db import get_db
 from src.schemas.base import GenericResponseModel
 from src.services.flashcards import FlashcardService
 from src.services.users import get_current_user
 from src.schemas.flashcards import (
     FlashcardSetsRequestSchema,
-    FlashcardsRequestSchema   
+    FlashcardsRequestSchema
 )
+
 
 class FlashcardsRouterTags(Enum):
     flashcards = "flashcards"
+
 
 flashcards_router = APIRouter(
     prefix="/v1/flashcards", tags=[FlashcardsRouterTags.flashcards]
 )
 
+
 @flashcards_router.get(
-    "/", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel 
+    "/", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
 )
-def view_flashcard_sets(req: FlashcardSetsRequestSchema, session: Session = Depends(get_db)):
+def view_flashcard_sets(user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     service = FlashcardService()
 
-    user_id = req.user_id
-
+    user_id = user.id
+    print(user_id)
     try:
-        current_user = get_current_user(req, session)
-        if (current_user.id != user_id): 
-            raise Exception
-        
         response = service.get_flashcard_sets_by_user(
             user_id=user_id,
             session=session
@@ -46,28 +47,26 @@ def view_flashcard_sets(req: FlashcardSetsRequestSchema, session: Session = Depe
             data=response,
         )
     except Exception:
-         return GenericResponseModel(
+        return GenericResponseModel(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             message="Error",
             error="You don't have access to these flashcard sets or flashcard sets don't exist.",
             data={},
         )
 
+
 @flashcards_router.get(
-    "/set", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
+    "/set/{set_id}", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
 )
-def view_flashcards(req: FlashcardsRequestSchema, session: Session = Depends(get_db)):
+def view_flashcards(set_id: str, note_id: str = None, user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     service = FlashcardService()
 
-    set_id = req.set_id
-    note_id = req.note_id
-
     try:
-        user_id = service.get_set_owner(set_id)
-        current_user = get_current_user(req, session)
-        if (current_user.id != user_id): 
+        user_id = service.get_set_owner(set_id, session)
+
+        if user.id != user_id:
             raise Exception
-        
+
         response = service.get_flashcards_by_set(
             set_id=set_id,
             note_id=note_id,

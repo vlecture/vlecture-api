@@ -1,3 +1,4 @@
+import datetime
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import UUID4
@@ -6,7 +7,8 @@ from typing import List
 from src.models.flashcards import Flashcard, FlashcardSet
 from src.utils.db import get_db
 
-class FlashcardService:   
+
+class FlashcardService:
 
     def get_flashcard_sets_by_user(self, user_id: UUID4, session: Session = Depends(get_db)):
         flashcard_sets = session.query(FlashcardSet).filter(
@@ -22,25 +24,28 @@ class FlashcardService:
             Flashcard.note_id == note_id,
             Flashcard.is_deleted == False
         ).all()
-        
+
         return self.build_json_flashcards(flashcards)
 
     def build_json_flashcard_sets(self, flashcard_sets):
         data = []
+
         for flashcard_set in flashcard_sets:
+            formatted_date = datetime.datetime.strftime(
+                flashcard_set.date_generated, "%Y-%m-%d %H:%M:%S")
             item = {
                 "set_id": flashcard_set.set_id,
                 "note_id": flashcard_set.note_id,
                 "user_id": flashcard_set.user_id,
                 "title": flashcard_set.title,
-                "date_generated": flashcard_set.date_generated,
+                "date_generated": formatted_date,
                 "tags": flashcard_set.tags,
                 "is_deleted": flashcard_set.is_deleted,
             }
             data.append(item)
 
         return data
-    
+
     def build_json_flashcards(self, flashcards):
         data = []
         for flashcard in flashcards:
@@ -56,11 +61,11 @@ class FlashcardService:
             data.append(item)
 
         return data
-    
+
     def get_set_owner(self, set_id, session):
         set = session.query(FlashcardSet).filter(
             FlashcardSet.set_id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
-
+        print(set.user_id)
         return set.user_id
