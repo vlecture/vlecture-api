@@ -34,6 +34,6 @@ class ForgotPasswordSchema(BaseModel):
     email: EmailStr
 
 class ResetPasswordSchema(BaseModel):
-    token: str
+    reset_password_token: str
     new_password: str
     retype_password: str
