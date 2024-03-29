@@ -44,7 +44,7 @@ note_router = APIRouter(
 @note_router.post(
   "/generate",
   response_description="Create a new vlecture Note",
-  status_code=http.HTTPStatus.CREATED,
+  status_code=http.HTTPStatus.OK,
   response_model=NoteSchema
 )
 def generate_vlecture_note(
