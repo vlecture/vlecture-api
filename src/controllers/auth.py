@@ -11,12 +11,12 @@ from sqlalchemy.orm import Session
 
 from src.utils.db import get_db
 from src.schemas.auth import (
-  RegisterSchema, 
-  LoginSchema, 
-  EmailSchema,
-  OTPCreateSchema,
-  OTPCheckSchema,
-  LogoutSchema
+    RegisterSchema,
+    LoginSchema,
+    EmailSchema,
+    OTPCreateSchema,
+    OTPCheckSchema,
+    LogoutSchema, ForgotPasswordSchema, ResetPasswordSchema
 )
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -160,3 +160,22 @@ def logout(
     """Processes user's logout request."""
 
     return auth.logout(response, session, payload)
+@auth_router.post("/forgot-password", tags=[AuthRouterTags.auth])
+def forgot_password(
+        response: Response,
+        payload: ForgotPasswordSchema = Body(),
+        session: Session = Depends(get_db),
+):
+    """Initiates the password reset process for a user by sending them a reset token via email."""
+
+    return auth.forgot_password(response, session, payload)
+
+@auth_router.post("/reset-password", tags=[AuthRouterTags.auth])
+def reset_password(
+        response: Response,
+        payload: ResetPasswordSchema = Body(),
+        session: Session = Depends(get_db),
+):
+    """Initiates the password reset process for a user by sending them a reset token via email."""
+
+    return auth.reset_password(response, session, payload)
