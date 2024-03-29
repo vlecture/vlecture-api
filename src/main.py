@@ -80,6 +80,7 @@ app.include_router(note.note_router)
 # Connect to MongoDB on startup
 @app.on_event("startup")
 def startup_mongodb_client():
+    # FORMAT_MONGODB_URL = f"{MONGODB_URL}/?retryWrites={MONGODB_URL_RW}&w={MONGODB_URL_MAJORITY}&appName={MONGODB_URL_CLUSTER}"
     app.mongodb_client = MongoClient(
         MONGODB_URL,
         # MongoClient Configs
