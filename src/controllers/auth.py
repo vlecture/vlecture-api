@@ -151,7 +151,7 @@ def logout(
     return auth.logout(response, session, payload)
 
 
-@auth_router.get("/verify", tags=[AuthRouterTags.auth])
+@auth_router.get("/verify_token", tags=[AuthRouterTags.auth])
 def verify(
     request: Request,
     session: Session = Depends(get_db),
