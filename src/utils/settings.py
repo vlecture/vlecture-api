@@ -9,11 +9,11 @@ print(f"ENV: {ENV_TYPE}")
 
 # POSTGRES
 try:
-    host=os.getenv("POSTGRES_HOST")
-    port=os.getenv("POSTGRES_PORT")
-    db_name=os.getenv("POSTGRES_DB")
-    username=os.getenv("POSTGRES_USER")
-    password=os.getenv("POSTGRES_PASSWORD")
+    host = os.getenv("POSTGRES_HOST")
+    port = os.getenv("POSTGRES_PORT")
+    db_name = os.getenv("POSTGRES_DB")
+    username = os.getenv("POSTGRES_USER")
+    password = os.getenv("POSTGRES_PASSWORD")
 
     # Database url configuration
     DATABASE_URL = (
@@ -30,7 +30,10 @@ except Exception:
     raise ValueError("Database config values are missing or incorrect.")
 
 # MONGODB
-MONGODB_URL= os.getenv("MONGODB_URL")
+MONGODB_URL = os.getenv("MONGODB_URL")
+MONGODB_URL_RW = os.getenv("MONGODB_URL_RW")
+MONGODB_URL_MAJORITY = os.getenv("MONGODB_URL_MAJORITY")
+MONGODB_URL_CLUSTER = os.getenv("MONGODB_URL_CLUSTER")
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME")
 MONGODB_COLLECTION_NAME = os.getenv("MONGODB_COLLECTION_NAME")
 
