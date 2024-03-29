@@ -12,18 +12,15 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from src.utils.settings import (
-    MONGODB_URL_CLUSTER,
-    MONGODB_URL_MAJORITY,
-    MONGODB_URL_RW,
     SENTRY_DSN,
     MONGODB_URL,
     MONGODB_DB_NAME,
     MONGODB_COLLECTION_NAME,
 )
 from src.controllers import (
-    transcription, 
-    auth, 
-    upload, 
+    transcription,
+    auth,
+    upload,
     waitlist,
     note
 )
@@ -83,10 +80,8 @@ app.include_router(note.note_router)
 # Connect to MongoDB on startup
 @app.on_event("startup")
 def startup_mongodb_client():
-    FORMAT_MONGODB_URL = f"{MONGODB_URL}/?retryWrites={MONGODB_URL_RW}&w={MONGODB_URL_MAJORITY}&appName={MONGODB_URL_CLUSTER}"
     app.mongodb_client = MongoClient(
-        FORMAT_MONGODB_URL, 
-
+        MONGODB_URL,
         # MongoClient Configs
         uuidRepresentation='standard',
         tlsCAFile=certifi.where()
@@ -94,6 +89,7 @@ def startup_mongodb_client():
     app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
     app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
     print("Connected to MongoDB Database.")
+
 
 @app.on_event("shutdown")
 def shutdown_db_client():
