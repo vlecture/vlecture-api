@@ -178,3 +178,13 @@ def generate_access_token(user: User):
         ACCESS_TOKEN_SECRET,
     )
     return access_token
+
+
+def forgot_password(response, session, payload):
+    """Generate Email Link for Reset Password"""
+    return None
+
+
+def reset_password(response, session, payload):
+    """Reset Password"""
+    return None
