@@ -1,3 +1,4 @@
+import json
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from openai import OpenAI
@@ -50,6 +51,7 @@ class FlashcardService:
                 ],
             )
             llm_answer = chat_completion.choices[0].message.content
+            llm_answer = json.loads(llm_answer)
             return llm_answer
 
     def get_flashcard_sets_by_user(

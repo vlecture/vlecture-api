@@ -65,10 +65,10 @@ def construct_system_flashcard_instructions(context: str, num_of_flashcards: int
 
     The "Hints" field is an optional field which is an array that can include multiple hints or clues to help the user recall the information on the back of the flashcard.
 
-    Your answer SHOULD BE IN JSON FORMAT, with three (3) keys namely "id", "type", and "content" where the "content" key itself will consist of three (3) more keys, "Front", "Back", and an array named "Hints". The "id" keys will always START WITH 1 and will be incremented for every flashcard.
+    Your answer SHOULD BE IN JSON FORMAT, with multiple flashcard objects depending on the number of the flashcards. Each flashcard object will contain three (3) keys namely "id", "type", and "content" where the "content" key itself will consist of three (3) more keys, "Front", "Back", and an array named "Hints". The "id" keys will always START WITH 1 and will be incremented for every flashcard.
 
     An example of the return values (EXAMPLE ONLY - THESE EXAMPLES DO NOT CORRELATE WITH EACH OTHER! - DO NOT USE THIS AS YOUR REFERENCE!)
-    {
+    "flashcards": {
         {
           "id": 1,
           "type": "Question",
@@ -141,6 +141,8 @@ def construct_system_flashcard_instructions(context: str, num_of_flashcards: int
 
     You should write your answers in the USER SPECIFIED LANGUAGE ONLY.
     The user specified language is: {language}
+
+    You should create {num_of_flashcards} flashcards with RANDOM types!
 
     THE CONTEXT (SUMMARY OF A NOTE) IS ADDED BELOW:
     {context}
