@@ -38,7 +38,7 @@ def generate_flashcards(request: Request, payload: GenerateFlashcardsJSONRequest
         num_of_flashcards=payload.num_of_flashcards
     )
 
-    flashcards_json: GenerateFlashcardsJSONSchema = service.convert_note_into_flashcard_json(
+    flashcard_jsons: GenerateFlashcardsJSONSchema = service.convert_note_into_flashcard_json(
         payload=req_generate_flashcards
     )
 
@@ -52,7 +52,12 @@ def generate_flashcards(request: Request, payload: GenerateFlashcardsJSONRequest
         flashcard_set=req_generate_flashcard_set,
     )
     
-    flashcards = service.
+    flashcards = service.create_flashcards(
+        session=session,
+        set_id=set_id,
+        note_id=payload.note_id,
+        flashcard_jsons=flashcard_jsons
+    )
 
 
 

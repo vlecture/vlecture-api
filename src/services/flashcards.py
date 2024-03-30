@@ -83,6 +83,15 @@ class FlashcardService:
         )
         return flashcard_schema
 
+    def create_flashcards(self, session: Session, set_id: UUID4, note_id: UUID4, flashcard_jsons: List[GenerateFlashcardsJSONSchema]):
+        for i, e in enumerate(flashcard_jsons):
+            flashcard = self.convert_flashcard_json_into_flashcard_schema(set_id, note_id, i)
+            session.add(flashcard)
+            session.commit()
+            session.refresh(flashcard)
+        
+        return flashcard_jsons
+
     def get_flashcard_sets_by_user(
         self, user_id: UUID4, session: Session = Depends(get_db)
     ):
