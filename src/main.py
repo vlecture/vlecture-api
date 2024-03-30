@@ -22,7 +22,8 @@ from src.controllers import (
     auth, 
     upload, 
     waitlist,
-    note
+    note,
+    flashcards
 )
 from src.utils.db import Base, engine
 

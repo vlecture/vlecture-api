@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import UUID4
 from typing import List
+from datetime import datetime
 
 from src.models.flashcards import Flashcard, FlashcardSet
 from src.utils.db import get_db
@@ -16,10 +17,9 @@ class FlashcardService:
 
         return self.build_json_flashcard_sets(flashcard_sets)
 
-    def get_flashcards_by_set(self, session: Session, set_id: UUID4, note_id: UUID4):
+    def get_flashcards_by_set(self, session: Session, set_id: UUID4):
         flashcards = session.query(Flashcard).filter(
             Flashcard.set_id == set_id,
-            Flashcard.note_id == note_id,
             Flashcard.is_deleted == False
         ).all()
         
@@ -28,12 +28,14 @@ class FlashcardService:
     def build_json_flashcard_sets(self, flashcard_sets):
         data = []
         for flashcard_set in flashcard_sets:
+            formatted_date = datetime.datetime.strftime(
+                flashcard_set.date_generated, "%Y-%m-%d %H:%M:%S")
             item = {
                 "set_id": flashcard_set.set_id,
                 "note_id": flashcard_set.note_id,
                 "user_id": flashcard_set.user_id,
                 "title": flashcard_set.title,
-                "date_generated": flashcard_set.date_generated,
+                "date_generated": formatted_date,
                 "tags": flashcard_set.tags,
                 "is_deleted": flashcard_set.is_deleted,
             }
@@ -64,3 +66,19 @@ class FlashcardService:
         ).one()
 
         return set.user_id
+    
+    def get_set_title(self, set_id, session):
+        set = session.query(FlashcardSet).filter(
+            FlashcardSet.set_id == set_id,
+            FlashcardSet.is_deleted == False
+        ).one()
+
+        return set.title
+
+    def get_set_note_id(self, set_id, session):
+        set = session.query(FlashcardSet).filter(
+            FlashcardSet.set_id == set_id,
+            FlashcardSet.is_deleted == False
+        ).one()
+
+        return set.note_id

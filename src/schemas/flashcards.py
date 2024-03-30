@@ -13,4 +13,3 @@ class FlashcardSetsRequestSchema(BaseModel):
 
 class FlashcardsRequestSchema(BaseModel):
   set_id: UUID4
-  note_id: UUID4
