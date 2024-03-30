@@ -193,6 +193,7 @@ def forgot_password(response: Response, session: Session, payload: ForgotPasswor
         ACCESS_TOKEN_SECRET,
     )
 
+    user.set_reset_token(reset_token)
     MESSAGE_SUBJECT = "Your vlecture.tech reset token"
     MESSAGE_BODY = f"""
       <h2>Hi! We noticed you're trying to Reset your vlecture password </h2>
@@ -221,10 +222,13 @@ def reset_password(response: Response, session: Session, payload: ResetPasswordS
         decoded_token = jwt.decode(payload.reset_password_token, ACCESS_TOKEN_SECRET)
         user_email = decoded_token.get("email")
         if not user_email:
-            raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid reset token.")
+            raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid or Expired reset token.")
 
         user = get_user(session=session, field="email", value=user_email)
         # TODO: check if the token matches the one stored and if it's still valid based on stored expiration time
+
+        if not user.validate_reset_token(decoded_token):
+            raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid or Expired reset token.")
         if not user:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found.")
 
@@ -235,4 +239,4 @@ def reset_password(response: Response, session: Session, payload: ResetPasswordS
 
         return {"message": "Password reset successfully."}
     except jwt.JWTError:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid reset token.")
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid or Expired reset token.")

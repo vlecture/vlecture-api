@@ -1,7 +1,7 @@
 import uuid
 from uuid import UUID
 from pytz import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from src.utils.db import Base
 from sqlalchemy import (
@@ -37,6 +37,8 @@ class User(Base):
     refresh_token = Column(String(225))
     access_token = Column(String(225))
     is_active = Column(Boolean, default=False)
+    reset_token = Column(String(225), nullable=True)
+    reset_token_expiration = Column(TIMESTAMP(timezone=True), nullable=True)
 
     PrimaryKeyConstraint("id", name="pk_user_id")
     UniqueConstraint("email", name="uq_user_email")
@@ -62,6 +64,19 @@ class User(Base):
     def get_is_active(self):
         return self.is_active
 
+    def set_reset_token(self, token: str):
+        self.reset_token = token
+        self.reset_token_expiration = time_now() + timedelta(hours=1)
+
+    def validate_reset_token(self, token: str):
+        if self.reset_token != token or time_now() > self.reset_token_expiration:
+            return False
+        else:
+            return True
+
     def update_password(self, session: Session, new_hashed_password: bytes):
+        """Updates the user's hashed password and clears reset token fields."""
         self.hashed_password = new_hashed_password
+        self.reset_token = None
+        self.reset_token_expiration = None
         session.commit()
