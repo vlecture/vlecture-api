@@ -33,9 +33,9 @@ class DifficultyEnum(Enum):
 class TypeEnum(Enum):
     __tablename__ = "type_enum"
 
-    identification = "identificaton"
-    trueorflase = "trueorfalse"
-    definition = "definition"
+    identification = "Identificaton"
+    trueorflase = "TrueOrFalse"
+    definition = "Definition"
 
 
 class Flashcard(Base):
