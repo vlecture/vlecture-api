@@ -78,7 +78,7 @@ class FlashcardSet(Base):
     title = Column(String(225), nullable=False)
     date_generated = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
     tags = Column(ARRAY(String), nullable=True, unique=False)
-    flashcards = Column(ARRAY(String), nullable=True, unique=False)
+    flashcards = Column(ARRAY(String), nullable=True, default=[])
     avg_difficulty=Column(
         Enum("hard", "good", "easy", name="difficulty_enum"),
         nullable=True,
@@ -101,6 +101,9 @@ class FlashcardSet(Base):
 
     def update_is_deleted(self, is_deleted):
         self.is_deleted = is_deleted
+    
+    def add_flashcards(self, new_flashcards):
+        self.flashcards.extend(new_flashcards)
 
     #     self.delete_all_flashcards_in_set(self)
 
