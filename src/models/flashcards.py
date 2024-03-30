@@ -30,6 +30,13 @@ class DifficultyEnum(Enum):
     good = "good"
     easy = "easy"
 
+class TypeEnum(Enum):
+    __tablename__ = "type_enum"
+
+    identification = "identificaton"
+    trueorflase = "trueorfalse"
+    definition = "definition"
+
 
 class Flashcard(Base):
     __tablename__ = "flashcards"
@@ -39,6 +46,10 @@ class Flashcard(Base):
     )
     set_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
     note_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    type = Column(
+        TypeEnum,
+        nullable=False,
+    )
     front = Column(String(300), nullable=False)
     back = Column(String(300), nullable=False)
     hint = Column(String(225), nullable=False)
