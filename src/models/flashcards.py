@@ -33,7 +33,7 @@ class DifficultyEnum(Enum):
 class TypeEnum(Enum):
     __tablename__ = "type_enum"
 
-    identification = "Identificaton"
+    question = "Question"
     trueorflase = "TrueOrFalse"
     definition = "Definition"
 
