@@ -38,6 +38,10 @@ from src.schemas.transcription import (
     TranscriptionChunksSchema,
 )
 from src.services.transcription import TranscriptionService
+
+from src.utils.time import (
+    get_datetime_now_jkt
+)
 from src.utils.aws.s3 import AWSS3Client
 from src.utils.aws.transcribe import (
     AWSTranscribeClient,
@@ -95,7 +99,7 @@ async def transcribe_audio(
         )
         
         # Transcription Fields
-        tsc_datetime_now = service.get_datetime_now_jkt()
+        tsc_datetime_now = get_datetime_now_jkt()
         chunk_items = formatted_tsc_response["results"]["items"]
 
         tsc_id = uuid.uuid4()
