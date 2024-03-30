@@ -17,13 +17,7 @@ from src.utils.settings import (
     MONGODB_DB_NAME,
     MONGODB_COLLECTION_NAME,
 )
-from src.controllers import (
-    transcription,
-    auth,
-    upload,
-    waitlist,
-    note
-)
+from src.controllers import transcription, auth, upload, waitlist, note
 from src.utils.db import Base, engine
 
 
@@ -65,7 +59,7 @@ app.add_middleware(
         "Keep-Alive",
         "Origin",
         "User-Agent",
-        "X-Requested-With"
+        "X-Requested-With",
     ],
 )
 
@@ -84,8 +78,8 @@ def startup_mongodb_client():
     app.mongodb_client = MongoClient(
         MONGODB_URL,
         # MongoClient Configs
-        uuidRepresentation='standard',
-        tlsCAFile=certifi.where()
+        uuidRepresentation="standard",
+        tlsCAFile=certifi.where(),
     )
     app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
     app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
