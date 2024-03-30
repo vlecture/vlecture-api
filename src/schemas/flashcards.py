@@ -27,13 +27,13 @@ class GenerateFlashcardsJSONRequestSchema(BaseModel):
     language: str
     num_of_flashcards: int
 
-class FlashcardsJSONSchema(BaseModel):
+class GenerateFlashcardsJSONSchema(BaseModel):
     type: str
     front: str
     back: str
     hints: Optional[List[str]]
 
-class GenerateFlashcardRequestSchema(BaseModel):
+class FlashcardRequestSchema(BaseModel):
     note_id: UUID4
     set_id: UUID4
     type: str
