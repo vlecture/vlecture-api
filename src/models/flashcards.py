@@ -27,8 +27,9 @@ class DifficultyEnum(Enum):
     __tablename__ = "difficulty_enum"
 
     hard = "hard"
-    good = "good"
+    medium = "medium"
     easy = "easy"
+    very_easy = "very_easy"
 
 class TypeEnum(Enum):
     __tablename__ = "type_enum"
@@ -41,11 +42,11 @@ class TypeEnum(Enum):
 class Flashcard(Base):
     __tablename__ = "flashcards"
 
-    flashcard_id = Column(
+    id = Column(
         UUID(as_uuid=True), nullable=False, primary_key=True, default=uuid.uuid4
     )
-    set_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
-    note_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    set_id = Column(UUID(as_uuid=True), nullable=False)
+    note_id = Column(UUID(as_uuid=True), nullable=False)
     type = Column(
         Enum("Question", "TrueOrFalse", "Definition", name="type_enum"),
         nullable=False,
@@ -55,7 +56,7 @@ class Flashcard(Base):
     hint = Column(String(225), nullable=True)
     is_deleted = Column(Boolean, default=False)
     rated_difficulty = Column(
-        Enum("hard", "good", "easy", name="difficulty_enum"),
+        Enum("hard", "medium", "easy", "very_easy", name="difficulty_enum"),
         nullable=False,
         default="good",
     )
@@ -70,17 +71,16 @@ class Flashcard(Base):
 class FlashcardSet(Base):
     __tablename__ = "flashcard_sets"
 
-    set_id = Column(
+    id = Column(
         UUID(as_uuid=True), nullable=False, primary_key=True, default=uuid.uuid4
     )
-    note_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    note_id = Column(UUID(as_uuid=True), nullable=False)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
     title = Column(String(225), nullable=True)
     date_generated = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
     tags = Column(ARRAY(String), nullable=True, unique=False)
-    flashcards = Column(ARRAY(String), nullable=True, default=[])
     avg_difficulty=Column(
-        Enum("hard", "good", "easy", name="difficulty_enum"),
+        Enum("hard", "medium", "easy", "very_easy", name="difficulty_enum"),
         nullable=True,
     )
     is_deleted = Column(Boolean, nullable=False, default=False)
@@ -101,9 +101,6 @@ class FlashcardSet(Base):
 
     def update_is_deleted(self, is_deleted):
         self.is_deleted = is_deleted
-    
-    def add_flashcards(self, new_flashcards):
-        self.flashcards.extend(new_flashcards)
 
     #     self.delete_all_flashcards_in_set(self)
 
