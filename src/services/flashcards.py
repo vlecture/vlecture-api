@@ -36,6 +36,7 @@ class FlashcardService:
             context = self.extract_text(payload.main)
             SYSTEM_PROMPT = construct_system_flashcard_instructions(
                 context=context,
+                num_of_flashcards=payload.num_of_flashcards,
                 language=payload.language,
             )
 
