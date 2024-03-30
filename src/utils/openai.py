@@ -55,13 +55,15 @@ def construct_system_flashcard_instructions(context: str, num_of_flashcards: int
 
     You will be provided the summary of a note in the form of a text.
 
-    From this note, you are required to create a set of {num_of_flashcards} flashcards. These flashcards come in three (3) TYPEs, including True or False, Question, and Definition flashcards, ensuring a comprehensive and engaging learning experience. However, every flashcard has two common features which is the FRONT of the flashcard, the BACK of the flashcard, and the HINTS. Explanations of the three (3) TYPEs and what to input to the FRONT and the BACK is given below.
+    From this note, you are required to create a set of {num_of_flashcards} flashcards. These flashcards come in three (3) "Type"s, including True or False, Question, and Definition flashcards, ensuring a comprehensive and engaging learning experience. However, every flashcard has two common features which is the "Front" of the flashcard, the "Back" of the flashcard, and the "Hint"s. Explanations of the three (3) "Type"s and what to input to the "Front" and the "Back" is given below.
 
-    This "TYPE" field specifies the type of question or information being presented on the flashcard. It's helpful for creating different styles of flashcards beyond just questions and answers. The "Question" type indicates a question on the front of the card with the answer on the back. The "Definition" type is used when the flashcard asks for the definition of a term where the "front" field holds the term, and "back" contains the definition. The "True or False" type presents a statement on the "front" that requires identifying it as true or false and the "back" field holds the correct answer (True/False).
+    This "Type" field specifies the type of question or information being presented on the flashcard. It's helpful for creating different styles of flashcards beyond just questions and answers. The "Question" type indicates a question on the front of the card with the answer on the back. The "Definition" type is used when the flashcard asks for the definition of a term where the "front" field holds the term, and "back" contains the definition. The "True or False" type presents a statement on the "front" that requires identifying it as true or false and the "back" field holds the correct answer (True/False).
 
-    The FRONT field holds the information displayed on the front side of the flashcard. It can be a question, a term to define, or a statement depending on the "type" chosen.
+    The "Front" field holds the information displayed on the front side of the flashcard. It can be a question, a term to define, or a statement depending on the "type" chosen.
 
-    This BACK holds the information displayed on the backside of the flashcard. It usually contains the answer to the question on the front, the definition of the term, or indicates whether the statement on the front is true or false.
+    This "Back" holds the information displayed on the backside of the flashcard. It usually contains the answer to the question on the front, the definition of the term, or indicates whether the statement on the front is true or false.
+
+    The "Hints" field is an optional field which is an array that can include multiple hints or clues to help the user recall the information on the back of the flashcard.
 
     Your answer SHOULD BE IN JSON FORMAT, with three (3) keys namely "id", "type", and "content" where the "content" key itself will consist of three (3) more keys, "Front", "Back", and an array named "Hints". The "id" keys will always START WITH 1 and will be incremented for every flashcard.
 
