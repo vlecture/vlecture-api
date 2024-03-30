@@ -59,7 +59,7 @@ def construct_system_flashcard_instructions(context: str, num_of_flashcards: int
 
     Your answer SHOULD BE IN JSON FORMAT, with three (2) keys namely "id" and "content". Each keys will correspond to ARRAY OF STRINGS values only. Each item within the array correspond to a single text block (e.g. a paragraph of text).
 
-    An example of the return values (EXAMPLE ONLY - DO NOT USE THIS AS YOUR REFERENCE!)
+    An example of the return values (EXAMPLE ONLY - THESE EXAMPLES DO NOT CORRELATE WITH EACH OTHER! - DO NOT USE THIS AS YOUR REFERENCE!)
     {
         {
           "id": 1,
@@ -70,7 +70,7 @@ def construct_system_flashcard_instructions(context: str, num_of_flashcards: int
               "Hints": [
                 "This condition is described as having a blind mind's eye.",
                 "Patients experience the inability to remember images, but is good at remembering facts and faces.",
-              ]
+              ],
           },
         },
         {
@@ -82,9 +82,53 @@ def construct_system_flashcard_instructions(context: str, num_of_flashcards: int
             "Hints": [
               "This process occurs in the chloroplasts of plant cells.",
               "Light energy is converted into chemical energy stored in glucose molecules."
-            ]
+            ],
           },
-        }
+        },
+        {
+          "id": 3,
+          "type": "Definition",
+          "content": {
+              "Front": "Pythagoream Theorem",
+              "Back": "A theorem in geometry: the square of the length of the hypotenuse of a right triangle equals the sum of the squares of the lengths of the other two sides.",
+              "Hints": [],
+          },
+        },
+        {
+            "id": 4,
+            "type": "Definition",
+            "content": {
+                "Front": "Cognitive Dissonance",
+                "Back": "Cognitive dissonance is the mental discomfort that results from holding two conflicting beliefs, values, or attitudes.",
+                "Hints": [],
+            },
+        },
+        {
+            "id": 5,
+            "type": "TrueOrFalse",
+            "content": {
+                "Front": "William Shakespeare wrote the novel 'Pride and Prejudice'",
+                "Back": "False",
+                "Hints": [
+                    "William Shakespeare is known for his plays, not novels.",
+                    "'Pride and Prejudice' was written by Jane Austen.",
+                    "The novel was published in the 19th century, long after Shakespeare's death."
+                ],
+            },
+        },
+        {
+            "id": 6,
+            "type": "TrueOrFalse",
+            "content": {
+                "Front": "The Earth is the only planet in our solar system known to support life.",
+                "Back": "",
+                "Hints": [
+                    "Conditions on other planets in our solar system are too harsh for life as we know it.",
+                    "Scientists are still searching for evidence of extraterrestrial life, but haven't found any definitively on other planets in our solar system yet.",
+                    "Earth has a unique combination of factors like atmosphere, temperature, and water that allows life to thrive."
+                ],
+            },
+        },
     }
 
     You should write your answers in the USER SPECIFIED LANGUAGE ONLY.
