@@ -33,9 +33,8 @@ class FlashcardService:
     def generate_flashcard_sets(self, payload: GenerateFlashcardRequestSchema):
         if self.check_word_count(payload.main_word_count, payload.num_of_flashcards):
             client = self.get_openai()
-            context = self.extract_text(payload.main)
             SYSTEM_PROMPT = construct_system_flashcard_instructions(
-                context=context,
+                context=payload.main,
                 num_of_flashcards=payload.num_of_flashcards,
                 language=payload.language,
             )
@@ -126,9 +125,3 @@ class FlashcardService:
             )
         else:
             return True
-
-    def extract_text(self, main):
-        text = ""
-        for i, element in enumerate(main):
-            text += element.content.text + " "
-        return text
