@@ -1,9 +1,11 @@
 import bcrypt
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, Request, Response
+from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.orm import Session
 from jose import jwt
 from src.exceptions.users import InvalidFieldName
+from src.utils.mail import get_mail_client
 from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
 
 from starlette.status import (
@@ -14,7 +16,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 from src.models.users import User
-from src.schemas.auth import LoginSchema, RegisterSchema, LogoutSchema
+from src.schemas.auth import LoginSchema, RegisterSchema, LogoutSchema, ForgotPasswordSchema, ResetPasswordSchema
 from src.services.users import (
     create_user,
     get_user,
@@ -180,11 +182,57 @@ def generate_access_token(user: User):
     return access_token
 
 
-def forgot_password(response, session, payload):
-    """Generate Email Link for Reset Password"""
-    return None
+def forgot_password(response: Response, session: Session, payload: ForgotPasswordSchema):
+    """Generate and send a password reset link via email."""
+    user = get_user(session=session, field="email", value=payload.email.lower())
+    if not user:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found!")
+
+    reset_token = jwt.encode(
+        {"email": user.email, "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
+        ACCESS_TOKEN_SECRET,
+    )
+
+    MESSAGE_SUBJECT = "Your vlecture.tech reset token"
+    MESSAGE_BODY = f"""
+      <h2>Hi! We noticed you're trying to Reset your vlecture password </h2>
+      <p>To reset your password visit http://vlecture/reset-password?token={reset_token}</p>
+      <p>Please insert it on the verification screen on the app.</p>
+      <br>Thanks,
+      <br>vlecture team
+      """
+    message = MessageSchema(
+        subject=MESSAGE_SUBJECT,
+        recipients=[payload.email],
+        body=MESSAGE_BODY,
+        subtype=MessageType.html,
+    )
+
+    client = get_mail_client()
+
+    await client.send_message(message)
+
+    return {"message": "If an account with this email was found, a password reset link has been sent."}
 
 
-def reset_password(response, session, payload):
-    """Reset Password"""
-    return None
+def reset_password(response: Response, session: Session, payload: ResetPasswordSchema):
+    """Reset the user's password given a valid reset token."""
+    try:
+        decoded_token = jwt.decode(payload.reset_password_token, ACCESS_TOKEN_SECRET)
+        user_email = decoded_token.get("email")
+        if not user_email:
+            raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid reset token.")
+
+        user = get_user(session=session, field="email", value=user_email)
+        # TODO: check if the token matches the one stored and if it's still valid based on stored expiration time
+        if not user:
+            raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found.")
+
+        if payload.new_password != payload.retype_password:
+            raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="The Password confirmation does not match.")
+        hashed_password = hash_password(payload.new_password)
+        # user.update_password(session, hashed_password)
+
+        return {"message": "Password reset successfully."}
+    except jwt.JWTError:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid reset token.")

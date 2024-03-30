@@ -35,5 +35,5 @@ class ForgotPasswordSchema(BaseModel):
 
 class ResetPasswordSchema(BaseModel):
     reset_password_token: str
-    new_password: str
-    retype_password: str
+    new_password: bytes = Field(alias="new_password")
+    retype_password: bytes = Field(alias="retype_password")
