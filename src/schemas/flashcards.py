@@ -16,6 +16,11 @@ class FlashcardsRequestSchema(BaseModel):
     note_id: UUID4
 
 
+class GenerateFlashcardSetSchema(BaseModel):
+    note_id: UUID4
+    user_id: UUID4
+
+
 class GenerateFlashcardsRequestSchema(BaseModel):
     note_id: UUID4
     main: str
