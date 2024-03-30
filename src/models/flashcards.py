@@ -58,7 +58,7 @@ class Flashcard(Base):
     rated_difficulty = Column(
         Enum("hard", "medium", "easy", "very_easy", name="difficulty_enum"),
         nullable=False,
-        default="good",
+        default="medium",
     )
 
     def update_is_deleted(self, is_deleted):
@@ -82,6 +82,7 @@ class FlashcardSet(Base):
     avg_difficulty=Column(
         Enum("hard", "medium", "easy", "very_easy", name="difficulty_enum"),
         nullable=True,
+        default="medium",
     )
     is_deleted = Column(Boolean, nullable=False, default=False)
 

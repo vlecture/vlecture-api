@@ -85,7 +85,8 @@ class FlashcardService:
 
     def create_flashcards(self, session: Session, set_id: UUID4, note_id: UUID4, flashcard_jsons: List[GenerateFlashcardsJSONSchema]):
         for i, e in enumerate(flashcard_jsons):
-            flashcard = self.convert_flashcard_json_into_flashcard_schema(set_id, note_id, e)
+            flashcard_json_schema = self.convert_flashcard_json_into_flashcard_schema(set_id, note_id, e) 
+            flashcard = Flashcard(**flashcard_json_schema.model_dump())
             session.add(flashcard)
             session.commit()
             session.refresh(flashcard)
