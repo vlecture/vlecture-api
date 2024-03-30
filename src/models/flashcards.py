@@ -78,6 +78,10 @@ class FlashcardSet(Base):
     title = Column(String(225), nullable=False)
     date_generated = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
     tags = Column(ARRAY(String), nullable=True, unique=False)
+    avg_difficulty=Column(
+        Enum("hard", "good", "easy", name="difficulty_enum"),
+        nullable=True,
+    )
     is_deleted = Column(Boolean, nullable=False, default=False)
 
     max_tags = 10
