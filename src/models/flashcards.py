@@ -53,7 +53,7 @@ class Flashcard(Base):
     )
     front = Column(String(300), nullable=False)
     back = Column(String(300), nullable=False)
-    hints = Column(ARRAY(String), nullable=True, unique=False)
+    hints = Column(ARRAY(String), nullable=True, unique=False, default=[])
     is_deleted = Column(Boolean, default=False)
     rated_difficulty = Column(
         Enum("hard", "medium", "easy", "very_easy", name="difficulty_enum"),
