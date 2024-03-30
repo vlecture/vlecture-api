@@ -1,7 +1,7 @@
 from enum import Enum
 import http
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body, Request
 from sqlalchemy.orm import Session
 import requests
 
@@ -9,9 +9,11 @@ from src.utils.db import get_db
 from src.schemas.base import GenericResponseModel
 from src.services.flashcards import FlashcardService
 from src.services.users import get_current_user
+from src.models.users import User
 from src.schemas.flashcards import (
     FlashcardSetsRequestSchema,
-    FlashcardsRequestSchema   
+    FlashcardsRequestSchema,
+    GenerateFlashcardsRequestSchema,
 )
 
 class FlashcardsRouterTags(Enum):
@@ -21,10 +23,30 @@ flashcards_router = APIRouter(
     prefix="/v1/flashcards", tags=[FlashcardsRouterTags.flashcards]
 )
 
+@flashcards_router.post(
+    "/generate", status_code=http.HTTPStatus.OK
+)
+def generate_flashcards(request: Request, payload: GenerateFlashcardsRequestSchema = Body(), user: User = Depends(get_current_user)):
+    service = FlashcardService()
+
+    req_generate_flashcards = GenerateFlashcardsRequestSchema(
+        main=payload.main,
+        main_word_count=payload.main_word_count,
+        language=payload.language,
+        num_of_flashcards=payload.num_of_flashcards
+    )
+
+    flashcards = service.convert_note_into_flashcard_json(
+        payload=req_generate_flashcards
+    )
+
+    return flashcards
+
+
 @flashcards_router.get(
     "/", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel 
 )
-def view_flashcard_sets(req: FlashcardSetsRequestSchema, session: Session = Depends(get_db)):
+def view_flashcard_sets(req: FlashcardSetsRequestSchema, user: User = Depends(get_current_user)):
     service = FlashcardService()
 
     user_id = req.user_id

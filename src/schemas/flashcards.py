@@ -16,7 +16,7 @@ class FlashcardsRequestSchema(BaseModel):
     note_id: UUID4
 
 
-class GenerateFlashcardRequestSchema(BaseModel):
+class GenerateFlashcardsRequestSchema(BaseModel):
     main: str
     main_word_count: int
     language: str
