@@ -28,10 +28,11 @@ flashcards_router = APIRouter(
 @flashcards_router.post(
     "/generate", status_code=http.HTTPStatus.OK
 )
-def generate_flashcards(request: Request, payload: GenerateFlashcardsJSONRequestSchema = Body(), user: User = Depends(get_current_user), session: Session = Depends(get_db),):
+def generate_flashcards(payload: GenerateFlashcardsJSONRequestSchema = Body(), user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     service = FlashcardService()
 
     req_generate_flashcards = GenerateFlashcardsJSONRequestSchema(
+        note_id=payload.note_id,
         main=payload.main,
         main_word_count=payload.main_word_count,
         language=payload.language,
@@ -59,9 +60,7 @@ def generate_flashcards(request: Request, payload: GenerateFlashcardsJSONRequest
         flashcard_jsons=flashcard_jsons
     )
 
-
-
-    return flashcards_json
+    return flashcards
 
 
 @flashcards_router.get(

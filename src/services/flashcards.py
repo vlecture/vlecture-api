@@ -32,8 +32,8 @@ class FlashcardService:
     def get_openai(self):
         return self.openai_client
 
-    def create_flashcard_set(session: Session, flashcard_set: GenerateFlashcardSetSchema):
-        db_flashcard_set = flashcard_set(**flashcard_set.model_dump())
+    def create_flashcard_set(self, session: Session, flashcard_set: GenerateFlashcardSetSchema):
+        db_flashcard_set = FlashcardSet(**flashcard_set.model_dump())
         session.add(db_flashcard_set)
         session.commit()
         session.refresh(db_flashcard_set)
@@ -61,12 +61,12 @@ class FlashcardService:
             llm_answer = chat_completion.choices[0].message.content
             llm_answer = json.loads(llm_answer)
             answer: List[GenerateFlashcardsJSONSchema] = []
-            for i, e in enumerate(llm_answer):
+            for i, e in enumerate(llm_answer.get("flashcards")):
                 flashcard = GenerateFlashcardsJSONSchema(
-                    type=i.type,
-                    front=i.front,
-                    back=i.content.back,
-                    hints=i.content.hints,
+                    type=e.get("type"),
+                    front=e.get("content").get("Front"),
+                    back=e.get("content").get("Back"),
+                    hints=e.get("content").get("Hints"),
                 )
                 answer.append(flashcard)
 
@@ -85,7 +85,7 @@ class FlashcardService:
 
     def create_flashcards(self, session: Session, set_id: UUID4, note_id: UUID4, flashcard_jsons: List[GenerateFlashcardsJSONSchema]):
         for i, e in enumerate(flashcard_jsons):
-            flashcard = self.convert_flashcard_json_into_flashcard_schema(set_id, note_id, i)
+            flashcard = self.convert_flashcard_json_into_flashcard_schema(set_id, note_id, e)
             session.add(flashcard)
             session.commit()
             session.refresh(flashcard)
