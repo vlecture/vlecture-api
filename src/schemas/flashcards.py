@@ -1,5 +1,4 @@
-from uuid import UUID
-from typing import List
+from typing import List, Optional
 
 from pydantic import UUID4
 from pydantic import (
@@ -27,3 +26,12 @@ class GenerateFlashcardsJSONRequestSchema(BaseModel):
     main_word_count: int
     language: str
     num_of_flashcards: int
+
+
+class GenerateFlashcardRequestSchema(BaseModel):
+    note_id: UUID4
+    set_id: UUID4
+    type: str
+    front: str
+    back: str
+    hints: Optional[List[str]]
