@@ -21,7 +21,7 @@ class GenerateFlashcardSetSchema(BaseModel):
     user_id: UUID4
 
 
-class GenerateFlashcardsRequestSchema(BaseModel):
+class GenerateFlashcardsJSONRequestSchema(BaseModel):
     note_id: UUID4
     main: str
     main_word_count: int

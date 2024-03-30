@@ -13,7 +13,8 @@ from src.models.users import User
 from src.schemas.flashcards import (
     FlashcardSetsRequestSchema,
     FlashcardsRequestSchema,
-    GenerateFlashcardsRequestSchema,
+    GenerateFlashcardsJSONRequestSchema,
+    GenerateFlashcardSetSchema,
 )
 
 class FlashcardsRouterTags(Enum):
@@ -26,10 +27,10 @@ flashcards_router = APIRouter(
 @flashcards_router.post(
     "/generate", status_code=http.HTTPStatus.OK
 )
-def generate_flashcards(request: Request, payload: GenerateFlashcardsRequestSchema = Body(), user: User = Depends(get_current_user)):
+def generate_flashcards(request: Request, payload: GenerateFlashcardsJSONRequestSchema = Body(), user: User = Depends(get_current_user), session: Session = Depends(get_db),):
     service = FlashcardService()
 
-    req_generate_flashcards = GenerateFlashcardsRequestSchema(
+    req_generate_flashcards = GenerateFlashcardsJSONRequestSchema(
         main=payload.main,
         main_word_count=payload.main_word_count,
         language=payload.language,
@@ -38,6 +39,16 @@ def generate_flashcards(request: Request, payload: GenerateFlashcardsRequestSche
 
     flashcards = service.convert_note_into_flashcard_json(
         payload=req_generate_flashcards
+    )
+
+    req_generate_flashcard_set = GenerateFlashcardSetSchema(
+        note_id=payload.note_id,
+        user_id=user.id,
+    )
+
+    set_id = service.create_flashcard_set(
+        session=session,
+        flashcard_set=req_generate_flashcard_set,
     )
 
     return flashcards

@@ -7,7 +7,7 @@ from pydantic import UUID4
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.models.flashcards import Flashcard, FlashcardSet
-from src.schemas.flashcards import GenerateFlashcardsRequestSchema, GenerateFlashcardSetSchema
+from src.schemas.flashcards import GenerateFlashcardsJSONRequestSchema, GenerateFlashcardSetSchema
 from src.utils.openai import construct_system_flashcard_instructions
 from src.utils.db import get_db
 
@@ -38,7 +38,7 @@ class FlashcardService:
         session.refresh(db_flashcard_set)
         return db_flashcard_set.id
 
-    def convert_note_into_flashcard_json(self, payload: GenerateFlashcardsRequestSchema):
+    def convert_note_into_flashcard_json(self, payload: GenerateFlashcardsJSONRequestSchema):
         if self.check_word_count(payload.main_word_count, payload.num_of_flashcards):
             client = self.get_openai()
             SYSTEM_PROMPT = construct_system_flashcard_instructions(
