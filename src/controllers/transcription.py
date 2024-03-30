@@ -48,7 +48,8 @@ class TranscriptionRouterTags(Enum):
 
 
 transcription_router = APIRouter(
-    prefix="/v1/transcription", tags=[TranscriptionRouterTags.transcribe]
+    prefix="/v1/transcription", 
+    tags=[TranscriptionRouterTags.transcribe]
 )
 
 
