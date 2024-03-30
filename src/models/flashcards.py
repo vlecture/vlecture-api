@@ -47,7 +47,7 @@ class Flashcard(Base):
     set_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
     note_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
     type = Column(
-        TypeEnum,
+        Enum("Question", "TrueOrFalse", "Definition", name="type_enum"),
         nullable=False,
     )
     front = Column(String(300), nullable=False)
