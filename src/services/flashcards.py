@@ -1,4 +1,5 @@
 import json
+from typing import List
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from openai import OpenAI
@@ -7,7 +8,7 @@ from pydantic import UUID4
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.models.flashcards import Flashcard, FlashcardSet
-from src.schemas.flashcards import GenerateFlashcardsJSONRequestSchema, GenerateFlashcardSetSchema
+from src.schemas.flashcards import GenerateFlashcardsJSONRequestSchema, GenerateFlashcardSetSchema, GenerateFlashcardRequestSchema, FlashcardsJSONSchema
 from src.utils.openai import construct_system_flashcard_instructions
 from src.utils.db import get_db
 
@@ -38,7 +39,7 @@ class FlashcardService:
         session.refresh(db_flashcard_set)
         return db_flashcard_set.id
 
-    def convert_note_into_flashcard_json(self, payload: GenerateFlashcardsJSONRequestSchema):
+    def convert_note_into_flashcard_json(self, payload: GenerateFlashcardsJSONRequestSchema) -> FlashcardsJSONSchema:
         if self.check_word_count(payload.main_word_count, payload.num_of_flashcards):
             client = self.get_openai()
             SYSTEM_PROMPT = construct_system_flashcard_instructions(
@@ -59,7 +60,24 @@ class FlashcardService:
             )
             llm_answer = chat_completion.choices[0].message.content
             llm_answer = json.loads(llm_answer)
+            llm_answer = FlashcardsJSONSchema(
+                type=llm_answer.type,
+                front=llm_answer.content.front,
+                back=llm_answer.content.back,
+                hints=llm_answer.content.hints,
+            )
             return llm_answer
+
+    def convert_flashcard_json_into_flashcard_schema(self, set_id: UUID4, note_id: UUID4, flashcard_json: FlashcardsJSONSchema):
+        flashcard_schema = GenerateFlashcardRequestSchema(
+            note_id=note_id,
+            set_id=set_id,
+            type=flashcard_json.type,
+            front=flashcard_json.front,
+            back=flashcard_json.back,
+            hints=flashcard_json.hints,
+        )
+        return flashcard_schema
 
     def get_flashcard_sets_by_user(
         self, user_id: UUID4, session: Session = Depends(get_db)
