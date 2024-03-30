@@ -75,7 +75,7 @@ class FlashcardSet(Base):
     )
     note_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
-    title = Column(String(225), nullable=False)
+    title = Column(String(225), nullable=True)
     date_generated = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
     tags = Column(ARRAY(String), nullable=True, unique=False)
     flashcards = Column(ARRAY(String), nullable=True, default=[])
