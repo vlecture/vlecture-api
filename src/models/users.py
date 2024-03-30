@@ -61,3 +61,7 @@ class User(Base):
 
     def get_is_active(self):
         return self.is_active
+
+    def update_password(self, session: Session, new_hashed_password: bytes):
+        self.hashed_password = new_hashed_password
+        session.commit()

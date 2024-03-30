@@ -231,7 +231,7 @@ def reset_password(response: Response, session: Session, payload: ResetPasswordS
         if payload.new_password != payload.retype_password:
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="The Password confirmation does not match.")
         hashed_password = hash_password(payload.new_password)
-        # user.update_password(session, hashed_password)
+        user.update_password(session, hashed_password)
 
         return {"message": "Password reset successfully."}
     except jwt.JWTError:
