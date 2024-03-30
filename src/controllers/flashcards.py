@@ -15,6 +15,7 @@ from src.schemas.flashcards import (
     FlashcardsRequestSchema,
     GenerateFlashcardsJSONRequestSchema,
     GenerateFlashcardSetSchema,
+    GenerateFlashcardsJSONSchema
 )
 
 class FlashcardsRouterTags(Enum):
@@ -37,7 +38,7 @@ def generate_flashcards(request: Request, payload: GenerateFlashcardsJSONRequest
         num_of_flashcards=payload.num_of_flashcards
     )
 
-    flashcards = service.convert_note_into_flashcard_json(
+    flashcards_json: GenerateFlashcardsJSONSchema = service.convert_note_into_flashcard_json(
         payload=req_generate_flashcards
     )
 
@@ -50,8 +51,12 @@ def generate_flashcards(request: Request, payload: GenerateFlashcardsJSONRequest
         session=session,
         flashcard_set=req_generate_flashcard_set,
     )
+    
+    flashcards = service.
 
-    return flashcards
+
+
+    return flashcards_json
 
 
 @flashcards_router.get(
