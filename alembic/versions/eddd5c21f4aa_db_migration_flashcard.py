@@ -47,6 +47,7 @@ def downgrade() -> None:
     sa.Column('title', sa.VARCHAR(length=225), autoincrement=False, nullable=False),
     sa.Column('date_generated', postgresql.TIMESTAMP(timezone=True), autoincrement=False, nullable=False),
     sa.Column('tags', postgresql.ARRAY(sa.VARCHAR()), autoincrement=False, nullable=True),
+    sa.Column('num_of_flashcards', sa.INTEGER(), nullable=False),
     sa.Column('avg_difficulty', postgresql.ENUM('hard', 'medium', 'easy', 'very_easy', name='difficulty_enum'), autoincrement=False, nullable=False),
     sa.Column('is_deleted', sa.BOOLEAN(), autoincrement=False, nullable=False),
     sa.CheckConstraint('array_length(tags, 1) IS NULL OR array_length(tags, 1) <= 50', name='max_tag_length_constraint'),

@@ -21,6 +21,7 @@ class FlashcardsRequestSchema(BaseModel):
 class GenerateFlashcardSetSchema(BaseModel):
     note_id: PyObjectId
     user_id: UUID4
+    num_of_flashcards: int
 
 
 class GenerateFlashcardsJSONRequestSchema(BaseModel):

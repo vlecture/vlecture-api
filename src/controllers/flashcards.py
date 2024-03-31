@@ -46,6 +46,7 @@ def generate_flashcards(payload: GenerateFlashcardsJSONRequestSchema = Body(), u
     req_generate_flashcard_set = GenerateFlashcardSetSchema(
         note_id=payload.note_id,
         user_id=user.id,
+        num_of_flashcards=payload.num_of_flashcards,
     )
 
     set_id = service.create_flashcard_set(
