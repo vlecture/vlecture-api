@@ -32,6 +32,8 @@ class FlashcardService:
     def get_openai(self):
         return self.openai_client
 
+    # Flashcard Generation
+
     def create_flashcard_set(self, session: Session, flashcard_set: GenerateFlashcardSetSchema):
         db_flashcard_set = FlashcardSet(**flashcard_set.model_dump())
         session.add(db_flashcard_set)
@@ -93,6 +95,8 @@ class FlashcardService:
         
         return flashcard_jsons
 
+    # Flashcard Manipulation and Accessing
+
     def get_flashcard_sets_by_user(
         self, user_id: UUID4, session: Session = Depends(get_db)
     ):
@@ -121,12 +125,13 @@ class FlashcardService:
         data = []
         for flashcard_set in flashcard_sets:
             item = {
-                "set_id": flashcard_set.set_id,
+                "set_id": flashcard_set.id,
                 "note_id": flashcard_set.note_id,
                 "user_id": flashcard_set.user_id,
                 "title": flashcard_set.title,
                 "date_generated": flashcard_set.date_generated,
                 "tags": flashcard_set.tags,
+                "avg_difficulty": flashcard_set.avg_difficulty,
                 "is_deleted": flashcard_set.is_deleted,
             }
             data.append(item)
@@ -137,11 +142,13 @@ class FlashcardService:
         data = []
         for flashcard in flashcards:
             item = {
-                "flashcard_id": flashcard.flashcard_id,
+                "flashcard_id": flashcard.id,
                 "set_id": flashcard.set_id,
                 "note_id": flashcard.note_id,
+                "type": flashcard.type,
                 "front": flashcard.front,
                 "back": flashcard.back,
+                "hints": flashcard.hints,
                 "is_deleted": flashcard.is_deleted,
                 "rated_difficulty": flashcard.rated_difficulty,
             }
@@ -157,6 +164,24 @@ class FlashcardService:
         )
 
         return set.user_id
+
+    def rerate_flashcard(
+        self, set_id: UUID4, note_id: UUID4, new_rating: str, session: Session 
+    ):
+        flashcards = self.get_flashcards_by_set(session=session, set_id=set_id, note_id=note_id)
+        flashcards.rated_difficulty(new_rating)
+        session.commit()
+
+        return self.build_json_flashcards(flashcards)
+
+    def rerate_flashcard_set(
+        self, user_id: UUID4, new_rating: str, session: Session
+    ):
+        flashcard_sets = self.get_flashcard_sets_by_user(user_id=user_id, session=session)
+        flashcard_sets.avg_difficulty(new_rating)
+        session.commit()
+
+        return self.build_json_flashcard_sets(flashcard_sets)
 
     # Helper Functions
 
