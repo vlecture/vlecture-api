@@ -11,6 +11,7 @@ import json
 import requests
 import pytz
 from datetime import datetime
+from bson import ObjectId
 
 from sqlalchemy.orm import Session
 from typing import List, Union
@@ -191,4 +192,19 @@ class NoteService:
 
     return new_note_object
     
+  def is_valid_note(note_id: str, user_id: str, note_collection) -> bool:
+    note_id = ObjectId(note_id)
+    existing_note = note_collection.find_one({
+        "_id": note_id,
+        "owner_id": user_id,
+        "is_deleted": False
+    })
+    return existing_note is not None
+
+  def delete_note(note_id: str, note_collection) -> bool:
+      result = note_collection.update_one(
+          {"_id": ObjectId(note_id)},
+          {"$set": {"is_deleted": True}}
+      )
+      return result.modified_count > 0
     

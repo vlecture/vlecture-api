@@ -123,14 +123,12 @@ def get_a_note(
   note_id = ObjectId(note_id)
   my_note = request.app.note_collection.find_one({
     "_id": note_id,
-    "owner_id": user.id,
     "is_deleted": False
   })
   if not my_note:
     return JSONResponse(status_code=http.HTTPStatus.NOT_FOUND, content={"message": "Note not found or already deleted."})
 
   return my_note
-
 
 @note_router.delete(
   "/delete/{note_id}",
@@ -146,7 +144,6 @@ def delete_a_note(
 
   existing_note = request.app.note_collection.find_one({
     "_id": note_id,
-    "owner_id": user.id,
     "is_deleted": False 
   })
 
@@ -162,3 +159,4 @@ def delete_a_note(
     return JSONResponse(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, content={"message": "Failed to delete note."})
   else:
     return JSONResponse(status_code=http.HTTPStatus.OK, content={"message": "Note deleted successfully."})
+
