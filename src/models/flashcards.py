@@ -7,6 +7,7 @@ from sqlalchemy import (
     Column,
     UUID,
     String,
+    Integer,
     Enum,
     CheckConstraint,
     TIMESTAMP,
@@ -60,6 +61,7 @@ class Flashcard(Base):
         nullable=False,
         default="medium",
     )
+    num_of_rates=Column(Integer, nullable=False, default=0)
 
     def update_is_deleted(self, is_deleted):
         self.is_deleted = is_deleted

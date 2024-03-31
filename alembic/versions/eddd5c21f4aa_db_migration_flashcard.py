@@ -37,6 +37,7 @@ def downgrade() -> None:
     sa.Column('hints', sa.ARRAY(sa.String), nullable=True, unique=False), 
     sa.Column('is_deleted', sa.BOOLEAN(), autoincrement=False, nullable=True),
     sa.Column('rated_difficulty', postgresql.ENUM('hard', 'medium', 'easy', 'very_easy', name='difficulty_enum'), autoincrement=False, nullable=False),
+    sa.Column('num_of_rates', sa.INTEGER(), nullable=False),
     sa.PrimaryKeyConstraint('id', name='flashcards_pkey')
     )
     op.create_table('flashcard_sets',
