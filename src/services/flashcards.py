@@ -192,3 +192,21 @@ class FlashcardService:
             )
         else:
             return True
+
+    def rating_enum_to_nominal(self, rating):
+        match rating:
+            case "hard":
+                return 8
+            case "medium":
+                return 6
+            case "easy":
+                return 4
+            case "very_easy":
+                return 2
+
+    def reevaluate_flashcard_set_rating(self, new_flashcard_rating, old_flashcard_rating, flashcard_set_rating, num_of_flashcards):
+        new_flashcard_rating = self.rating_enum_to_nominal(new_flashcard_rating)
+        old_flashcard_rating = self.rating_enum_to_nominal(old_flashcard_rating)
+        flashcard_set_rating = self.rating_enum_to_nominal(flashcard_set_rating)
+
+        return ((flashcard_set_rating * num_of_flashcards) - old_flashcard_rating + new_flashcard_rating) / num_of_flashcards
