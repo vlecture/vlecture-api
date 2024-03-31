@@ -1,14 +1,29 @@
 import uuid
-import http
+from uuid import UUID
+
 import time
 import requests
-import json
+import pytz
+from datetime import datetime
 
-from fastapi import Response
+from sqlalchemy.orm import Session
+from typing import List, Union
 from botocore.exceptions import ClientError
 
-from src.utils.aws.s3 import AWSS3Client
-from src.utils.aws.transcribe import AWSTranscribeClient
+from src.models.transcription import (
+    Transcription,
+    TranscriptionChunk,
+)
+
+from src.schemas.transcription import (
+  TranscriptionChunkItemSchema,
+  TranscriptionChunksSchema,
+  TranscriptionSchema,
+  ServiceRetrieveTranscriptionChunkItemSchema,
+  GenerateTranscriptionChunksResponseSchema,
+)
+
+from src.utils.time import get_datetime_now_jkt
 
 
 class TranscriptionService:
@@ -80,17 +95,177 @@ class TranscriptionService:
             )
 
             return job_result
-
-            # Grab the transcription text
-            # content = requests.get(job_result['TranscriptionJob']['Transcript']['TranscriptFileUri'])
-            # res = json.loads(content.content.decode('utf8'))['results']['transcripts'][0]['transcript']
-
-            # return res
         except TimeoutError:
             return TimeoutError("Timeout when polling the transcription results")
         except ClientError:
             raise RuntimeError("Transcription Job failed.")
 
+    async def insert_transcription_result(
+        self, 
+        session: Session,
+        transcription_data: TranscriptionSchema,
+    ):
+        """
+        Stores a Transcription object to the db
+        """
+        db_tsc = Transcription(**transcription_data.model_dump())
+
+        try:
+            session.add(db_tsc)
+            session.commit()
+            session.refresh(db_tsc)
+
+            return db_tsc
+        except Exception as e:
+            session.rollback()
+            raise RuntimeError(f"Error while inserting Transcription to DB: {e}")
+        finally:
+            session.close()
+
+    async def insert_transcription_chunks(
+        self,
+        session: Session,
+        transcription_chunk_data: TranscriptionChunksSchema
+    ):
+        """
+        Stores a Transcription Chunk object to the db
+        """
+
+        db_tsc_chunk = TranscriptionChunk(**transcription_chunk_data.model_dump())
+
+        try:
+            session.add(db_tsc_chunk)
+            session.commit()
+            session.refresh(db_tsc_chunk)
+
+            return db_tsc_chunk
+        except Exception as e:
+            session.rollback()
+            raise RuntimeError(f"Error while inserting Transcription Chunk to DB: {e}")
+        finally:
+            session.close()
+
+    async def _fetch_transcription_data(self, transcribe_client, job_name: str):
+        response = await self.get_all_transcriptions(transcribe_client=transcribe_client, job_name=job_name)
+        aws_link = requests.get(response)
+        return aws_link.json()
+
+    async def retrieve_formatted_transcription_from_job_name(
+        self,
+        transcribe_client,
+        job_name: str
+    ):
+        transcription_data = await self._fetch_transcription_data(transcribe_client, job_name)
+
+        job_name = transcription_data.get("jobName")
+        accountId = transcription_data.get("accountId")
+        status = transcription_data.get("status")
+        transcripts = transcription_data.get("results", {}).get("transcripts", [])
+
+        temp_transcripts = []
+
+        if transcripts:
+            for i in range(len(transcripts)):
+                transcript_text = transcripts[i].get("transcript")
+                temp_transcripts.append(transcript_text)
+        else:
+            print("No transcripts found in the response")
+
+        full_transcript = " ".join(temp_transcripts)
+
+        items = transcription_data.get("results", {}).get("items", [])
+
+        grouped_items = self.generate_grouped_items_and_format_chunks(items=items)
+
+        response = {
+            "jobName": job_name,
+            "accountId": accountId,
+            "status": status,
+            "results": {
+                "transcripts": full_transcript, 
+                "items": grouped_items
+            },
+        }
+
+        return response
+        
+    def generate_grouped_items_and_format_chunks(
+        self,
+        items: Union[List[TranscriptionChunkItemSchema], None],
+    ):
+        grouped_items = []
+        temp_group = []
+
+        for index, item in enumerate(items):
+            if item.get("type") == "pronunciation":
+                temp_group.append(item)
+
+                if len(temp_group) == 5 or index == len(items) - 1:
+                    contents = " ".join(
+                        [i.get("alternatives")[0].get("content") for i in temp_group]
+                    )
+
+                    start_time = temp_group[0].get("start_time")
+                    end_time = temp_group[-1].get("end_time")
+                    duration = float(end_time) - float(start_time)
+
+                    tsc_chunk_formatted: ServiceRetrieveTranscriptionChunkItemSchema = {
+                            "content": str(contents),
+                            "start_time": str(start_time),
+                            "end_time": str(end_time),
+                            "duration": "{:.2f}".format(duration),
+                        }
+
+                    grouped_items.append(
+                        tsc_chunk_formatted
+                    )
+
+                    temp_group = []
+        
+        return grouped_items
+
+    def generate_transcription_chunks(
+        self, 
+        transcription_id: UUID,
+        items: Union[List[ServiceRetrieveTranscriptionChunkItemSchema], None]
+    ) -> GenerateTranscriptionChunksResponseSchema:
+        """
+        Generate TranscriptionChunk objects and total duration
+        from a list of ServiceRetrieveTranscriptionChunkItemSchema items
+        """
+        
+        total_duration = 0
+        chunks: List[TranscriptionChunksSchema] = []
+
+        for item in items:
+            datetime_now_jkt = get_datetime_now_jkt()
+            chunk_duration = float(item["duration"])
+
+            chunk = TranscriptionChunksSchema(
+                id=uuid.uuid4(),
+                created_at=datetime_now_jkt,
+                updated_at=datetime_now_jkt,
+                is_deleted=False,
+                
+                transcription_id=transcription_id,
+                content=item["content"],
+                start_time=float(item["start_time"]),
+                end_time=float(item["end_time"]),
+                duration=chunk_duration,
+                is_edited=False,
+            )
+
+            # Use `append` to correctly add the object to chunks list
+            chunks.append(chunk)
+
+            total_duration += chunk_duration
+        
+        response = GenerateTranscriptionChunksResponseSchema(
+            duration=total_duration,
+            chunks=chunks,
+        )
+
+        return response
 
     async def delete_transcription_job(self, transcribe_client, job_name: str):
         try:

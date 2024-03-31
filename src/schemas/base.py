@@ -29,7 +29,7 @@ class DBBaseModel(BaseModel):
   id: UUID
   created_at: datetime 
   updated_at: Optional[datetime]
-  is_deleted: datetime
+  is_deleted: bool
 
   class Config:
     orm_mode = True

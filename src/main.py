@@ -1,16 +1,31 @@
 import sentry_sdk
+import certifi
 
 from fastapi import (
     FastAPI,
 )
+
+from pymongo import MongoClient
+from bson.binary import UuidRepresentation
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from src.utils.settings import (
     SENTRY_DSN,
+    MONGODB_URL,
+    MONGODB_DB_NAME,
+    MONGODB_COLLECTION_NAME,
 )
-from src.controllers import transcription, auth, upload
+from src.controllers import (
+    transcription, 
+    auth, 
+    upload, 
+    waitlist,
+    note
+)
 from src.utils.db import Base, engine
+
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
@@ -26,19 +41,10 @@ sentry_sdk.init(
 app = FastAPI()
 
 # CORS
-origins = [
-    "https://app.vlecture.tech",
-    "https://staging.app.vlecture.tech",
-    "https://api.vlecture.tech",
-    "https://staging.api.vlecture.tech",
-    "http://localhost",
-    "http://localhost:3000",
-    "http://localhost:8080",
-]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://vlecture.tech",
         "https://app.vlecture.tech",
         "https://staging.app.vlecture.tech",
         "https://api.vlecture.tech",
@@ -67,6 +73,29 @@ app.add_middleware(
 app.include_router(auth.auth_router)
 app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
+app.include_router(waitlist.waitlist_router)
+app.include_router(note.note_router)
+
+
+# Connect to MongoDB on startup
+@app.on_event("startup")
+def startup_mongodb_client():
+    app.mongodb_client = MongoClient(
+        MONGODB_URL, 
+
+        # MongoClient Configs
+        uuidRepresentation='standard',
+        tlsCAFile=certifi.where()
+    )
+    app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
+    app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
+    print("Connected to MongoDB Database.")
+
+@app.on_event("shutdown")
+def shutdown_db_client():
+    app.mongodb_client.close()
+    print("Closed MongoDB Connection")
+
 
 # sentry trigger error test, comment when not needed
 # @app.get("/sentry-debug")

@@ -1,3 +1,7 @@
+import uuid
+from pytz import timezone
+from datetime import datetime
+
 from src.utils.db import Base
 from src.models.base import DBBase
 from src.models.users import User
@@ -6,14 +10,11 @@ from src.schemas.transcription import TranscriptionSchema, TranscriptionChunksSc
 from sqlalchemy import (
     Column,
     UUID,
+    TIMESTAMP,
     Integer,
     String,
     Float,
     Boolean,
-    LargeBinary,
-    PrimaryKeyConstraint,
-    DateTime,
-    UniqueConstraint,
     ForeignKey,
 )
 
@@ -28,8 +29,17 @@ from sqlalchemy.orm import (
   relationship,
 )
 
-class Transcription(Base, DBBase):
-  __tablename__ = "transcription"
+UTC = timezone("UTC")
+def time_now():
+    return datetime.now(UTC)
+
+class Transcription(Base):
+  __tablename__ = "transcriptions"
+
+  id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
+  created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
+  updated_at = Column(TIMESTAMP(timezone=True), default=time_now, onupdate=time_now, nullable=False)
+  is_deleted = Column(Boolean, default=False)
 
   ## Foreign Relationships
   # Foreign key to User
@@ -54,13 +64,26 @@ class Transcription(Base, DBBase):
   def get_by_id(cls, uuid: UUID) -> TranscriptionSchema:
     base = super().get_by_id(uuid)
     return base.__to_model() if base else None
+  
+  def __str__(self):
+    return f"""
+      Transcription\n
+      ===
+      id: {self.id}\n
+      title: {self.title}
+    """
 
 
-class TranscriptionChunk(Base, DBBase):
-  __tablename__ = "transcription_chunk"
+class TranscriptionChunk(Base):
+  __tablename__ = "transcription_chunks"
+
+  id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
+  created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
+  updated_at = Column(TIMESTAMP(timezone=True), default=time_now, onupdate=time_now, nullable=False)
+  is_deleted = Column(Boolean, default=False)
 
   # Extra fields
-  duration = Column(Float(precision=1), default=0, nullable=False)
+  duration = Column(Float(precision=1),nullable=False)
 
   is_edited = Column(Boolean, default=False)
 
@@ -70,6 +93,19 @@ class TranscriptionChunk(Base, DBBase):
 
   # One to many relationship with Transcription
   transcription_parent = relationship("Transcription", back_populates="chunks")
+
+  start_time = Column(Float(precision=1), nullable=False)
+  end_time = Column(Float(precision=1), nullable=False)
+
+  content = Column(String(255), nullable=True)
+
+  def __str__(self):
+    return f"""
+    Transcription Chunk\n
+    ===
+    id: {self.id}\n
+    content: {self.content}
+    """
 
   def __to_model(self) -> TranscriptionChunksSchema:
     """ Converts DB ORM object to Pydantic Model ('schema') """
