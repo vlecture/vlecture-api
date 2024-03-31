@@ -34,6 +34,8 @@ def upgrade() -> None:
         sa.Column('refresh_token', sa.VARCHAR(length=225), autoincrement=False, nullable=True),
         sa.Column('access_token', sa.VARCHAR(length=225), autoincrement=False, nullable=True),
         sa.Column('is_active', sa.BOOLEAN(), autoincrement=False, nullable=True),
+        sa.Column('reset_token', sa.VARCHAR(length=225), nullable=True),
+        sa.Column('reset_token_expiration', sa.TIMESTAMP(timezone=True), nullable=True),
 
         sa.PrimaryKeyConstraint('id', name='pk_user_id'),
         sa.UniqueConstraint('email', name='uq_user_email'),
