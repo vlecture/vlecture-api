@@ -182,7 +182,7 @@ def generate_access_token(user: User):
     return access_token
 
 
-def forgot_password(response: Response, session: Session, payload: ForgotPasswordSchema):
+async def forgot_password(response: Response, session: Session, payload: ForgotPasswordSchema):
     """Generate and send a password reset link via email."""
     user = get_user(session=session, field="email", value=payload.email.lower())
     if not user:
