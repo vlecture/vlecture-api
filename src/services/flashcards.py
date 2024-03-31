@@ -45,7 +45,7 @@ class FlashcardService:
         if self.check_word_count(payload["main_word_count"], payload["num_of_flashcards"]):
             client = self.get_openai()
             SYSTEM_PROMPT = construct_system_flashcard_instructions(
-                context=payload["main"],
+                context=self.extract_main_text(payload["main"]),
                 num_of_flashcards=payload["num_of_flashcards"],
                 language=payload["language"],
             )
@@ -186,6 +186,15 @@ class FlashcardService:
             session.commit()
 
     # Helper Functions
+
+    def extract_main_text(self, main):
+        all_text = ""
+        for block in main:
+            if block["content"] in block:
+                for item in block["content"]:
+                    if item["text"] in item:
+                        all_text += item["text"] + " "
+        return all_text.strip()
 
     def check_word_count(self, word_count, num_of_flashcards):
         if word_count // 50 < num_of_flashcards:
