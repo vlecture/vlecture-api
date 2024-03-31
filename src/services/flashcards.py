@@ -42,12 +42,12 @@ class FlashcardService:
         return db_flashcard_set.id
 
     def convert_note_into_flashcard_json(self, payload: GenerateFlashcardsJSONRequestSchema) -> GenerateFlashcardsJSONSchema:
-        if self.check_word_count(payload["main_word_count"], payload["num_of_flashcards"]):
+        if self.check_word_count(payload.main_word_count, payload.num_of_flashcards):
             client = self.get_openai()
             SYSTEM_PROMPT = construct_system_flashcard_instructions(
-                context=self.extract_main_text(payload["main"]),
-                num_of_flashcards=payload["num_of_flashcards"],
-                language=payload["language"],
+                context=self.extract_main_text(payload.main),
+                num_of_flashcards=payload.num_of_flashcards,
+                language=payload.language,
             )
 
             chat_completion = client.chat.completions.create(
@@ -78,10 +78,10 @@ class FlashcardService:
         flashcard_schema = FlashcardRequestSchema(
             note_id=note_id,
             set_id=set_id,
-            type=flashcard_json["type"],
-            front=flashcard_json["front"],
-            back=flashcard_json["back"],
-            hints=flashcard_json["hints"],
+            type=flashcard_json.type,
+            front=flashcard_json.front,
+            back=flashcard_json.back,
+            hints=flashcard_json.hints,
         )
         return flashcard_schema
 
@@ -159,8 +159,8 @@ class FlashcardService:
         flashcard = self.get_flashcard_by_id(session=session, flashcard_id=flashcard_id)
         flashcard_sets = self.get_flashcard_sets_by_user(user_id=user_id, session=session)
 
-        num_of_rates = flashcard["num_of_rates"]
-        old_flashcard_rating = flashcard["rated_difficulty"]
+        num_of_rates = flashcard.num_of_rates
+        old_flashcard_rating = flashcard.rated_difficulty
 
         new_flashcard_rating = self.reevaluate_flashcard_rating(new_flashcard_rating=new_rating, old_flashcard_rating=old_flashcard_rating, num_of_rates=num_of_rates)
         flashcard.rated_difficulty = new_flashcard_rating
@@ -177,9 +177,9 @@ class FlashcardService:
         self, new_flashcard_rating: str, old_flashcard_rating: str, flashcard_sets, session: Session
     ):
         for i, e in enumerate(flashcard_sets):
-            flashcard_set = self.get_flashcard_set_by_id(flashcard_sets["id"])
-            flashcard_set_rating = flashcard_set["avg_difficulty"]
-            num_of_flashcards = flashcard_set["num_of_flashcards"]
+            flashcard_set = self.get_flashcard_set_by_id(flashcard_sets.id)
+            flashcard_set_rating = flashcard_set.avg_difficulty
+            num_of_flashcards = flashcard_set.num_of_flashcards
 
             new_flashcard_set_rating = self.reevaluate_flashcard_set_rating(new_flashcard_rating=new_flashcard_rating, old_flashcard_rating=old_flashcard_rating, old_flashcard_set_rating=flashcard_set_rating, num_of_flashcards=num_of_flashcards)
             flashcard_set.avg_difficulty = new_flashcard_set_rating
@@ -190,9 +190,9 @@ class FlashcardService:
     def extract_main_text(self, main):
         all_text = ""
         for block in main:
-            if block["content"] in block:
+            if block["content"]:
                 for item in block["content"]:
-                    if item["text"] in item:
+                    if item["text"]:
                         all_text += item["text"] + " "
         return all_text.strip()
 

@@ -26,7 +26,7 @@ class GenerateFlashcardSetSchema(BaseModel):
 
 class GenerateFlashcardsJSONRequestSchema(BaseModel):
     note_id: PyObjectId
-    main: str
+    main: List[dict]
     main_word_count: int
     language: str
     num_of_flashcards: int
