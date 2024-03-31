@@ -30,9 +30,12 @@ def time_now():
 class DifficultyEnum(Enum):
     __tablename__ = "difficulty_enum"
 
-    hard = "hard"
-    good = "good"
     easy = "easy"
+    medium = "medium"
+    hard = "hard"
+    very_hard = "very hard"
+
+
 
 class Flashcard(Base):
     __tablename__ = "flashcards"
@@ -48,7 +51,7 @@ class Flashcard(Base):
     front = Column(String(300), nullable=False)
     back = Column(String(300), nullable=False)
     is_deleted = Column(Boolean, default=False) 
-    rated_difficulty = Column(Enum('hard', 'good', 'easy', name='difficulty_enum'), nullable=False, default='good')
+    rated_difficulty = Column(Enum('easy', 'medium', 'hard', 'very hard', name='difficulty_enum'), nullable=False, default='medium')
 
     def update_is_deleted(self, is_deleted):
         self.is_deleted = is_deleted

@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import UUID4
 from typing import List
-from datetime import datetime
+import datetime
 
 from src.models.flashcards import Flashcard, FlashcardSet
 from src.utils.db import get_db

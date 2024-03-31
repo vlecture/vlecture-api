@@ -2,16 +2,17 @@ from enum import Enum
 import http
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
+
 from sqlalchemy.orm import Session
 import requests
 
 from src.utils.db import get_db
-from src.schemas.base import GenericResponseModel
 from src.services.flashcards import FlashcardService
 from src.services.users import get_current_user
 from src.schemas.flashcards import (
-    FlashcardSetsRequestSchema,
-    FlashcardsRequestSchema   
+    FlashcardSetsResponseSchema,
+    FlashcardsResponseSchema   
 )
 from src.models.users import User
 
@@ -23,7 +24,7 @@ flashcards_router = APIRouter(
 )
 
 @flashcards_router.get(
-    "", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel 
+    "", status_code=http.HTTPStatus.OK, response_model=FlashcardSetsResponseSchema  
 )
 def view_flashcard_sets(user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     service = FlashcardService()
@@ -35,28 +36,19 @@ def view_flashcard_sets(user: User = Depends(get_current_user), session: Session
             user_id=user_id,
             session=session
         )
-        
-        response = service.get_flashcard_sets_by_user(
-            user_id=user_id,
-            session=session
-        )
 
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.OK,
-            message="Succesfully fetched all flashcard sets from current user.",
-            error="",
-            data=response,
+            content=response
         )
     except Exception:
-         return GenericResponseModel(
+         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
-            message="Error",
-            error="You don't have access to these flashcard sets or flashcard sets don't exist.",
-            data={},
+            content="Error: You don't have access to these flashcard sets or flashcard sets don't exist.",
         )
 
 @flashcards_router.get(
-    "/set/{set_id}", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
+    "/set/{set_id}", status_code=http.HTTPStatus.OK, response_model=FlashcardsResponseSchema
 )
 def view_flashcards(set_id: str, user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     service = FlashcardService()
@@ -72,21 +64,21 @@ def view_flashcards(set_id: str, user: User = Depends(get_current_user), session
             session=session
         )
 
-        title = service.get_set_title
-        note_id = service.get_set_note_id
+        title = service.get_set_title(set_id, session)
+        note_id = service.get_set_note_id(set_id, session)
 
-        response = [title, note_id] + response
-
-        return GenericResponseModel(
+        response = {
+            'title': title,
+            'note_id': note_id,
+            'flashcards': response
+        }
+        
+        return JSONResponse(
             status_code=http.HTTPStatus.OK,
-            message="Succesfully fetched all flashcards from set.",
-            error="",
-            data=response,
+            content=response,
         )
     except Exception as e:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
-            message="Error",
-            error="You don't have access to these flashcards or flashcards don't exist.",
-            data={},
+            content="You don't have access to these flashcards or flashcards don't exist.",
         )

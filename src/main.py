@@ -78,7 +78,7 @@ app.add_middleware(
         "Keep-Alive",
         "Origin",
         "User-Agent",
-        "X-Requested-With"
+        "X-Requested-With",
     ],
 )
 
@@ -94,16 +94,17 @@ app.include_router(note.note_router)
 # Connect to MongoDB on startup
 @app.on_event("startup")
 def startup_mongodb_client():
+    # FORMAT_MONGODB_URL = f"{MONGODB_URL}/?retryWrites={MONGODB_URL_RW}&w={MONGODB_URL_MAJORITY}&appName={MONGODB_URL_CLUSTER}"
     app.mongodb_client = MongoClient(
-        MONGODB_URL, 
-
+        MONGODB_URL,
         # MongoClient Configs
-        uuidRepresentation='standard',
-        tlsCAFile=certifi.where()
+        uuidRepresentation="standard",
+        tlsCAFile=certifi.where(),
     )
     app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
     app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
     print("Connected to MongoDB Database.")
+
 
 @app.on_event("shutdown")
 def shutdown_db_client():

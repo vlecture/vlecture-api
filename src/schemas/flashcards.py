@@ -6,10 +6,10 @@ from pydantic import (
   BaseModel,
 )
 
-from src.schemas.base import DBBaseModel
+class FlashcardsResponseSchema(BaseModel):
+    title: str
+    note_id: UUID4
+    flashcards: List[dict]
 
-class FlashcardSetsRequestSchema(BaseModel):
-  user_id: UUID4
-
-class FlashcardsRequestSchema(BaseModel):
-  set_id: UUID4
+class FlashcardSetsResponseSchema(BaseModel):
+    flashcard_sets: List[FlashcardsResponseSchema]

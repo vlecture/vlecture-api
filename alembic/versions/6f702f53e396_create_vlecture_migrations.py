@@ -122,7 +122,7 @@ def upgrade() -> None:
         sa.Column('front', sa.String(300), nullable=False),
         sa.Column('back', sa.String(300), nullable=False),
         sa.Column('is_deleted', sa.BOOLEAN(), nullable=False),
-        sa.Column('rated_difficulty', sa.Enum('hard', 'good', 'easy', name='difficulty_enum'), nullable=False, default='good'),
+        sa.Column('rated_difficulty', sa.Enum('easy', 'medium', 'hard', 'very hard', name='difficulty_enum'), nullable=False, default='medium'),
 
         sa.PrimaryKeyConstraint('flashcard_id', name="flashcards_pkey")
     )
