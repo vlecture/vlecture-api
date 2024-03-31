@@ -225,7 +225,6 @@ def reset_password(response: Response, session: Session, payload: ResetPasswordS
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid or Expired reset token.")
 
         user = get_user(session=session, field="email", value=user_email)
-        # TODO: check if the token matches the one stored and if it's still valid based on stored expiration time
 
         if not user.validate_reset_token(decoded_token):
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid or Expired reset token.")
