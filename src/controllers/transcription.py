@@ -37,6 +37,10 @@ from src.schemas.transcription import (
     TranscriptionChunksSchema,
 )
 from src.services.transcription import TranscriptionService
+
+from src.utils.time import (
+    get_datetime_now_jkt
+)
 from src.utils.aws.s3 import AWSS3Client
 from src.utils.aws.transcribe import (
     AWSTranscribeClient,

@@ -6,6 +6,7 @@ from fastapi import (
 )
 
 from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 from bson.binary import UuidRepresentation
 
 from fastapi import FastAPI
@@ -94,13 +95,24 @@ app.include_router(note.note_router)
 # Connect to MongoDB on startup
 @app.on_event("startup")
 def startup_mongodb_client():
-    # FORMAT_MONGODB_URL = f"{MONGODB_URL}/?retryWrites={MONGODB_URL_RW}&w={MONGODB_URL_MAJORITY}&appName={MONGODB_URL_CLUSTER}"
-    app.mongodb_client = MongoClient(
+    client = MongoClient(
         MONGODB_URL,
+        server_api=ServerApi('1'),
+
         # MongoClient Configs
         uuidRepresentation="standard",
         tlsCAFile=certifi.where(),
     )
+
+    try:
+        client.admin.command('ping')
+        print("Pinged your deployment. You successfully connected to MongoDB!")
+
+        # Assign MongoDB client to FastAPI app
+        app.mongodb_client = client
+    except Exception as e:
+        print(e)
+
     app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
     app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
     print("Connected to MongoDB Database.")
