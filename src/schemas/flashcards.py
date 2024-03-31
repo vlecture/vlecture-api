@@ -13,3 +13,7 @@ class FlashcardsResponseSchema(BaseModel):
 
 class FlashcardSetsResponseSchema(BaseModel):
     flashcard_sets: List[FlashcardsResponseSchema]
+
+class FlashcardUpdateDiffRequest(BaseModel):
+    flashcard_id: UUID4
+    new_difficulty: str

@@ -24,6 +24,16 @@ class FlashcardService:
         ).all()
         
         return self.build_json_flashcards(flashcards)
+    
+    def update_flashcard_difficulty(self, session: Session, flashcard_id: UUID4, new_difficulty: str):
+        flashcard = session.query(Flashcard).filter(
+            Flashcard.flashcard_id == flashcard_id,
+        ).one()
+
+        if (flashcard.is_deleted):
+            raise Exception
+        else:
+            flashcard.update_rated_difficulty(new_difficulty)
 
     def build_json_flashcard_sets(self, flashcard_sets):
         data = []

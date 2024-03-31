@@ -12,7 +12,8 @@ from src.services.flashcards import FlashcardService
 from src.services.users import get_current_user
 from src.schemas.flashcards import (
     FlashcardSetsResponseSchema,
-    FlashcardsResponseSchema   
+    FlashcardsResponseSchema,
+    FlashcardUpdateDiffRequest 
 )
 from src.models.users import User
 
@@ -81,4 +82,33 @@ def view_flashcards(set_id: str, user: User = Depends(get_current_user), session
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="You don't have access to these flashcards or flashcards don't exist.",
+        )
+    
+@flashcards_router.post(
+    "/set/update_diff", status_code=http.HTTPStatus.OK
+)
+def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+    service = FlashcardService()
+
+    try:
+        user_id = user.id
+
+        if user.id != user_id:
+            raise Exception
+        
+        service.update_flashcard_difficulty(
+            flashcard_id=req.flashcard_id,
+            new_difficulty=req.new_difficulty,
+            session=session
+        )
+
+        return JSONResponse(
+            status_code=http.HTTPStatus.OK,
+            content="Successfully updated flashcard difficulty.",
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            content="You don't have access to this flashcard or flashcard doesn't exist.",
         )
