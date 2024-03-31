@@ -103,6 +103,9 @@ class FlashcardSet(Base):
     def update_is_deleted(self, is_deleted):
         self.is_deleted = is_deleted
 
+    def update_avg_difficulty(self, avg_difficulty):
+        self.avg_difficulty = avg_difficulty
+
     #     self.delete_all_flashcards_in_set(self)
 
     # def delete_all_flashcards_in_set(self):
