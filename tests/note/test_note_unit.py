@@ -1,7 +1,5 @@
 ### UNIT TESTS FOR NOTES SERVICES
-
 import pytest
-from typing import List
 from openai import (
   OpenAI
 )
@@ -14,11 +12,6 @@ from src.schemas.note import (
 )
 
 from .utils import (
-  TRANSCRIPT,
-  EXPECTED_RESPONSE_CONVERT_CORNELL_JSON,
-  EXPECTED_RESPONSE_CREATE_PARAGRAPH_BLOCK,
-  EXPECTED_RESPONSE_GENERATE_NOTE,
-
   # INPUTS
   INPUT_FORMAT_CORNELL_INTO_BLOCKNOTE_ARRAY,
   INPUT_CREATE_NOTEBLOCK,
