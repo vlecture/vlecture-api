@@ -121,6 +121,18 @@ class FlashcardService:
 
         return self.build_json_flashcards(flashcards)
 
+    def get_flashcard_by_id(self, session: Session, flashcard_id):
+        flashcard = (
+            session.query(Flashcard)
+            .filter(
+                Flashcard.id == flashcard_id,
+                Flashcard.is_deleted == False
+            )
+            .all()
+        )
+
+        return self.build_json_flashcard(flashcard)
+
     def build_json_flashcard_sets(self, flashcard_sets):
         data = []
         for flashcard_set in flashcard_sets:
@@ -155,6 +167,21 @@ class FlashcardService:
             data.append(item)
 
         return data
+
+    def build_json_flashcard(self, flashcard):
+        item = {
+            "flashcard_id": flashcard.id,
+            "set_id": flashcard.set_id,
+            "note_id": flashcard.note_id,
+            "type": flashcard.type,
+            "front": flashcard.front,
+            "back": flashcard.back,
+            "hints": flashcard.hints,
+            "is_deleted": flashcard.is_deleted,
+            "rated_difficulty": flashcard.rated_difficulty,
+        }
+
+        return item
 
     def get_set_owner(self, set_id, session):
         set = (
