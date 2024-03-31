@@ -1,4 +1,4 @@
-import json
+import json, math
 from typing import List
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -106,7 +106,19 @@ class FlashcardService:
             .all()
         )
 
-        return self.build_json_flashcard_sets(flashcard_sets)
+        return flashcard_sets
+
+    def get_flashcard_set_by_id(self, session: Session, set_id):
+        flashcard = (
+            session.query(FlashcardSet)
+            .filter(
+                FlashcardSet.id == set_id,
+                Flashcard.is_deleted == False
+            )
+            .all()
+        )
+
+        return flashcard
 
     def get_flashcards_by_set(self, session: Session, set_id: UUID4, note_id: UUID4):
         flashcards = (
@@ -119,7 +131,7 @@ class FlashcardService:
             .all()
         )
 
-        return self.build_json_flashcards(flashcards)
+        return flashcards
 
     def get_flashcard_by_id(self, session: Session, flashcard_id):
         flashcard = (
@@ -130,58 +142,7 @@ class FlashcardService:
             )
             .all()
         )
-
-        return self.build_json_flashcard(flashcard)
-
-    def build_json_flashcard_sets(self, flashcard_sets):
-        data = []
-        for flashcard_set in flashcard_sets:
-            item = {
-                "set_id": flashcard_set.id,
-                "note_id": flashcard_set.note_id,
-                "user_id": flashcard_set.user_id,
-                "title": flashcard_set.title,
-                "date_generated": flashcard_set.date_generated,
-                "tags": flashcard_set.tags,
-                "avg_difficulty": flashcard_set.avg_difficulty,
-                "is_deleted": flashcard_set.is_deleted,
-            }
-            data.append(item)
-
-        return data
-
-    def build_json_flashcards(self, flashcards):
-        data = []
-        for flashcard in flashcards:
-            item = {
-                "flashcard_id": flashcard.id,
-                "set_id": flashcard.set_id,
-                "note_id": flashcard.note_id,
-                "type": flashcard.type,
-                "front": flashcard.front,
-                "back": flashcard.back,
-                "hints": flashcard.hints,
-                "is_deleted": flashcard.is_deleted,
-                "rated_difficulty": flashcard.rated_difficulty,
-            }
-            data.append(item)
-
-        return data
-
-    def build_json_flashcard(self, flashcard):
-        item = {
-            "flashcard_id": flashcard.id,
-            "set_id": flashcard.set_id,
-            "note_id": flashcard.note_id,
-            "type": flashcard.type,
-            "front": flashcard.front,
-            "back": flashcard.back,
-            "hints": flashcard.hints,
-            "is_deleted": flashcard.is_deleted,
-            "rated_difficulty": flashcard.rated_difficulty,
-        }
-
-        return item
+    
 
     def get_set_owner(self, set_id, session):
         set = (
@@ -193,22 +154,36 @@ class FlashcardService:
         return set.user_id
 
     def rerate_flashcard(
-        self, set_id: UUID4, note_id: UUID4, new_rating: str, session: Session 
+        self, user_id: UUID4, flashcard_id: UUID4, new_rating: str, session: Session 
     ):
-        flashcards = self.get_flashcards_by_set(session=session, set_id=set_id, note_id=note_id)
-        flashcards.rated_difficulty(new_rating)
-        session.commit()
-
-        return self.build_json_flashcards(flashcards)
-
-    def rerate_flashcard_set(
-        self, user_id: UUID4, new_rating: str, session: Session
-    ):
+        flashcard = self.get_flashcard_by_id(session=session, flashcard_id=flashcard_id)
         flashcard_sets = self.get_flashcard_sets_by_user(user_id=user_id, session=session)
-        flashcard_sets.avg_difficulty(new_rating)
+
+        num_of_rates = flashcard.num_of_rates
+        old_flashcard_rating = flashcard.rated_difficulty
+
+        new_flashcard_rating = self.reevaluate_flashcard_rating(new_flashcard_rating=new_rating, old_flashcard_rating=old_flashcard_rating, num_of_rates=num_of_rates)
+        flashcard.rated_difficulty = new_flashcard_rating
+
+        self.rerate_flashcard_sets(new_flashcard_rating=new_flashcard_rating, old_flashcard_rating=old_flashcard_rating, flashcard_sets=flashcard_sets, session=session)
+
         session.commit()
 
-        return self.build_json_flashcard_sets(flashcard_sets)
+        flashcard = self.get_flashcard_by_id(session=session, flashcard_id=flashcard_id)
+
+        return self.build_json_flashcard(flashcard)
+
+    def rerate_flashcard_sets(
+        self, new_flashcard_rating: str, old_flashcard_rating: str, flashcard_sets, session: Session
+    ):
+        for i, e in enumerate(flashcard_sets):
+            flashcard_set = self.get_flashcard_set_by_id(flashcard_sets.id)
+            flashcard_set_rating = flashcard_set.avg_difficulty
+            num_of_flashcards = flashcard_set.num_of_flashcards
+
+            new_flashcard_set_rating = self.reevaluate_flashcard_set_rating(new_flashcard_rating=new_flashcard_rating, old_flashcard_rating=old_flashcard_rating, old_flashcard_set_rating=flashcard_set_rating, num_of_flashcards=num_of_flashcards)
+            flashcard_set.avg_difficulty = new_flashcard_set_rating
+            session.commit()
 
     # Helper Functions
 
@@ -223,17 +198,25 @@ class FlashcardService:
     def rating_enum_to_nominal(self, rating):
         match rating:
             case "hard":
-                return 8
-            case "medium":
-                return 6
-            case "easy":
                 return 4
-            case "very_easy":
+            case "medium":
+                return 3
+            case "easy":
                 return 2
+            case "very_easy":
+                return 1
 
-    def reevaluate_flashcard_set_rating(self, new_flashcard_rating, old_flashcard_rating, flashcard_set_rating, num_of_flashcards):
+    def reevaluate_flashcard_rating(self, new_flashcard_rating, old_flashcard_rating, num_of_rates):
         new_flashcard_rating = self.rating_enum_to_nominal(new_flashcard_rating)
         old_flashcard_rating = self.rating_enum_to_nominal(old_flashcard_rating)
-        flashcard_set_rating = self.rating_enum_to_nominal(flashcard_set_rating)
 
-        return ((flashcard_set_rating * num_of_flashcards) - old_flashcard_rating + new_flashcard_rating) / num_of_flashcards
+        rating = ((old_flashcard_rating * num_of_rates) - old_flashcard_rating + new_flashcard_rating) / num_of_rates
+        return math.ceil(rating)
+
+    def reevaluate_flashcard_set_rating(self, new_flashcard_rating, old_flashcard_rating, old_flashcard_set_rating, num_of_flashcards):
+        new_flashcard_rating = self.rating_enum_to_nominal(new_flashcard_rating)
+        old_flashcard_rating = self.rating_enum_to_nominal(old_flashcard_rating)
+        old_flashcard_set_rating = self.rating_enum_to_nominal(old_flashcard_set_rating)
+
+        rating = ((old_flashcard_set_rating * num_of_flashcards) - old_flashcard_rating + new_flashcard_rating) / num_of_flashcards
+        return math.ceil(rating)
