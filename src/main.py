@@ -17,7 +17,14 @@ from src.utils.settings import (
     MONGODB_DB_NAME,
     MONGODB_COLLECTION_NAME,
 )
-from src.controllers import transcription, auth, upload, waitlist, note
+from src.controllers import (
+    transcription, 
+    auth, 
+    upload, 
+    waitlist,
+    note,
+    flashcards
+)
 from src.utils.db import Base, engine
 
 
@@ -69,6 +76,7 @@ app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
 app.include_router(waitlist.waitlist_router)
 app.include_router(note.note_router)
+app.include_router(flashcards.flashcards_router)
 
 
 # Connect to MongoDB on startup

@@ -29,6 +29,9 @@ try:
 except Exception:
     raise ValueError("Database config values are missing or incorrect.")
 
+# TESTDB
+TESTDB_URL = os.getenv("TESTDB_URL")
+
 # MONGODB
 MONGODB_URL = os.getenv("MONGODB_URL")
 # MONGODB_URL_RW = os.getenv("MONGODB_URL_RW")
