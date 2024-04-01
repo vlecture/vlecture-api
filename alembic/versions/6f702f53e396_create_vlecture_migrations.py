@@ -99,32 +99,35 @@ def upgrade() -> None:
     )
 
     op.create_table(
-        'flashcard_sets',
+        'flashcards',
+        sa.Column('id', sa.UUID(), nullable=False),
         sa.Column('set_id', sa.UUID(), nullable=False),
+        sa.Column('note_id', sa.UUID(), nullable=False),
+        sa.Column('front', sa.String(300), nullable=False),
+        sa.Column('back', sa.String(300), nullable=False),
+        sa.Column('is_deleted', sa.BOOLEAN(), nullable=False),
+        sa.Column('latest_judged_difficulty', sa.Enum('very easy', 'easy', 'medium', 'hard', name='difficulty_enum'), nullable=False, default='medium'),
+        sa.Column('last_accessed', sa.TIMESTAMP(timezone=True), nullable=False),
+
+        sa.PrimaryKeyConstraint('flashcard_id', name="flashcards_pkey")
+    )
+
+    op.create_table(
+        'flashcard_sets',
+        sa.Column('id', sa.UUID(), nullable=False),
         sa.Column('note_id', sa.UUID(), nullable=False),
         sa.Column('user_id', sa.UUID(), nullable=False),
         sa.Column('title', sa.String(255), nullable=False),
         sa.Column('date_generated', sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column('tags', sa.ARRAY(sa.String), nullable=True, unique=False), 
         sa.Column('is_deleted', sa.BOOLEAN(), nullable=False),
+        sa.Column('last_accessed', sa.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column('last_completed', sa.TIMESTAMP(timezone=True), nullable=True),
+        sa.Column('avg_diff_score', sa.Float, nullable=False),
 
         sa.PrimaryKeyConstraint('set_id', name="flashcard_sets_pkey"),
         sa.CheckConstraint("cardinality(tags) <= 10", name="max_tags_constraint"),
         sa.CheckConstraint("array_length(tags, 1) <= 50", name="max_tag_length_constraint")
-    )
-
-
-    op.create_table(
-        'flashcards',
-        sa.Column('flashcard_id', sa.UUID(), nullable=False),
-        sa.Column('set_id', sa.UUID(), nullable=False),
-        sa.Column('note_id', sa.UUID(), nullable=False),
-        sa.Column('front', sa.String(300), nullable=False),
-        sa.Column('back', sa.String(300), nullable=False),
-        sa.Column('is_deleted', sa.BOOLEAN(), nullable=False),
-        sa.Column('rated_difficulty', sa.Enum('very easy', 'easy', 'medium', 'hard', name='difficulty_enum'), nullable=False, default='medium'),
-
-        sa.PrimaryKeyConstraint('flashcard_id', name="flashcards_pkey")
     )
 
     # ### end Alembic commands ###

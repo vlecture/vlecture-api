@@ -15,7 +15,8 @@ from sqlalchemy import (
     CheckConstraint,
     func,
     TIMESTAMP,
-    text
+    text,
+    Float
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
@@ -26,20 +27,10 @@ UTC = timezone("UTC")
 def time_now():
     return datetime.now(UTC)
 
-
-class DifficultyEnum(Enum):
-    __tablename__ = "difficulty_enum"
-
-    very_easy = "very_easy"
-    easy = "easy"
-    medium = "medium"
-    hard = "hard"
-
-
 class Flashcard(Base):
     __tablename__ = "flashcards"
 
-    flashcard_id = Column(
+    id = Column(
         UUID(as_uuid=True), 
         nullable=False, 
         primary_key=True, 
@@ -50,18 +41,22 @@ class Flashcard(Base):
     front = Column(String(300), nullable=False)
     back = Column(String(300), nullable=False)
     is_deleted = Column(Boolean, default=False) 
-    rated_difficulty = Column(Enum('very easy', 'easy', 'medium', 'hard', name='difficulty_enum'), nullable=False, default='medium')
+    latest_judged_difficulty = Column(Enum('very easy', 'easy', 'medium', 'hard', name='difficulty_enum'), nullable=False, default='medium')
+    last_accessed = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
 
     def update_is_deleted(self, is_deleted):
         self.is_deleted = is_deleted
     
-    def update_rated_difficulty(self, rated_difficulty):
-        self.rated_difficulty = rated_difficulty
+    def update_latest_judged_difficulty(self, latest_judged_difficulty):
+        self.latest_judged_difficulty = latest_judged_difficulty
+
+    def update_last_accessed(self, last_accessed):
+        self.last_accessed = last_accessed
 
 class FlashcardSet(Base):
     __tablename__ = "flashcard_sets" 
 
-    set_id = Column(
+    id = Column(
         UUID(as_uuid=True), 
         nullable=False, 
         primary_key=True, 
@@ -73,6 +68,9 @@ class FlashcardSet(Base):
     date_generated = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
     tags = Column(ARRAY(String), nullable=True, unique=False)
     is_deleted = Column(Boolean, nullable=False, default=False)
+    last_accessed = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
+    last_completed = Column(TIMESTAMP(timezone=True), nullable=True)
+    avg_diff_score = Column(Float, default=10, nullable=False)
 
     max_tags = 10  
     max_tag_length = 50 
@@ -84,13 +82,16 @@ class FlashcardSet(Base):
         ),
     )
 
-
     # flashcards = relationship("Flashcard", back_populates="flashcard_set")
 
     def update_is_deleted(self, is_deleted):
         self.is_deleted = is_deleted
-    #     self.delete_all_flashcards_in_set(self)
     
-    # def delete_all_flashcards_in_set(self):
-    #     for flashcard in self.flashcards:
-    #         flashcard.update_is_deleted(True) 
+    def update_last_accessed(self, last_accessed):
+        self.last_accessed = last_accessed
+
+    def update_last_completed(self, last_completed):
+        self.last_completed = last_completed
+
+    def update_avg_diff_score(self, avg_diff_score):
+        self.avg_diff_score = avg_diff_score
