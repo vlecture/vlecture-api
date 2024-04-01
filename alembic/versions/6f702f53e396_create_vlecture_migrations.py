@@ -109,7 +109,7 @@ def upgrade() -> None:
         sa.Column('latest_judged_difficulty', sa.Enum('very easy', 'easy', 'medium', 'hard', name='difficulty_enum'), nullable=False, default='medium'),
         sa.Column('last_accessed', sa.TIMESTAMP(timezone=True), nullable=False),
 
-        sa.PrimaryKeyConstraint('flashcard_id', name="flashcards_pkey")
+        sa.PrimaryKeyConstraint('id', name="flashcards_pkey")
     )
 
     op.create_table(
@@ -125,7 +125,7 @@ def upgrade() -> None:
         sa.Column('last_completed', sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column('avg_diff_score', sa.Float, nullable=False),
 
-        sa.PrimaryKeyConstraint('set_id', name="flashcard_sets_pkey"),
+        sa.PrimaryKeyConstraint('id', name="flashcard_sets_pkey"),
         sa.CheckConstraint("cardinality(tags) <= 10", name="max_tags_constraint"),
         sa.CheckConstraint("array_length(tags, 1) <= 50", name="max_tag_length_constraint")
     )
