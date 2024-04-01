@@ -133,7 +133,6 @@ async def transcribe_audio(
         # Then, store TranscriptionChunk object to database, bcs it needs to maintain a ForeignKey
         print(f"Storing Transcription Chunks to db...")
         for chunk in transcription_chunks:
-            print(chunk)
             await service.insert_transcription_chunks(
                 session=session, transcription_chunk_data=chunk
             )
