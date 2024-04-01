@@ -95,21 +95,16 @@ def view_flashcard_sets(user: User = Depends(get_current_user), session: Session
 def view_flashcards(set_id: str, user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     service = FlashcardService()
     
-    print("@@@ in")
-
     try:
         user_id = service.get_set_owner(set_id, session)
 
         if user.id != user_id:
             raise Exception
 
-        print("@@@ start")
         response = service.get_flashcards_by_set(
             set_id=set_id,
             session=session
         )
-
-        print("@@@response: ", response)
 
         title = service.get_set_title(set_id, session)
         note_id = service.get_set_note_id(set_id, session)
@@ -125,7 +120,6 @@ def view_flashcards(set_id: str, user: User = Depends(get_current_user), session
             content=response,
         )
     except Exception as e:
-        print("@@@ error: ", e)
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="You don't have access to these flashcards or flashcards don't exist.",
