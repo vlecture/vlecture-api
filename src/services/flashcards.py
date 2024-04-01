@@ -118,14 +118,11 @@ class FlashcardService:
         return flashcard
 
     def get_flashcards_by_set(self, session: Session, set_id: UUID4):
-        print("@@@ set_id: ", set_id)
         flashcards = session.query(Flashcard).filter(
             Flashcard.set_id == set_id,
             Flashcard.is_deleted == False
         ).all()
         
-        print("@@@ flashcards:", len(flashcards))
-
         return self.build_json_flashcards(flashcards)
 
     def update_flashcard_difficulty(self, session: Session, flashcard_id: UUID4, new_difficulty: str):
