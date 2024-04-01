@@ -127,7 +127,7 @@ def upgrade() -> None:
         sa.Column('is_deleted', sa.BOOLEAN(), nullable=False),
         sa.Column('last_accessed', sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column('last_completed', sa.TIMESTAMP(timezone=True), nullable=True),
-        sa.Column('avg_difficulty', sa.Float(), nullable=False),
+        sa.Column('cum_avg_difficulty', sa.Float(), nullable=False),
 
         sa.PrimaryKeyConstraint('id', name="flashcard_sets_pkey"),
         sa.CheckConstraint("cardinality(tags) <= 10", name="max_tags_constraint"),

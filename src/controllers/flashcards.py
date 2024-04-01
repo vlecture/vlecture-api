@@ -128,7 +128,7 @@ def view_flashcards(set_id: str, user: User = Depends(get_current_user), session
         )
     
 @flashcards_router.post(
-    "/set/update_diff", status_code=http.HTTPStatus.OK
+    "/set/update-flashcard-diff", status_code=http.HTTPStatus.OK
 )
 def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     service = FlashcardService()

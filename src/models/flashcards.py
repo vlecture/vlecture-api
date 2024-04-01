@@ -84,7 +84,7 @@ class FlashcardSet(Base):
     is_deleted = Column(Boolean, nullable=False, default=False)
     last_accessed = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
     last_completed = Column(TIMESTAMP(timezone=True), nullable=True)
-    avg_difficulty = Column(Float, default=10, nullable=False)
+    cum_avg_difficulty = Column(Float, default=10, nullable=False)
 
     max_tags = 10
     max_tag_length = 50
@@ -109,5 +109,5 @@ class FlashcardSet(Base):
     def update_last_completed(self, last_completed):
         self.last_completed = last_completed
 
-    def update_avg_difficulty(self, avg_difficulty):
-        self.avg_difficulty = avg_difficulty
+    def update_avg_difficulty(self, cum_avg_difficulty):
+        self.cum_avg_difficulty = cum_avg_difficulty
