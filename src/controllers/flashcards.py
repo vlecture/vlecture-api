@@ -12,6 +12,8 @@ from src.services.flashcards import FlashcardService
 from src.services.users import get_current_user
 from src.models.users import User
 from src.schemas.flashcards import (
+    FlashcardSetsResponseSchema,
+    FlashcardsResponseSchema,
     FlashcardUpdateDiffRequest, 
     GenerateFlashcardsJSONRequestSchema,
     GenerateFlashcardSetSchema,
