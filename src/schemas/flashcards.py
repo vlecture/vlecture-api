@@ -1,5 +1,6 @@
 from typing import Annotated, List, Optional
 from uuid import UUID
+from datetime import datetime
 
 from pydantic import UUID4, BeforeValidator
 from pydantic import (
@@ -11,6 +12,10 @@ PyObjectId = Annotated[str, BeforeValidator(str)]
 class FlashcardUpdateDiffRequest(BaseModel):
     id: UUID4
     new_difficulty: str
+
+class FlashcardSetUpdateLastCompletedRequest(BaseModel):
+    id: UUID4
+    new_last_completed: datetime
 
 class FlashcardsResponseSchema(BaseModel):
     title: str

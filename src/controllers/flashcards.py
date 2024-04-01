@@ -15,6 +15,7 @@ from src.schemas.flashcards import (
     FlashcardSetsResponseSchema,
     FlashcardsResponseSchema,
     FlashcardUpdateDiffRequest, 
+    FlashcardSetUpdateLastCompletedRequest,
     GenerateFlashcardsJSONRequestSchema,
     GenerateFlashcardSetSchema,
     GenerateFlashcardsJSONSchema
@@ -70,13 +71,13 @@ def generate_flashcards(payload: GenerateFlashcardsJSONRequestSchema = Body(), u
 @flashcards_router.get(
     "", status_code=http.HTTPStatus.OK, response_model=FlashcardSetsResponseSchema  
 )
-def view_flashcard_sets(user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+def view_flashcard_sets( user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     service = FlashcardService()
 
     try:
         response = service.get_flashcard_sets_by_user(
             user_id=user.id,
-            session=session
+            session=session,
         )
 
         return JSONResponse(
@@ -89,6 +90,29 @@ def view_flashcard_sets(user: User = Depends(get_current_user), session: Session
             content="Error: You don't have access to these flashcard sets or flashcard sets don't exist.",
         )
 
+@flashcards_router.get(
+    "/recommended", status_code=http.HTTPStatus.OK, response_model=FlashcardSetsResponseSchema  
+)
+def view_recommended_flashcard_sets( user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+    service = FlashcardService()
+
+    try:
+        response = service.get_recommended_flashcard_sets_by_user(
+            user_id=user.id,
+            session=session,
+        )
+
+        return JSONResponse(
+            status_code=http.HTTPStatus.OK,
+            content=response
+        )
+    
+    except Exception as e:
+        return JSONResponse(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            content="Error: You don't have access to these flashcard sets or flashcard sets don't exist.",
+        )
+    
 @flashcards_router.get(
     "/set/{set_id}", status_code=http.HTTPStatus.OK, response_model=FlashcardsResponseSchema
 )
@@ -132,13 +156,13 @@ def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = De
     service = FlashcardService()
 
     try:
-        user_id = user.id
+        user_id = service.get_flashcard_owner(req.id, session)
 
         if user.id != user_id:
             raise Exception
         
         service.update_flashcard_difficulty(
-            id=req.id,
+            flashcard_id=req.id,
             new_difficulty=req.new_difficulty,
             session=session
         )
@@ -152,4 +176,33 @@ def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = De
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="You don't have access to this flashcard or flashcard doesn't exist.",
+        )
+    
+@flashcards_router.post(
+    "/set/update-flashcard-set-last-completed", status_code=http.HTTPStatus.OK
+)
+def update_flashcard_last_completed(req: FlashcardSetUpdateLastCompletedRequest, user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+    service = FlashcardService()
+
+    try:
+        user_id = service.get_set_owner(req.id, session)
+
+        if user.id != user_id:
+            raise Exception
+        
+        service.update_flashcard_set_last_completed(
+            set_id=req.id,
+            new_last_completed=req.new_last_completed,
+            session=session
+        )
+
+        return JSONResponse(
+                status_code=http.HTTPStatus.OK,
+                content="Successfully updated flashcard set last completed timestamp.",
+            )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            content="You don't have access to this flashcard set or flashcard set doesn't exist.",
         )
