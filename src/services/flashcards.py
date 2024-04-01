@@ -27,13 +27,13 @@ class FlashcardService:
     
     def update_flashcard_difficulty(self, session: Session, flashcard_id: UUID4, new_difficulty: str):
         flashcard = session.query(Flashcard).filter(
-            Flashcard.flashcard_id == flashcard_id,
+            Flashcard.id == flashcard_id,
         ).one()
 
         if (flashcard.is_deleted):
             raise Exception
         else:
-            flashcard.update_rated_difficulty(new_difficulty)
+            flashcard.update_latest_judged_difficulty(new_difficulty)
 
     def build_json_flashcard_sets(self, flashcard_sets):
         data = []
@@ -41,7 +41,7 @@ class FlashcardService:
             formatted_date = datetime.datetime.strftime(
                 flashcard_set.date_generated, "%Y-%m-%d %H:%M:%S")
             item = {
-                "set_id": flashcard_set.set_id,
+                "set_id": flashcard_set.id,
                 "note_id": flashcard_set.note_id,
                 "user_id": flashcard_set.user_id,
                 "title": flashcard_set.title,
@@ -57,7 +57,7 @@ class FlashcardService:
         data = []
         for flashcard in flashcards:
             item = {
-                "flashcard_id": flashcard.flashcard_id,
+                "flashcard_id": flashcard.id,
                 "set_id": flashcard.set_id,
                 "note_id": flashcard.note_id,
                 "front": flashcard.front,
@@ -71,7 +71,7 @@ class FlashcardService:
     
     def get_set_owner(self, set_id, session):
         set = session.query(FlashcardSet).filter(
-            FlashcardSet.set_id == set_id,
+            FlashcardSet.id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
 
@@ -79,7 +79,7 @@ class FlashcardService:
     
     def get_set_title(self, set_id, session):
         set = session.query(FlashcardSet).filter(
-            FlashcardSet.set_id == set_id,
+            FlashcardSet.id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
 
@@ -87,7 +87,7 @@ class FlashcardService:
 
     def get_set_note_id(self, set_id, session):
         set = session.query(FlashcardSet).filter(
-            FlashcardSet.set_id == set_id,
+            FlashcardSet.id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
 

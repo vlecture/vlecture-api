@@ -97,7 +97,7 @@ def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = De
             raise Exception
         
         service.update_flashcard_difficulty(
-            flashcard_id=req.flashcard_id,
+            id=req.id,
             new_difficulty=req.new_difficulty,
             session=session
         )
