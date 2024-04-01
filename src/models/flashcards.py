@@ -48,12 +48,12 @@ class Flashcard(Base):
     back = Column(String(300), nullable=False)
     hints = Column(ARRAY(String), nullable=True, unique=False, default=[])
     is_deleted = Column(Boolean, default=False)
+    num_of_rates=Column(Integer, nullable=False, default=0)
     latest_judged_difficulty = Column(
         Enum("hard", "medium", "easy", "very_easy", name="difficulty_enum"),
         nullable=False,
         default="medium",
     )
-    num_of_rates=Column(Integer, nullable=False, default=0)
     last_accessed = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
 
     def update_is_deleted(self, is_deleted):
