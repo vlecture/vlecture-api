@@ -98,16 +98,12 @@ class FlashcardService:
 
     # Flashcard Manipulation and Accessing
 
-    def get_flashcard_sets_by_user(
-        self, user_id: UUID4, session: Session = Depends(get_db)
-    ):
-        flashcard_sets = (
-            session.query(FlashcardSet)
-            .filter(FlashcardSet.user_id == user_id, FlashcardSet.is_deleted == False)
-            .all()
-        )
+    def get_flashcard_sets_by_user(self, user_id: UUID4, session: Session = Depends(get_db)):
+        flashcard_sets = session.query(FlashcardSet) \
+                        .filter(FlashcardSet.user_id == user_id, FlashcardSet.is_deleted == False) \
+                        .all()
 
-        return flashcard_sets
+        return self.build_json_flashcard_sets(flashcard_sets)
 
     def get_flashcard_set_by_id(self, session: Session, set_id):
         flashcard = (
@@ -122,11 +118,14 @@ class FlashcardService:
         return flashcard
 
     def get_flashcards_by_set(self, session: Session, set_id: UUID4):
+        print("@@@ set_id: ", set_id)
         flashcards = session.query(Flashcard).filter(
-            Flashcard.id == set_id,
+            Flashcard.set_id == set_id,
             Flashcard.is_deleted == False
         ).all()
         
+        print("@@@ flashcards:", len(flashcards))
+
         return self.build_json_flashcards(flashcards)
 
     def update_flashcard_difficulty(self, session: Session, flashcard_id: UUID4, new_difficulty: str):
@@ -149,17 +148,26 @@ class FlashcardService:
             .all()
         )
 
+    def format_date(self, date):
+        if (date == None):
+            return None
+        return datetime.datetime.strftime(date, "%Y-%m-%d %H:%M:%S")
+
     def build_json_flashcard_sets(self, flashcard_sets):
         data = []
         for flashcard_set in flashcard_sets:
             item = {
-                "set_id": flashcard_set.id,
-                "note_id": flashcard_set.note_id,
-                "user_id": flashcard_set.user_id,
+                "set_id": str(flashcard_set.id),
+                "note_id": str(flashcard_set.note_id),
+                "user_id": str(flashcard_set.user_id),
                 "title": flashcard_set.title,
-                "date_generated": flashcard_set.date_generated,
+                "date_generated": self.format_date(flashcard_set.date_generated),
                 "tags": flashcard_set.tags,
+                "num_of_flashcards": flashcard_set.num_of_flashcards,
                 "is_deleted": flashcard_set.is_deleted,
+                "last_accessed": self.format_date(flashcard_set.last_accessed),
+                "last_completed": self.format_date(flashcard_set.last_completed),
+                "cum_avg_difficulty": flashcard_set.cum_avg_difficulty
             }
             data.append(item)
 
@@ -169,13 +177,17 @@ class FlashcardService:
         data = []
         for flashcard in flashcards:
             item = {
-                "flashcard_id": flashcard.id,
-                "set_id": flashcard.set_id,
-                "note_id": flashcard.note_id,
+                "flashcard_id": str(flashcard.id),
+                "set_id": str(flashcard.set_id),
+                "note_id": str(flashcard.note_id),
+                "type": flashcard.type,
                 "front": flashcard.front,
                 "back": flashcard.back,
+                "hints": flashcard.hints,
                 "is_deleted": flashcard.is_deleted,
-                "rated_difficulty": flashcard.rated_difficulty
+                "num_of_rates": flashcard.num_of_rates,
+                "latest_judged_difficulty": flashcard.latest_judged_difficulty,
+                "last_accessed": self.format_date(flashcard.last_accessed)
             }
             data.append(item)
 
@@ -239,7 +251,7 @@ class FlashcardService:
                 old_flashcard_set_rating=flashcard_set_rating, 
                 num_of_flashcards=num_of_flashcards
             )
-            
+
             flashcard_set.avg_difficulty = new_flashcard_set_rating
             session.commit()
 
