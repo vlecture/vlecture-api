@@ -16,11 +16,11 @@ from src.models.transcription import (
 )
 
 from src.schemas.transcription import (
-    TranscriptionChunkItemSchema,
-    TranscriptionChunksSchema,
-    TranscriptionSchema,
-    ServiceRetrieveTranscriptionChunkItemSchema,
-    GenerateTranscriptionChunksResponseSchema,
+  TranscriptionChunkItemSchema,
+  TranscriptionChunksSchema,
+  TranscriptionSchema,
+  ServiceRetrieveTranscriptionChunkItemSchema,
+  GenerateTranscriptionChunksResponseSchema,
 )
 
 from src.utils.time import get_datetime_now_jkt
@@ -97,12 +97,11 @@ class TranscriptionService:
             return job_result
         except TimeoutError:
             return TimeoutError("Timeout when polling the transcription results")
-        except ClientError as e:
-            print(e)
+        except ClientError:
             raise RuntimeError("Transcription Job failed.")
 
     async def insert_transcription_result(
-        self,
+        self, 
         session: Session,
         transcription_data: TranscriptionSchema,
     ):
@@ -124,7 +123,9 @@ class TranscriptionService:
             session.close()
 
     async def insert_transcription_chunks(
-        self, session: Session, transcription_chunk_data: TranscriptionChunksSchema
+        self,
+        session: Session,
+        transcription_chunk_data: TranscriptionChunksSchema
     ):
         """
         Stores a Transcription Chunk object to the db
@@ -145,18 +146,16 @@ class TranscriptionService:
             session.close()
 
     async def _fetch_transcription_data(self, transcribe_client, job_name: str):
-        response = await self.get_all_transcriptions(
-            transcribe_client=transcribe_client, job_name=job_name
-        )
+        response = await self.get_all_transcriptions(transcribe_client=transcribe_client, job_name=job_name)
         aws_link = requests.get(response)
         return aws_link.json()
 
     async def retrieve_formatted_transcription_from_job_name(
-        self, transcribe_client, job_name: str
+        self,
+        transcribe_client,
+        job_name: str
     ):
-        transcription_data = await self._fetch_transcription_data(
-            transcribe_client, job_name
-        )
+        transcription_data = await self._fetch_transcription_data(transcribe_client, job_name)
 
         job_name = transcription_data.get("jobName")
         accountId = transcription_data.get("accountId")
@@ -182,11 +181,14 @@ class TranscriptionService:
             "jobName": job_name,
             "accountId": accountId,
             "status": status,
-            "results": {"transcripts": full_transcript, "items": grouped_items},
+            "results": {
+                "transcripts": full_transcript, 
+                "items": grouped_items
+            },
         }
 
         return response
-
+        
     def generate_grouped_items_and_format_chunks(
         self,
         items: Union[List[TranscriptionChunkItemSchema], None],
@@ -208,28 +210,30 @@ class TranscriptionService:
                     duration = float(end_time) - float(start_time)
 
                     tsc_chunk_formatted: ServiceRetrieveTranscriptionChunkItemSchema = {
-                        "content": str(contents),
-                        "start_time": str(start_time),
-                        "end_time": str(end_time),
-                        "duration": "{:.2f}".format(duration),
-                    }
+                            "content": str(contents),
+                            "start_time": str(start_time),
+                            "end_time": str(end_time),
+                            "duration": "{:.2f}".format(duration),
+                        }
 
-                    grouped_items.append(tsc_chunk_formatted)
+                    grouped_items.append(
+                        tsc_chunk_formatted
+                    )
 
                     temp_group = []
-
+        
         return grouped_items
 
     def generate_transcription_chunks(
-        self,
+        self, 
         transcription_id: UUID,
-        items: Union[List[ServiceRetrieveTranscriptionChunkItemSchema], None],
+        items: Union[List[ServiceRetrieveTranscriptionChunkItemSchema], None]
     ) -> GenerateTranscriptionChunksResponseSchema:
         """
         Generate TranscriptionChunk objects and total duration
         from a list of ServiceRetrieveTranscriptionChunkItemSchema items
         """
-
+        
         total_duration = 0
         chunks: List[TranscriptionChunksSchema] = []
 
@@ -242,6 +246,7 @@ class TranscriptionService:
                 created_at=datetime_now_jkt,
                 updated_at=datetime_now_jkt,
                 is_deleted=False,
+                
                 transcription_id=transcription_id,
                 content=item["content"],
                 start_time=float(item["start_time"]),
@@ -254,7 +259,7 @@ class TranscriptionService:
             chunks.append(chunk)
 
             total_duration += chunk_duration
-
+        
         response = GenerateTranscriptionChunksResponseSchema(
             duration=total_duration,
             chunks=chunks,
@@ -264,9 +269,7 @@ class TranscriptionService:
 
     async def delete_transcription_job(self, transcribe_client, job_name: str):
         try:
-            response = transcribe_client.delete_transcription_job(
-                TranscriptionJobName=job_name
-            )
+            response = transcribe_client.delete_transcription_job(TranscriptionJobName=job_name)
             return response
         except ClientError as e:
             raise e
