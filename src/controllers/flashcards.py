@@ -1,7 +1,7 @@
 from enum import Enum
 import http
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body, Request
 from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session
@@ -10,10 +10,12 @@ import requests
 from src.utils.db import get_db
 from src.services.flashcards import FlashcardService
 from src.services.users import get_current_user
+from src.models.users import User
 from src.schemas.flashcards import (
-    FlashcardSetsResponseSchema,
-    FlashcardsResponseSchema,
-    FlashcardUpdateDiffRequest 
+    FlashcardUpdateDiffRequest, 
+    GenerateFlashcardsJSONRequestSchema,
+    GenerateFlashcardSetSchema,
+    GenerateFlashcardsJSONSchema
 )
 from src.models.users import User
 
@@ -23,6 +25,45 @@ class FlashcardsRouterTags(Enum):
 flashcards_router = APIRouter(
     prefix="/v1/flashcards", tags=[FlashcardsRouterTags.flashcards]
 )
+
+@flashcards_router.post(
+    "/generate", status_code=http.HTTPStatus.OK
+)
+def generate_flashcards(payload: GenerateFlashcardsJSONRequestSchema = Body(), user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+    service = FlashcardService()
+
+    req_generate_flashcards = GenerateFlashcardsJSONRequestSchema(
+        note_id=payload.note_id,
+        main=payload.main,
+        main_word_count=payload.main_word_count,
+        language=payload.language,
+        num_of_flashcards=payload.num_of_flashcards
+    )
+
+    flashcard_jsons: GenerateFlashcardsJSONSchema = service.convert_note_into_flashcard_json(
+        payload=req_generate_flashcards
+    )
+
+    req_generate_flashcard_set = GenerateFlashcardSetSchema(
+        note_id=payload.note_id,
+        user_id=user.id,
+        num_of_flashcards=payload.num_of_flashcards,
+    )
+
+    set_id = service.create_flashcard_set(
+        session=session,
+        flashcard_set=req_generate_flashcard_set,
+    )
+    
+    flashcards = service.create_flashcards(
+        session=session,
+        set_id=set_id,
+        note_id=payload.note_id,
+        flashcard_jsons=flashcard_jsons
+    )
+
+    return flashcards
+
 
 @flashcards_router.get(
     "", status_code=http.HTTPStatus.OK, response_model=FlashcardSetsResponseSchema  
