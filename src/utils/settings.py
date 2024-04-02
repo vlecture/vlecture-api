@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv(".env", override=True)
-load_dotenv(".env", override=True)
 
 ENV_TYPE = os.getenv("ENV")
 
@@ -33,8 +32,9 @@ except Exception:
 # TESTDB
 TESTDB_URL = os.getenv("TESTDB_URL")
 
-# MONGODB
-MONGODB_URL_RAW= os.getenv("MONGODB_URL")
+# MONGO DB
+MONGODB_URL = os.getenv("MONGODB_URL")
+
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME")
 MONGODB_COLLECTION_NAME = os.getenv("MONGODB_COLLECTION_NAME")
 

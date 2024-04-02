@@ -94,18 +94,17 @@ def startup_mongodb_client():
 
     try:
         client.admin.command('ping')
-        print("Pinged your deployment. You successfully connected to MongoDB!")
+        print("Pinged your deployment. Successfully connected to MongoDB!")
 
         # Assign MongoDB client to FastAPI app
         app.mongodb_client = client
+        app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
+        app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
+        
+        print("Connected to MongoDB Database.")
     except Exception as e:
         print(e)
-
-    app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
-    app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
-    print("Connected to MongoDB Database.")
-
-
+ 
 @app.on_event("shutdown")
 def shutdown_db_client():
     app.mongodb_client.close()

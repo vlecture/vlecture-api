@@ -11,6 +11,9 @@ from fastapi import (
     Depends,
     Body,
 )
+
+from src.utils.time import get_datetime_now_jkt
+
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
@@ -141,36 +144,24 @@ async def transcribe_audio(
                 session=session, transcription_chunk_data=chunk
             )
 
-        # response = {
-        #     "transcription": tsc_create_schema,
-        #     "transcription_chunks": transcription_chunks,
-        # }
+        response = {
+            "transcription": tsc_create_schema,
+            "transcription_chunks": transcription_chunks,
+        }
 
-        # print("response", response)
-
-        return GenericResponseModel(
-            status_code=http.HTTPStatus.OK,
-            message="Successfully retrieved transcription status",
-            error="",
-            data={
-                "transcription": tsc_create_schema,
-                "transcription_chunks": transcription_chunks,
-            },
+        return JSONResponse(
+            status_code=http.HTTPStatus.CREATED, content=jsonable_encoder(response)
         )
 
     except TimeoutError:
         return GenericResponseModel(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
-            message="Error",
-            error="Error: Timeout during audio transcription.",
-            data={},
+            content="Error: Timeout during audio transcription.",
         )
     except RuntimeError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
-            message="Error",
-            error="Audio Transcription job failed.",
-            data={},
+            content="Audio Transcription job failed.",
         )
 
 
