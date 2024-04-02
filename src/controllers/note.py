@@ -103,6 +103,7 @@ def get_all_notes(
 ):
   my_notes = list(request.app.note_collection.find({
     "owner_id": user.id,
+    "is_deleted": False
   }))
 
   return my_notes
@@ -121,8 +122,41 @@ def get_a_note(
 ):
   note_id = ObjectId(note_id)
   my_note = request.app.note_collection.find_one({
-    "_id": note_id
+    "_id": note_id,
+    "is_deleted": False
   })
+  if not my_note:
+    return JSONResponse(status_code=http.HTTPStatus.NOT_FOUND, content={"message": "Note not found or already deleted."})
 
   return my_note
+
+@note_router.delete(
+  "/delete/{note_id}",
+  response_description="delete a specific note",
+  status_code=http.HTTPStatus.OK,
+)
+def delete_a_note(
+  note_id: str,
+  request: Request,
+  user: User = Depends(get_current_user),
+):
+  note_id = ObjectId(note_id)
+
+  existing_note = request.app.note_collection.find_one({
+    "_id": note_id,
+    "is_deleted": False 
+  })
+
+  if not existing_note:
+    return JSONResponse(status_code=http.HTTPStatus.NOT_FOUND, content={"message": "Note not found or already deleted."})
+
+  result = request.app.note_collection.update_one(
+    {"_id": note_id},
+    {"$set": {"is_deleted": True}}
+  )
+
+  if result.modified_count == 0:
+    return JSONResponse(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, content={"message": "Failed to delete note."})
+  else:
+    return JSONResponse(status_code=http.HTTPStatus.OK, content={"message": "Note deleted successfully."})
 

@@ -8,15 +8,17 @@ from pydantic import (
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
+class FlashcardUpdateDiffRequest(BaseModel):
+    id: UUID4
+    new_difficulty: str
 
-class FlashcardSetsRequestSchema(BaseModel):
-    user_id: UUID4
+class FlashcardsResponseSchema(BaseModel):
+    title: str
+    note_id: UUID4
+    flashcards: List[dict]
 
-
-class FlashcardsRequestSchema(BaseModel):
-    set_id: UUID4
-    note_id: PyObjectId
-
+class FlashcardSetsResponseSchema(BaseModel):
+    flashcard_sets: List[FlashcardsResponseSchema]
 
 class GenerateFlashcardSetSchema(BaseModel):
     note_id: PyObjectId
@@ -26,7 +28,7 @@ class GenerateFlashcardSetSchema(BaseModel):
 
 class GenerateFlashcardsJSONRequestSchema(BaseModel):
     note_id: PyObjectId
-    main: str
+    main: List[dict]
     main_word_count: int
     language: str
     num_of_flashcards: int

@@ -12,6 +12,7 @@ from sqlalchemy import (
     CheckConstraint,
     TIMESTAMP,
     text,
+    Float
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 
@@ -22,15 +23,6 @@ UTC = timezone("UTC")
 
 def time_now():
     return datetime.now(UTC)
-
-
-class DifficultyEnum(Enum):
-    __tablename__ = "difficulty_enum"
-
-    hard = "hard"
-    medium = "medium"
-    easy = "easy"
-    very_easy = "very_easy"
 
 class TypeEnum(Enum):
     __tablename__ = "type_enum"
@@ -46,8 +38,8 @@ class Flashcard(Base):
     id = Column(
         UUID(as_uuid=True), nullable=False, primary_key=True, default=uuid.uuid4
     )
-    set_id = Column(UUID(as_uuid=True), nullable=False)
-    note_id = Column(String, nullable=False)
+    set_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    note_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
     type = Column(
         Enum("Question", "TrueOrFalse", "Definition", name="type_enum"),
         nullable=False,
@@ -56,25 +48,32 @@ class Flashcard(Base):
     back = Column(String(300), nullable=False)
     hints = Column(ARRAY(String), nullable=True, unique=False, default=[])
     is_deleted = Column(Boolean, default=False)
-    rated_difficulty = Column(
+    num_of_rates=Column(Integer, nullable=False, default=0)
+    latest_judged_difficulty = Column(
         Enum("hard", "medium", "easy", "very_easy", name="difficulty_enum"),
         nullable=False,
         default="medium",
     )
-    num_of_rates=Column(Integer, nullable=False, default=0)
+    last_accessed = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
 
     def update_is_deleted(self, is_deleted):
         self.is_deleted = is_deleted
 
-    def update_rated_difficulty(self, rated_difficulty):
-        self.rated_difficulty = rated_difficulty
+    def update_latest_judged_difficulty(self, latest_judged_difficulty):
+        self.latest_judged_difficulty = latest_judged_difficulty
+
+    def update_last_accessed(self, last_accessed):
+        self.last_accessed = last_accessed
 
 
 class FlashcardSet(Base):
     __tablename__ = "flashcard_sets"
 
     id = Column(
-        UUID(as_uuid=True), nullable=False, primary_key=True, default=uuid.uuid4
+        UUID(as_uuid=True), 
+        nullable=False, 
+        primary_key=True, 
+        default=uuid.uuid4
     )
     note_id = Column(String, nullable=False)
     user_id = Column(UUID(as_uuid=True), nullable=False)
@@ -82,12 +81,10 @@ class FlashcardSet(Base):
     date_generated = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
     tags = Column(ARRAY(String), nullable=True, unique=False)
     num_of_flashcards=Column(Integer, nullable=False, default=0)
-    avg_difficulty=Column(
-        Enum("hard", "medium", "easy", "very_easy", name="difficulty_enum"),
-        nullable=True,
-        default="medium",
-    )
     is_deleted = Column(Boolean, nullable=False, default=False)
+    last_accessed = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
+    last_completed = Column(TIMESTAMP(timezone=True), nullable=True)
+    cum_avg_difficulty = Column(Float, default=10, nullable=False)
 
     max_tags = 10
     max_tag_length = 50
@@ -105,12 +102,12 @@ class FlashcardSet(Base):
 
     def update_is_deleted(self, is_deleted):
         self.is_deleted = is_deleted
+    
+    def update_last_accessed(self, last_accessed):
+        self.last_accessed = last_accessed
 
-    def update_avg_difficulty(self, avg_difficulty):
-        self.avg_difficulty = avg_difficulty
+    def update_last_completed(self, last_completed):
+        self.last_completed = last_completed
 
-    #     self.delete_all_flashcards_in_set(self)
-
-    # def delete_all_flashcards_in_set(self):
-    #     for flashcard in self.flashcards:
-    #         flashcard.update_is_deleted(True)
+    def update_avg_difficulty(self, cum_avg_difficulty):
+        self.cum_avg_difficulty = cum_avg_difficulty

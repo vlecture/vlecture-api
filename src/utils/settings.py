@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv(".env")
+load_dotenv(".env", override=True)
+load_dotenv(".env", override=True)
 
 ENV_TYPE = os.getenv("ENV")
 
@@ -9,11 +10,11 @@ print(f"ENV: {ENV_TYPE}")
 
 # POSTGRES
 try:
-    host=os.getenv("POSTGRES_HOST")
-    port=os.getenv("POSTGRES_PORT")
-    db_name=os.getenv("POSTGRES_DB")
-    username=os.getenv("POSTGRES_USER")
-    password=os.getenv("POSTGRES_PASSWORD")
+    host = os.getenv("POSTGRES_HOST")
+    port = os.getenv("POSTGRES_PORT")
+    db_name = os.getenv("POSTGRES_DB")
+    username = os.getenv("POSTGRES_USER")
+    password = os.getenv("POSTGRES_PASSWORD")
 
     # Database url configuration
     DATABASE_URL = (
@@ -33,9 +34,15 @@ except Exception:
 TESTDB_URL = os.getenv("TESTDB_URL")
 
 # MONGODB
-MONGODB_URL= os.getenv("MONGODB_URL")
+MONGODB_URL_RAW= os.getenv("MONGODB_URL")
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME")
 MONGODB_COLLECTION_NAME = os.getenv("MONGODB_COLLECTION_NAME")
+
+MONGODB_URL_RW = os.getenv("MONGODB_URL_RW")
+MONGODB_URL_MAJORITY = os.getenv("MONGODB_URL_MAJORITY")
+MONGODB_URL_CLUSTER = os.getenv("MONGODB_URL_CLUSTER")
+
+MONGODB_URL = f"{MONGODB_URL_RAW}/?retryWrites={MONGODB_URL_RW}&w={MONGODB_URL_MAJORITY}&appName={MONGODB_URL_CLUSTER}"
 
 REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET")
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
