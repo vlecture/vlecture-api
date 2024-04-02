@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Body, Request
 from sqlalchemy.orm import Session
 import requests
 
+from src.models.flashcards import Flashcard
 from src.utils.db import get_db
 from src.schemas.base import GenericResponseModel
 from src.services.flashcards import FlashcardService
@@ -15,20 +16,25 @@ from src.schemas.flashcards import (
     FlashcardsRequestSchema,
     GenerateFlashcardsJSONRequestSchema,
     GenerateFlashcardSetSchema,
-    GenerateFlashcardsJSONSchema
+    GenerateFlashcardsJSONSchema,
 )
+
 
 class FlashcardsRouterTags(Enum):
     flashcards = "flashcards"
+
 
 flashcards_router = APIRouter(
     prefix="/v1/flashcards", tags=[FlashcardsRouterTags.flashcards]
 )
 
-@flashcards_router.post(
-    "/generate", status_code=http.HTTPStatus.OK
-)
-def generate_flashcards(payload: GenerateFlashcardsJSONRequestSchema = Body(), user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+
+@flashcards_router.post("/generate", status_code=http.HTTPStatus.OK)
+def generate_flashcards(
+    payload: GenerateFlashcardsJSONRequestSchema = Body(),
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_db),
+):
     service = FlashcardService()
 
     req_generate_flashcards = GenerateFlashcardsJSONRequestSchema(
@@ -36,11 +42,11 @@ def generate_flashcards(payload: GenerateFlashcardsJSONRequestSchema = Body(), u
         main=payload.main,
         main_word_count=payload.main_word_count,
         language=payload.language,
-        num_of_flashcards=payload.num_of_flashcards
+        num_of_flashcards=payload.num_of_flashcards,
     )
 
-    flashcard_jsons: GenerateFlashcardsJSONSchema = service.convert_note_into_flashcard_json(
-        payload=req_generate_flashcards
+    flashcard_jsons: GenerateFlashcardsJSONSchema = (
+        service.convert_note_into_flashcard_json(payload=req_generate_flashcards)
     )
 
     req_generate_flashcard_set = GenerateFlashcardSetSchema(
@@ -53,34 +59,33 @@ def generate_flashcards(payload: GenerateFlashcardsJSONRequestSchema = Body(), u
         session=session,
         flashcard_set=req_generate_flashcard_set,
     )
-    
+
     flashcards = service.create_flashcards(
         session=session,
         set_id=set_id,
         note_id=payload.note_id,
-        flashcard_jsons=flashcard_jsons
+        flashcard_jsons=flashcard_jsons,
     )
 
     return flashcards
 
 
 @flashcards_router.get(
-    "/", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel 
+    "/", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
 )
-def view_flashcard_sets(req: FlashcardSetsRequestSchema, user: User = Depends(get_current_user)):
+def view_flashcard_sets(
+    req: FlashcardSetsRequestSchema, user: User = Depends(get_current_user)
+):
     service = FlashcardService()
 
     user_id = req.user_id
 
     try:
         current_user = get_current_user(req, session)
-        if (current_user.id != user_id): 
+        if current_user.id != user_id:
             raise Exception
-        
-        response = service.get_flashcard_sets_by_user(
-            user_id=user_id,
-            session=session
-        )
+
+        response = service.get_flashcard_sets_by_user(user_id=user_id, session=session)
 
         return GenericResponseModel(
             status_code=http.HTTPStatus.OK,
@@ -89,12 +94,13 @@ def view_flashcard_sets(req: FlashcardSetsRequestSchema, user: User = Depends(ge
             data=response,
         )
     except Exception:
-         return GenericResponseModel(
+        return GenericResponseModel(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             message="Error",
             error="You don't have access to these flashcard sets or flashcard sets don't exist.",
             data={},
         )
+
 
 @flashcards_router.get(
     "/set", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
@@ -108,13 +114,11 @@ def view_flashcards(req: FlashcardsRequestSchema, session: Session = Depends(get
     try:
         user_id = service.get_set_owner(set_id)
         current_user = get_current_user(req, session)
-        if (current_user.id != user_id): 
+        if current_user.id != user_id:
             raise Exception
-        
+
         response = service.get_flashcards_by_set(
-            set_id=set_id,
-            note_id=note_id,
-            session=session
+            set_id=set_id, note_id=note_id, session=session
         )
 
         return GenericResponseModel(
@@ -123,6 +127,38 @@ def view_flashcards(req: FlashcardsRequestSchema, session: Session = Depends(get
             error="",
             data=response,
         )
+    except Exception as e:
+        return GenericResponseModel(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            message="Error",
+            error="You don't have access to these flashcards or flashcards don't exist.",
+            data={},
+        )
+
+
+@flashcards_router.delete("/{flashcard_id}", status_code=200)
+async def delete_flashcard(flashcard_id: str, session: Session = Depends(get_db)):
+    flashcard_service = FlashcardService()
+    try:
+        flashcard_service.delete_flashcard(flashcard_id, session)
+        return {"message": "Flashcard deleted successfully"}
+    except Exception as e:
+        return GenericResponseModel(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            message="Error",
+            error="You don't have access to these flashcards or flashcards don't exist.",
+            data={},
+        )
+
+
+@flashcards_router.delete("/set/{flashcard_set_id}", status_code=200)
+async def delete_flashcard_set(
+    flashcard_set_id: str, session: Session = Depends(get_db)
+):
+    flashcard_service = FlashcardService()
+    try:
+        flashcard_service.delete_flashcards_by_set(flashcard_set_id, session)
+        return {"message": "Flashcard set deleted successfully"}
     except Exception as e:
         return GenericResponseModel(
             status_code=http.HTTPStatus.UNAUTHORIZED,
