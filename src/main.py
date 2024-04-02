@@ -7,7 +7,6 @@ from fastapi import (
 
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-from bson.binary import UuidRepresentation
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
