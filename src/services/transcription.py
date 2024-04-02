@@ -88,15 +88,13 @@ class TranscriptionService:
             # return res
         except TimeoutError:
             return TimeoutError("Timeout when polling the transcription results")
-        except ClientError as e:
-            print(e)
+        except ClientError:
             raise RuntimeError("Transcription Job failed.")
+
 
     async def delete_transcription_job(self, transcribe_client, job_name: str):
         try:
-            response = transcribe_client.delete_transcription_job(
-                TranscriptionJobName=job_name
-            )
+            response = transcribe_client.delete_transcription_job(TranscriptionJobName=job_name)
             return response
         except ClientError as e:
             raise e

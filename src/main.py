@@ -3,16 +3,7 @@ import sentry_sdk
 from fastapi import (
     FastAPI,
 )
-from fastapi import (
-    FastAPI,
-    File,
-    UploadFile,
-    status,
-    Response,
-    HTTPException,
-    Depends,
-    Body,
-)
+from fastapi import FastAPI, File, UploadFile, status, Response, HTTPException, Depends, Body
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy import Enum
 from src.utils.settings import (
@@ -72,7 +63,7 @@ app.add_middleware(
         "Keep-Alive",
         "Origin",
         "User-Agent",
-        "X-Requested-With",
+        "X-Requested-With"
     ],
 )
 
