@@ -11,7 +11,9 @@ from fastapi import (
     Depends,
     Body,
 )
+
 from src.utils.time import get_datetime_now_jkt
+
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
@@ -37,6 +39,10 @@ from src.schemas.transcription import (
     TranscriptionChunksSchema,
 )
 from src.services.transcription import TranscriptionService
+
+from src.utils.time import (
+    get_datetime_now_jkt
+)
 from src.utils.aws.s3 import AWSS3Client
 from src.utils.aws.transcribe import (
     AWSTranscribeClient,
@@ -133,6 +139,7 @@ async def transcribe_audio(
         # Then, store TranscriptionChunk object to database, bcs it needs to maintain a ForeignKey
         print(f"Storing Transcription Chunks to db...")
         for chunk in transcription_chunks:
+            print(chunk)
             await service.insert_transcription_chunks(
                 session=session, transcription_chunk_data=chunk
             )
@@ -147,7 +154,7 @@ async def transcribe_audio(
         )
 
     except TimeoutError:
-        return JSONResponse(
+        return GenericResponseModel(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
             content="Error: Timeout during audio transcription.",
         )
