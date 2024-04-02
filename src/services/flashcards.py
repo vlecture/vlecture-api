@@ -182,21 +182,15 @@ class FlashcardService:
             flashcard.update_latest_judged_difficulty(new_difficulty, session)
 
     def update_flashcard_set_last_completed(self, session: Session, set_id: UUID4, new_last_completed: str):
-        set = session.query(FlashcardSet).filter(
+        flashcard_set = session.query(FlashcardSet).filter(
             FlashcardSet.id == set_id,
         ).one()
 
-    def get_flashcard_by_id(self, session: Session, flashcard_id):
-      flashcard = (
-          session.query(Flashcard)
-          .filter(Flashcard.id == flashcard_id, Flashcard.is_deleted == False)
-          .all()
-      )
+        if (flashcard_set.is_deleted):
+            raise Exception
+        else:
+            flashcard_set.update_last_completed(new_last_completed, session)
 
-      if (set.is_deleted):
-          raise Exception
-      else:
-          set.update_last_completed(new_last_completed, session)
 
     def build_json_flashcard_sets(self, flashcard_sets):
         data = []
