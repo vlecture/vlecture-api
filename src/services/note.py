@@ -104,12 +104,12 @@ class NoteService:
       self, 
       owner_id: UUID,
       title: str,
-      main_word_count: int,
+      subtitle: str,
       main: List[NoteBlockSchema],
       cues: List[NoteBlockSchema],
       summary: List[NoteBlockSchema],
       language: str,
-      subtitle: str,
+      main_word_count: int,
   ) -> NoteSchema:
     datetime_now_jkt = get_datetime_now_jkt()
 
@@ -158,11 +158,11 @@ class NoteService:
       self, 
       payload: GenerateNoteServiceRequestSchema
   ) -> NoteSchema:
-    transcript = payload.transcript
-    title = payload.title
-    subtitle = payload.subtitle
-    owner_id = payload.owner_id 
-    language = payload.language
+    transcript = payload["transcript"]
+    title = payload["title"]
+    subtitle = payload["subtitle"]
+    owner_id = payload["owner_id"] 
+    language = payload["language"]
 
     note_json = self.convert_text_into_cornell_json(
       transcript=transcript,

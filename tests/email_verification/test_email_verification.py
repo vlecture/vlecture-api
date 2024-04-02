@@ -1,6 +1,10 @@
 import pytest
 from httpx import AsyncClient
-from tests.utils.test_db import client, test_db
+from tests.utils.test_db import (
+  client, 
+  test_db
+)
+
 from src.main import app
 from unittest.mock import AsyncMock, patch
 
@@ -25,7 +29,7 @@ async def mock_test_send_email_verification_positive(ac: AsyncClient):
     mock_post.assert_called_once()
     assert response.status_code == 200
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_send_email_email_dne(test_db):
   async with AsyncClient(app=app) as ac:
     response = await ac.post(
@@ -37,7 +41,7 @@ async def test_send_email_email_dne(test_db):
 
     assert response.status_code == 422
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_send_email_invalid_input(test_db):
   async with AsyncClient(app=app) as ac:
     response = await ac.post(
