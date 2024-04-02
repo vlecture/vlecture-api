@@ -40,7 +40,7 @@ class Flashcard(Base):
         UUID(as_uuid=True), nullable=False, primary_key=True, default=uuid.uuid4
     )
     set_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
-    note_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    note_id = Column(String(255), nullable=False)
     type = Column(
         Enum("Question", "TrueOrFalse", "Definition", name="type_enum"),
         nullable=False,
@@ -78,7 +78,7 @@ class FlashcardSet(Base):
         primary_key=True, 
         default=uuid.uuid4
     )
-    note_id = Column(String, nullable=False)
+    note_id = Column(String(255), nullable=False)
     user_id = Column(UUID(as_uuid=True), nullable=False)
     title = Column(String(225), nullable=True)
     date_generated = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)

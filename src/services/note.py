@@ -158,11 +158,11 @@ class NoteService:
       self, 
       payload: GenerateNoteServiceRequestSchema
   ) -> NoteSchema:
-    transcript = payload["transcript"]
-    title = payload["title"]
-    subtitle = payload["subtitle"]
-    owner_id = payload["owner_id"] 
-    language = payload["language"]
+    transcript = payload.transcript
+    title = payload.title
+    subtitle = payload.subtitle
+    owner_id = payload.owner_id
+    language = payload.language
 
     note_json = self.convert_text_into_cornell_json(
       transcript=transcript,

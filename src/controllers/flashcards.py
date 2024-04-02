@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import requests
 
+from src.schemas.base import GenericResponseModel
 from src.utils.db import get_db
 from src.services.flashcards import FlashcardService
 from src.services.users import get_current_user
@@ -205,6 +206,7 @@ def update_flashcard_last_completed(req: FlashcardSetUpdateLastCompletedRequest,
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="You don't have access to this flashcard set or flashcard set doesn't exist.",
+        )
 
 @flashcards_router.delete("/{flashcard_id}", status_code=200)
 async def delete_flashcard(flashcard_id: str, session: Session = Depends(get_db)):
