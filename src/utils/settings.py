@@ -1,18 +1,19 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv(".env")
+load_dotenv(".env", override=True)
 
 ENV_TYPE = os.getenv("ENV")
 
 print(f"ENV: {ENV_TYPE}")
 
+# POSTGRES
 try:
-    host=os.getenv("POSTGRES_HOST")
-    port=os.getenv("POSTGRES_PORT")
-    db_name=os.getenv("POSTGRES_DB")
-    username=os.getenv("POSTGRES_USER")
-    password=os.getenv("POSTGRES_PASSWORD")
+    host = os.getenv("POSTGRES_HOST")
+    port = os.getenv("POSTGRES_PORT")
+    db_name = os.getenv("POSTGRES_DB")
+    username = os.getenv("POSTGRES_USER")
+    password = os.getenv("POSTGRES_PASSWORD")
 
     # Database url configuration
     DATABASE_URL = (
@@ -27,6 +28,19 @@ try:
 
 except Exception:
     raise ValueError("Database config values are missing or incorrect.")
+
+# TESTDB
+TESTDB_URL = os.getenv("TESTDB_URL")
+
+# MONGO DB
+MONGODB_URL = os.getenv("MONGODB_URL")
+
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME")
+MONGODB_COLLECTION_NAME = os.getenv("MONGODB_COLLECTION_NAME")
+
+MONGODB_URL_RW = os.getenv("MONGODB_URL_RW")
+MONGODB_URL_MAJORITY = os.getenv("MONGODB_URL_MAJORITY")
+MONGODB_URL_CLUSTER = os.getenv("MONGODB_URL_CLUSTER")
 
 REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET")
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
@@ -50,3 +64,12 @@ VALIDATE_CERTS = os.getenv("VALIDATE_CERTS")
 
 OTP_SECRET = os.getenv("OTP_SECRET")
 OTP_LIFESPAN_SEC = os.getenv("OTP_LIFESPAN_SEC")
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_ORG_ID = os.getenv("OPENAI_ORG_ID")
+OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME")
+
+VERY_EASY_DIFF_THRESHOLD = os.getenv("VERY_EASY_DIFF_THRESHOLD")
+EASY_DIFF_THRESHOLD = os.getenv("EASY_DIFF_THRESHOLD")
+MEDIUM_DIFF_THRESHOLD = os.getenv("MEDIUM_DIFF_THRESHOLD")
+HARD_DIFF_THRESHOLD = os.getenv("HARD_DIFF_THRESHOLD")
