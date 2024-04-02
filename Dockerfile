@@ -1,6 +1,6 @@
 
 # Select base image - Python 3.10
-FROM python:3.10-slim AS builder
+FROM python:3.12-slim AS builder
 
 # Set working directory to `app`
 WORKDIR /app

@@ -4,14 +4,12 @@ from pytz import timezone
 from src.utils.settings import OTP_LIFESPAN_SEC
 from src.utils.db import Base
 from sqlalchemy import (
-    Boolean,
     Column,
     UUID,
     TIMESTAMP,
-    LargeBinary,
-    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
+    PrimaryKeyConstraint
 )
 
 UTC = timezone("UTC")
@@ -30,10 +28,13 @@ class OTP(Base):
           UUID(as_uuid=True), nullable=False, primary_key=True, default=uuid.uuid4
   )
 
-  email = Column(String(225), nullable=False, unique=True)
+  email = Column(String(225), nullable=False)
   token = Column(String(6), nullable=False)
   created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
   expires_at = Column(TIMESTAMP(timezone=True), default=time_expiry, nullable=False)
+
+  PrimaryKeyConstraint("id", name="pk_otp_id")
+  UniqueConstraint("email", name="uq_otp_token")
 
   def __str__(self):
      return f"id: {self.id}\nemail: {self.email}\ntoken: {self.token}\ncreated_at: {self.created_at}\nexpires_at: {self.expires_at}\n"

@@ -1,27 +1,74 @@
-from datetime import date, datetime, time, timedelta
+from datetime import datetime
 import uuid
 from typing import Union, List, Optional
 from uuid import UUID
 
 from pydantic import (
   BaseModel, 
-  Field, 
   computed_field,
   field_validator,
 )
 
 from src.schemas.base import DBBaseModel
 
-TRANSCRIPTION_DEFAULT_TITLE = "My Transcription"
+# DATABASE SCHEMA
+class TranscriptionChunksSchema(DBBaseModel, BaseModel):
+  """
+  Schema for Transcription Chunks object
+  """
+  
+  duration: float = 0 # how many seconds in a chunk
+  is_edited: bool = False
+  transcription_id: UUID
+  
+  start_time: float
+  end_time: float
 
+  content: Optional[str] = ""
+  
+
+  @field_validator("duration")
+  @classmethod
+  def validate_duration(cls, dur: float) -> float:
+    if dur < 0:
+      raise ValueError("Duration must be a non-negative real number")
+    
+    return dur
+  
+class TranscriptionSchema(DBBaseModel, BaseModel):
+  """
+  Input type & schema for Transcription
+  
+  Usage example:
+
+  async def create_trc(trc: TranscriptionSchema) -> Any:
+      ... 
+      return transcriptionResObj
+    
+  """
+  owner_id: UUID
+  title: str
+  tags: Optional[Union[List[str], str]] = []
+  duration: float
+
+### REQUEST SCHEMAS
 class TranscribeAudioRequestSchema(BaseModel):
    s3_filename: str
    job_name: str
    language_code: str
 
+   # NOTE Mar 24, newly added, backward-compatible field definitions
+   title: Optional[str]
+   tags: Optional[Union[List[str], str]] = []
+   
+
 class PollTranscriptionRequestSchema(BaseModel):
    job_name: str
 
+class ViewTranscriptionRequestSchema(BaseModel):
+   job_name: str
+
+### RESPONSE SCHEMAS
 class TranscriptionResponseSchema(BaseModel):
   """
   Return type for Transcription object
@@ -45,73 +92,32 @@ class TranscriptionChunksResponseSchema(BaseModel):
   created_at: datetime
   duration: float
 
-class TranscriptionChunksSchema(DBBaseModel, BaseModel):
-  """
-  Schema for Transcription Chunks object
-  """
-  
-  transcription_id: UUID
-  duration: float = 0 # how many seconds in a chunk
-  content: Optional[str] = ""
-  is_edited: bool = False
+class GenerateTranscriptionChunksResponseSchema(BaseModel):
+   duration: float
+   chunks: List[TranscriptionChunksSchema]
 
-  @field_validator("duration")
-  @classmethod
-  def validate_duration(cls, dur: float) -> float:
-    if dur < 0:
-      raise ValueError("Duration must be a non-negative real number")
-    
-    return dur
-  
-  class Config:
-        orm_mode = True
-  
-  def build_response_model(self) -> TranscriptionChunksResponseSchema:
-    return TranscriptionChunksResponseSchema( 
-          id=self.id,
-          transcription_id=self.transcription_id,
-          content=self.content,
-          created_at=self.created_at,
-          duration=self.duration,
-        )
+# OBJECT SCHEMAS
+class TranscriptionChunkItemAlternativesSchema(BaseModel):
+   confidence: str
+   content: str
 
-class TranscriptionSchema(DBBaseModel, BaseModel):
-  """
-  Input type & schema for Transcription
-  
-  Usage example:
+class TranscriptionChunkItemSchema(BaseModel):
+   item_type: str
+   alternatives: List[TranscriptionChunkItemAlternativesSchema]
+   start_time: str
+   end_time: str
 
-  async def create_trc(trc: TranscriptionSchema) -> Any:
-      ... 
-      return transcriptionResObj
-    
-  """
-  title: str = TRANSCRIPTION_DEFAULT_TITLE
-  tags: Optional[Union[List[str], str]] = []
-  chunks: Optional[List[TranscriptionChunksSchema]] = []
-  is_edited: bool = False
+# STORE TRANSCRIPTION SERVICE
+class ServiceRetrieveTranscriptionChunkItemSchema(BaseModel):
+   """
+   The returned response from `service.retrieve_transcription_from_job_name`
+   """
 
-  @computed_field
-  @property
-  def duration(self) -> float:
-    """Duration property is computed automatically"""
-    if len(self.chunks) == 0:
-      return 0
-    
-    total = 0
-
-    for chunk in self.chunks:
-      total += chunk.duration
-    
-    return total
-  
-  class Config:
-        orm_mode = True
-
-  def build_response_model(self) -> TranscriptionResponseSchema:
-    return TranscriptionResponseSchema( 
-          id=self.id,
-          title=self.title,
-          created_at=self.created_at,
-          duration=self.duration,
-        )
+   content: str
+   start_time: str
+   end_time: str
+   duration: str
+   
+class ServiceStoreTranscriptionRequestSchema(BaseModel):
+   transcript_text: str
+   transcript_items: List[ServiceRetrieveTranscriptionChunkItemSchema]

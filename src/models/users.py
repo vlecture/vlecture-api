@@ -1,4 +1,8 @@
 import uuid
+from uuid import UUID
+from pytz import timezone
+from datetime import datetime
+
 from src.utils.db import Base
 from sqlalchemy import (
     Boolean,
@@ -8,9 +12,13 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     String,
     UniqueConstraint,
+    TIMESTAMP
 )
 from sqlalchemy.orm import Session
 
+UTC = timezone("UTC")
+def time_now():
+    return datetime.now(UTC)
 
 class User(Base):
     __tablename__ = "users"
@@ -18,6 +26,9 @@ class User(Base):
     id = Column(
         UUID(as_uuid=True), nullable=False, primary_key=True, default=uuid.uuid4
     )
+    created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), default=time_now, onupdate=time_now, nullable=False)
+
     email = Column(String(225), nullable=False, unique=True)
     first_name = Column(String(225))
     middle_name = Column(String(225))
@@ -27,8 +38,8 @@ class User(Base):
     access_token = Column(String(225))
     is_active = Column(Boolean, default=False)
 
-    UniqueConstraint("email", name="uq_user_email")
     PrimaryKeyConstraint("id", name="pk_user_id")
+    UniqueConstraint("email", name="uq_user_email")
 
     def __repr__(self):
         """Returns string representation of model instance"""
