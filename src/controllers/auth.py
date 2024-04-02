@@ -9,6 +9,8 @@ from fastapi import (
 from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 
+from src.models.users import User
+from src.services.users import get_current_user
 from src.utils.db import get_db
 from src.schemas.auth import (
     RegisterSchema,
@@ -18,6 +20,7 @@ from src.schemas.auth import (
     OTPCheckSchema,
     LogoutSchema,
 )
+from starlette.status import HTTP_200_OK
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
@@ -150,6 +153,14 @@ def logout(
 
     return auth.logout(response, session, payload)
 
+@auth_router.get("/name", tags=[AuthRouterTags.auth])
+def get_username( user: User = Depends(get_current_user)):
+    return JSONResponse(
+            status_code=HTTP_200_OK,
+            content={
+                "email":user.email,
+            }
+    )
 
 @auth_router.get("/verify_token", tags=[AuthRouterTags.auth])
 def verify(

@@ -341,6 +341,6 @@ class FlashcardService:
     #     new_flashcard_rating = self.rating_enum_to_nominal(new_flashcard_rating)
     #     old_flashcard_rating = self.rating_enum_to_nominal(old_flashcard_rating)
     #     old_flashcard_set_rating = self.rating_enum_to_nominal(old_flashcard_set_rating)
-
     #     rating = ((old_flashcard_set_rating * num_of_flashcards) - old_flashcard_rating + new_flashcard_rating) / num_of_flashcards
     #     return math.ceil(rating)
+
