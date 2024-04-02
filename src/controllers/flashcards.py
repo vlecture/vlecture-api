@@ -153,3 +153,34 @@ def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = De
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="You don't have access to this flashcard or flashcard doesn't exist.",
         )
+
+@flashcards_router.delete("/{flashcard_id}", status_code=200)
+async def delete_flashcard(flashcard_id: str, session: Session = Depends(get_db)):
+    flashcard_service = FlashcardService()
+    try:
+        flashcard_service.delete_flashcard(flashcard_id, session)
+        return {"message": "Flashcard deleted successfully"}
+    except Exception as e:
+        return GenericResponseModel(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            message="Error",
+            error="You don't have access to these flashcards or flashcards don't exist.",
+            data={},
+        )
+
+
+@flashcards_router.delete("/set/{flashcard_set_id}", status_code=200)
+async def delete_flashcard_set(
+    flashcard_set_id: str, session: Session = Depends(get_db)
+):
+    flashcard_service = FlashcardService()
+    try:
+        flashcard_service.delete_flashcards_by_set(flashcard_set_id, session)
+        return {"message": "Flashcard set deleted successfully"}
+    except Exception as e:
+        return GenericResponseModel(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            message="Error",
+            error="You don't have access to these flashcards or flashcards don't exist.",
+            data={},
+        )
