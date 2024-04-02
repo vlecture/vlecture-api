@@ -309,6 +309,8 @@ class FlashcardService:
                 return 1
             
     def check_recommended(self, avg_cum_difficulty, last_completed):
+        if (last_completed == None):
+            return True
         if (avg_cum_difficulty <= int(VERY_EASY_DIFF_THRESHOLD)):
             delta =  datetime.timedelta(days=7)
         elif (avg_cum_difficulty <= int(EASY_DIFF_THRESHOLD)):
