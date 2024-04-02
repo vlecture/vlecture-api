@@ -15,6 +15,7 @@ from sqlalchemy import (
     Float
 )
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import Session
 
 from src.utils.db import Base
 
@@ -56,15 +57,17 @@ class Flashcard(Base):
     )
     last_accessed = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
 
-    def update_is_deleted(self, is_deleted):
+    def update_is_deleted(self, is_deleted, session: Session):
         self.is_deleted = is_deleted
+        session.commit()
 
-    def update_latest_judged_difficulty(self, latest_judged_difficulty):
+    def update_latest_judged_difficulty(self, latest_judged_difficulty, session: Session):
         self.latest_judged_difficulty = latest_judged_difficulty
+        session.commit()
 
-    def update_last_accessed(self, last_accessed):
+    def update_last_accessed(self, last_accessed, session: Session):
         self.last_accessed = last_accessed
-
+        session.commit()
 
 class FlashcardSet(Base):
     __tablename__ = "flashcard_sets"
@@ -100,14 +103,18 @@ class FlashcardSet(Base):
 
     # flashcards = relationship("Flashcard", back_populates="flashcard_set")
 
-    def update_is_deleted(self, is_deleted):
+    def update_is_deleted(self, is_deleted, session: Session):
         self.is_deleted = is_deleted
+        session.commit()
     
-    def update_last_accessed(self, last_accessed):
+    def update_last_accessed(self, last_accessed, session: Session):
         self.last_accessed = last_accessed
+        session.commit()
 
-    def update_last_completed(self, last_completed):
+    def update_last_completed(self, last_completed, session: Session):
         self.last_completed = last_completed
+        session.commit()
 
-    def update_avg_difficulty(self, cum_avg_difficulty):
+    def update_avg_difficulty(self, cum_avg_difficulty, session: Session):
         self.cum_avg_difficulty = cum_avg_difficulty
+        session.commit()
