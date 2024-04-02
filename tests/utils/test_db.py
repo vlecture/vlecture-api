@@ -7,7 +7,7 @@ from src.utils.db import Base, get_db
 from src.main import app
 
 if TESTDB_URL is None:
-    raise ValueError("DB_URL environment variable is not set!")
+    raise ValueError("TESTDB_URL environment variable is not set!")
 
 engine = create_engine(TESTDB_URL)
 
