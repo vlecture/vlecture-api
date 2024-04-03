@@ -59,9 +59,9 @@ def construct_system_flashcard_instructions(context: str, num_of_flashcards: int
 
     This "Type" field specifies the type of question or information being presented on the flashcard. It's helpful for creating different styles of flashcards beyond just questions and answers. The "Question" type indicates a question on the front of the card with the answer on the back. The "Definition" type is used when the flashcard asks for the definition of a term where the "front" field holds the term, and "back" contains the definition. The "TrueorFalse" type presents a statement on the "front" that requires identifying it as true or false and the "back" field holds the correct answer (True/False).
 
-    The "Front" field holds the information displayed on the front side of the flashcard. It can be a question, a term to define, or a statement depending on the "type" chosen.
+    The "Front" field holds the information displayed on the front side of the flashcard. It can be a question, a term to define, or a statement depending on the "type" chosen. This field should be limited to only 300 characters or less.
 
-    This "Back" holds the information displayed on the backside of the flashcard. It usually contains the answer to the question on the front, the definition of the term, or indicates whether the statement on the front is true or false.
+    This "Back" holds the information displayed on the backside of the flashcard. It usually contains the answer to the question on the front, the definition of the term, or indicates whether the statement on the front is true or false. This field should be limited to only 300 characters or less.
 
     The "Hints" field is an optional field which is an array that can include multiple hints or clues to help the user recall the information on the back of the flashcard.
 

@@ -6,20 +6,9 @@ from openai import OpenAI
 from pydantic import UUID4
 
 from starlette.status import HTTP_400_BAD_REQUEST
-import datetime
 
-from src.utils.settings import (
-    VERY_EASY_DIFF_THRESHOLD,
-    EASY_DIFF_THRESHOLD,
-    MEDIUM_DIFF_THRESHOLD
-)
 from src.models.flashcards import Flashcard, FlashcardSet
-from src.schemas.flashcards import (
-    GenerateFlashcardsJSONRequestSchema,
-    GenerateFlashcardSetSchema,
-    FlashcardRequestSchema,
-    GenerateFlashcardsJSONSchema,
-)
+from src.schemas.flashcards import GenerateFlashcardsJSONRequestSchema, GenerateFlashcardSetSchema, FlashcardRequestSchema, GenerateFlashcardsJSONSchema
 from src.utils.openai import construct_system_flashcard_instructions
 from src.utils.db import get_db
 
@@ -45,38 +34,14 @@ class FlashcardService:
 
     # Flashcard Generation
 
-    def create_flashcard_set(
-        self, session: Session, flashcard_set: GenerateFlashcardSetSchema
-    ):
+    def create_flashcard_set(self, session: Session, flashcard_set: GenerateFlashcardSetSchema):
         db_flashcard_set = FlashcardSet(**flashcard_set.model_dump())
         session.add(db_flashcard_set)
         session.commit()
         session.refresh(db_flashcard_set)
         return db_flashcard_set.id
 
-    def delete_flashcards_by_set(self, set_id, session: Session):
-        flashcard_set = (
-            session.query(FlashcardSet).filter(FlashcardSet.id == set_id).first()
-        )
-        if not flashcard_set:
-            raise Exception("flashcard_set set not found")
-
-        session.delete(flashcard_set)
-        session.commit()
-
-    def delete_flashcard(self, flashcard_id, session: Session):
-        flashcard = (
-            session.query(Flashcard).filter(Flashcard.id == flashcard_id).first()
-        )
-        if not flashcard:
-            raise Exception("Flashcard not found")
-
-        session.delete(flashcard)
-        session.commit()
-
-    def convert_note_into_flashcard_json(
-        self, payload: GenerateFlashcardsJSONRequestSchema
-    ) -> GenerateFlashcardsJSONSchema:
+    def convert_note_into_flashcard_json(self, payload: GenerateFlashcardsJSONRequestSchema) -> GenerateFlashcardsJSONSchema:
         if self.check_word_count(payload.main_word_count, payload.num_of_flashcards):
             client = self.get_openai()
             SYSTEM_PROMPT = construct_system_flashcard_instructions(
@@ -109,12 +74,7 @@ class FlashcardService:
 
             return answer
 
-    def convert_flashcard_json_into_flashcard_schema(
-        self,
-        set_id: UUID4,
-        note_id: UUID4,
-        flashcard_json: GenerateFlashcardsJSONSchema,
-    ):
+    def convert_flashcard_json_into_flashcard_schema(self, set_id: UUID4, note_id: UUID4, flashcard_json: GenerateFlashcardsJSONSchema):
         flashcard_schema = FlashcardRequestSchema(
             note_id=note_id,
             set_id=set_id,
@@ -125,113 +85,54 @@ class FlashcardService:
         )
         return flashcard_schema
 
-    def create_flashcards(
-        self,
-        session: Session,
-        set_id: UUID4,
-        note_id: UUID4,
-        flashcard_jsons: List[GenerateFlashcardsJSONSchema],
-    ):
+    def create_flashcards(self, session: Session, set_id: UUID4, note_id: UUID4, flashcard_jsons: List[GenerateFlashcardsJSONSchema]):
         for i, e in enumerate(flashcard_jsons):
-            flashcard_json_schema = self.convert_flashcard_json_into_flashcard_schema(
-                set_id, note_id, e
-            )
+            flashcard_json_schema = self.convert_flashcard_json_into_flashcard_schema(set_id, note_id, e) 
             flashcard = Flashcard(**flashcard_json_schema.model_dump())
             session.add(flashcard)
             session.commit()
             session.refresh(flashcard)
-
+        
         return flashcard_jsons
 
     # Flashcard Manipulation and Accessing
 
-    def get_flashcard_sets_by_user(self, user_id: UUID4, session: Session = Depends(get_db)):
-        flashcard_sets = session.query(FlashcardSet) \
-                        .filter(FlashcardSet.user_id == user_id, FlashcardSet.is_deleted == False) \
-                        .all()
-        
-        return self.build_json_flashcard_sets(flashcard_sets)
-    
-    def get_recommended_flashcard_sets_by_user(self, user_id: UUID4, session: Session = Depends(get_db)):
-        flashcard_sets = session.query(FlashcardSet) \
-                        .filter(FlashcardSet.user_id == user_id, FlashcardSet.is_deleted == False) \
-                        .all()
-        
-        flashcard_sets = [x for x in flashcard_sets if self.check_recommended(x.cum_avg_difficulty, x.last_completed)]
-        flashcard_sets.sort(key=lambda x: (-x.cum_avg_difficulty, x.last_completed))
+    def get_flashcard_sets_by_user(
+        self, user_id: UUID4, session: Session = Depends(get_db)
+    ):
+        flashcard_sets = (
+            session.query(FlashcardSet)
+            .filter(FlashcardSet.user_id == user_id, FlashcardSet.is_deleted == False)
+            .all()
+        )
 
-        return self.build_json_flashcard_sets(flashcard_sets)
-    
+        return flashcard_sets
 
-    def get_flashcards_by_set(self, session: Session, set_id: UUID4):
-        flashcards = session.query(Flashcard).filter(
-            Flashcard.set_id == set_id,
-            Flashcard.is_deleted == False
-        ).all()
-        
-        return self.build_json_flashcards(flashcards)
+    def get_flashcard_set_by_id(self, session: Session, set_id):
+        flashcard = (
+            session.query(FlashcardSet)
+            .filter(
+                FlashcardSet.id == set_id,
+                Flashcard.is_deleted == False
+            )
+            .all()
+        )
 
-    def update_flashcard_difficulty(self, session: Session, flashcard_id: UUID4, new_difficulty: str):
-        flashcard = session.query(Flashcard).filter(
-            Flashcard.id == flashcard_id,
-        ).one()
+        return flashcard
 
-        if (flashcard.is_deleted):
-            raise Exception
-        else:
-            flashcard.update_latest_judged_difficulty(new_difficulty, session)
+    def get_flashcards_by_set(self, session: Session, set_id: UUID4, note_id: UUID4):
+        flashcards = (
+            session.query(Flashcard)
+            .filter(
+                Flashcard.set_id == set_id,
+                Flashcard.note_id == note_id,
+                Flashcard.is_deleted == False,
+            )
+            .all()
+        )
 
-    def update_flashcard_set_last_completed(self, session: Session, set_id: UUID4, new_last_completed: str):
-        flashcard_set = session.query(FlashcardSet).filter(
-            FlashcardSet.id == set_id,
-        ).one()
+        return flashcards
 
-        if (flashcard_set.is_deleted):
-            raise Exception
-        else:
-            flashcard_set.update_last_completed(new_last_completed, session)
-
-
-    def build_json_flashcard_sets(self, flashcard_sets):
-        data = []
-        for flashcard_set in flashcard_sets:
-            item = {
-                "set_id": str(flashcard_set.id),
-                "note_id": str(flashcard_set.note_id),
-                "user_id": str(flashcard_set.user_id),
-                "title": flashcard_set.title,
-                "date_generated": self.format_date(flashcard_set.date_generated),
-                "tags": flashcard_set.tags,
-                "num_of_flashcards": flashcard_set.num_of_flashcards,
-                "is_deleted": flashcard_set.is_deleted,
-                "last_accessed": self.format_date(flashcard_set.last_accessed),
-                "last_completed": self.format_date(flashcard_set.last_completed),
-                "cum_avg_difficulty": flashcard_set.cum_avg_difficulty
-            }
-            data.append(item)
-
-        return data
-    
-    def build_json_flashcards(self, flashcards):
-        data = []
-        for flashcard in flashcards:
-            item = {
-                "flashcard_id": str(flashcard.id),
-                "set_id": str(flashcard.set_id),
-                "note_id": str(flashcard.note_id),
-                "type": flashcard.type,
-                "front": flashcard.front,
-                "back": flashcard.back,
-                "hints": flashcard.hints,
-                "is_deleted": flashcard.is_deleted,
-                "num_of_rates": flashcard.num_of_rates,
-                "latest_judged_difficulty": flashcard.latest_judged_difficulty,
-                "last_accessed": self.format_date(flashcard.last_accessed)
-            }
-            data.append(item)
-
-        return data
-    
     def get_flashcard_by_id(self, session: Session, flashcard_id):
         flashcard = (
             session.query(Flashcard)
@@ -242,39 +143,50 @@ class FlashcardService:
             .all()
         )
     
+
     def get_set_owner(self, set_id, session):
-        set = session.query(FlashcardSet).filter(
-            FlashcardSet.id == set_id,
-            FlashcardSet.is_deleted == False
-        ).one()
+        set = (
+            session.query(FlashcardSet)
+            .filter(FlashcardSet.set_id == set_id, FlashcardSet.is_deleted == False)
+            .one()
+        )
 
         return set.user_id
-    
-    def get_flashcard_owner(self, flashcard_id, session):
-        flashcard = session.query(Flashcard).filter(
-            Flashcard.id == flashcard_id,
-            Flashcard.is_deleted == False
-        ).one()
 
-        return self.get_set_owner(flashcard.set_id, session)
-    
-    def get_set_title(self, set_id, session):
-        set = session.query(FlashcardSet).filter(
-            FlashcardSet.id == set_id,
-            FlashcardSet.is_deleted == False
-        ).one()
+    def rerate_flashcard(
+        self, user_id: UUID4, flashcard_id: UUID4, new_rating: str, session: Session 
+    ):
+        flashcard = self.get_flashcard_by_id(session=session, flashcard_id=flashcard_id)
+        flashcard_sets = self.get_flashcard_sets_by_user(user_id=user_id, session=session)
 
-        return set.title
+        num_of_rates = flashcard.num_of_rates
+        old_flashcard_rating = flashcard.rated_difficulty
 
-    def get_set_note_id(self, set_id, session):
-        set = session.query(FlashcardSet).filter(
-            FlashcardSet.id == set_id,
-            FlashcardSet.is_deleted == False
-        ).one()
+        new_flashcard_rating = self.reevaluate_flashcard_rating(new_flashcard_rating=new_rating, old_flashcard_rating=old_flashcard_rating, num_of_rates=num_of_rates)
+        flashcard.rated_difficulty = new_flashcard_rating
 
-        return set.note_id
+        self.rerate_flashcard_sets(new_flashcard_rating=new_flashcard_rating, old_flashcard_rating=old_flashcard_rating, flashcard_sets=flashcard_sets, session=session)
+
+        session.commit()
+
+        flashcard = self.get_flashcard_by_id(session=session, flashcard_id=flashcard_id)
+
+        return self.build_json_flashcard(flashcard)
+
+    def rerate_flashcard_sets(
+        self, new_flashcard_rating: str, old_flashcard_rating: str, flashcard_sets, session: Session
+    ):
+        for i, e in enumerate(flashcard_sets):
+            flashcard_set = self.get_flashcard_set_by_id(flashcard_sets.id)
+            flashcard_set_rating = flashcard_set.avg_difficulty
+            num_of_flashcards = flashcard_set.num_of_flashcards
+
+            new_flashcard_set_rating = self.reevaluate_flashcard_set_rating(new_flashcard_rating=new_flashcard_rating, old_flashcard_rating=old_flashcard_rating, old_flashcard_set_rating=flashcard_set_rating, num_of_flashcards=num_of_flashcards)
+            flashcard_set.avg_difficulty = new_flashcard_set_rating
+            session.commit()
 
     # Helper Functions
+
     def extract_main_text(self, main):
         all_text = ""
         for block in main:
@@ -292,11 +204,6 @@ class FlashcardService:
         else:
             return True
 
-    def format_date(self, date):
-        if (date == None):
-            return None
-        return datetime.datetime.strftime(date, "%Y-%m-%d %H:%M:%S")
-    
     def rating_enum_to_nominal(self, rating):
         match rating:
             case "hard":
@@ -307,22 +214,18 @@ class FlashcardService:
                 return 2
             case "very_easy":
                 return 1
-            
-    def check_recommended(self, avg_cum_difficulty, last_completed):
-        if (last_completed == None):
-            return True
-        if (avg_cum_difficulty <= int(VERY_EASY_DIFF_THRESHOLD)):
-            delta =  datetime.timedelta(days=7)
-        elif (avg_cum_difficulty <= int(EASY_DIFF_THRESHOLD)):
-            delta =  datetime.timedelta(days=3)
-        elif (avg_cum_difficulty <= int(MEDIUM_DIFF_THRESHOLD)):
-            delta = datetime.timedelta(days=1)
-        else:
-            delta = datetime.timedelta(hours=1)
 
-        time_to_show = last_completed + delta
+    def reevaluate_flashcard_rating(self, new_flashcard_rating, old_flashcard_rating, num_of_rates):
+        new_flashcard_rating = self.rating_enum_to_nominal(new_flashcard_rating)
+        old_flashcard_rating = self.rating_enum_to_nominal(old_flashcard_rating)
 
-        timezone_of_time_to_show = time_to_show.tzinfo
-        now_in_timezone = datetime.datetime.now(timezone_of_time_to_show)
+        rating = ((old_flashcard_rating * num_of_rates) - old_flashcard_rating + new_flashcard_rating) / num_of_rates
+        return math.ceil(rating)
 
-        return (time_to_show < now_in_timezone)
+    def reevaluate_flashcard_set_rating(self, new_flashcard_rating, old_flashcard_rating, old_flashcard_set_rating, num_of_flashcards):
+        new_flashcard_rating = self.rating_enum_to_nominal(new_flashcard_rating)
+        old_flashcard_rating = self.rating_enum_to_nominal(old_flashcard_rating)
+        old_flashcard_set_rating = self.rating_enum_to_nominal(old_flashcard_set_rating)
+
+        rating = ((old_flashcard_set_rating * num_of_flashcards) - old_flashcard_rating + new_flashcard_rating) / num_of_flashcards
+        return math.ceil(rating)
