@@ -78,9 +78,9 @@ class GenerateVlectureNoteRequestSchema(BaseModel):
 class GenerateNoteServiceRequestSchema(BaseModel):
   transcript: str
   title: str
+  subtitle: str
   owner_id: UUID
   language: str
-  subtitle: str
 
 class BlockNoteCornellSchema(BaseModel):
   main: Optional[List[NoteBlockSchema]]

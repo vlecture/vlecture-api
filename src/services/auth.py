@@ -9,6 +9,7 @@ from src.utils.mail import get_mail_client
 from src.utils.settings import REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET
 
 from starlette.status import (
+    HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
@@ -23,7 +24,7 @@ from src.services.users import (
     update_access_token,
     update_active_status,
     update_refresh_token,
-    get_user_by_access_token
+    get_user_by_access_token,
 )
 
 
@@ -79,6 +80,43 @@ def login(response: Response, session: Session, payload: LoginSchema):
     }
 
 
+def verify_access_token(request: Request, session: Session):
+    access_token = request.cookies.get("access_token")
+    if access_token is None:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized. Token not provided!",
+        )
+    try:
+        decoded_access_token = jwt.decode(access_token, ACCESS_TOKEN_SECRET)
+        try:
+            user = get_user(session=session, field="access_token", value=access_token)
+
+            if int(datetime.now(timezone.utc).timestamp()) > decoded_access_token.get(
+                "exp"
+            ):
+                raise HTTPException(
+                    status_code=HTTP_401_UNAUTHORIZED,
+                    detail="Unauthorized. Token expired!",
+                )
+            else:
+                return {
+                    "status_code": HTTP_200_OK,
+                    "content": "Access token authorized!",
+                }
+        except InvalidFieldName as e:
+            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        except Exception as e:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND, detail="User not found!"
+            ) from e
+    except Exception:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized. Invalid access token!",
+        )
+
+
 def renew_access_token(request: Request, response: Response, session: Session):
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token is None:
@@ -115,29 +153,30 @@ def renew_access_token(request: Request, response: Response, session: Session):
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Unauthorized. Invalid refresh token!",
         )
-    
+
+
 def logout(response: Response, session: Session, payload: LogoutSchema):
     user = None
     try:
-        user = get_user_by_access_token(session=session, access_token=payload.access_token)
+        user = get_user_by_access_token(
+            session=session, access_token=payload.access_token
+        )
         is_active: bool = user.get_is_active()
         if not is_active:
             raise HTTPException(
-                status_code=HTTP_404_NOT_FOUND,
-                detail="User is not logged in!"
+                status_code=HTTP_404_NOT_FOUND, detail="User is not logged in!"
             )
-        
+
         user.clear_token(session)
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
 
         return {"message": "Logout successful."}
 
-    except Exception:  
+    except Exception:
         if user is None:
             raise HTTPException(
-                status_code=HTTP_404_NOT_FOUND,
-                detail="User is not logged in!"
+                status_code=HTTP_404_NOT_FOUND, detail="User is not logged in!"
             )
 
 

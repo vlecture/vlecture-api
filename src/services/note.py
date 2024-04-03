@@ -11,6 +11,7 @@ import json
 import requests
 import pytz
 from datetime import datetime
+from bson import ObjectId
 
 from sqlalchemy.orm import Session
 from typing import List, Union
@@ -103,12 +104,12 @@ class NoteService:
       self, 
       owner_id: UUID,
       title: str,
-      main_word_count: int,
+      subtitle: str,
       main: List[NoteBlockSchema],
       cues: List[NoteBlockSchema],
       summary: List[NoteBlockSchema],
       language: str,
-      subtitle: str,
+      main_word_count: int,
   ) -> NoteSchema:
     datetime_now_jkt = get_datetime_now_jkt()
 
@@ -160,7 +161,7 @@ class NoteService:
     transcript = payload.transcript
     title = payload.title
     subtitle = payload.subtitle
-    owner_id = payload.owner_id 
+    owner_id = payload.owner_id
     language = payload.language
 
     note_json = self.convert_text_into_cornell_json(
@@ -191,4 +192,19 @@ class NoteService:
 
     return new_note_object
     
+  def is_valid_note(note_id: str, user_id: str, note_collection) -> bool:
+    note_id = ObjectId(note_id)
+    existing_note = note_collection.find_one({
+        "_id": note_id,
+        "owner_id": user_id,
+        "is_deleted": False
+    })
+    return existing_note is not None
+
+  def delete_note(note_id: str, note_collection) -> bool:
+      result = note_collection.update_one(
+          {"_id": ObjectId(note_id)},
+          {"$set": {"is_deleted": True}}
+      )
+      return result.modified_count > 0
     

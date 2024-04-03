@@ -12,6 +12,8 @@ from fastapi import (
     Body,
 )
 
+from src.utils.time import get_datetime_now_jkt
+
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
@@ -33,7 +35,6 @@ from src.schemas.transcription import (
     TranscribeAudioRequestSchema,
     PollTranscriptionRequestSchema,
     ViewTranscriptionRequestSchema,
-
     TranscriptionSchema,
     TranscriptionChunksSchema,
 )
@@ -47,24 +48,21 @@ from src.utils.aws.transcribe import (
     AWSTranscribeClient,
 )
 
+
 class TranscriptionRouterTags(Enum):
     transcribe = "transcribe"
 
 
 transcription_router = APIRouter(
-    prefix="/v1/transcription", 
-    tags=[TranscriptionRouterTags.transcribe]
+    prefix="/v1/transcription", tags=[TranscriptionRouterTags.transcribe]
 )
 
 
-@transcription_router.post(
-    "/create", 
-    status_code=http.HTTPStatus.CREATED
-)
+@transcription_router.post("/create", status_code=http.HTTPStatus.OK)
 async def transcribe_audio(
-    req: TranscribeAudioRequestSchema, 
+    req: TranscribeAudioRequestSchema,
     session: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
 ):
     transcribe_client = AWSTranscribeClient().get_client()
 
@@ -75,10 +73,12 @@ async def transcribe_audio(
     language_code = req.language_code
 
     file_uri = service.generate_file_uri(
-        bucket_name=AWS_BUCKET_NAME, 
-        filename=filename, 
+        bucket_name=AWS_BUCKET_NAME,
+        filename=filename,
         extension=file_format,
     )
+
+    # print(filename)
 
     try:
         # Transcribe audio
@@ -93,11 +93,12 @@ async def transcribe_audio(
         # Store created transcription to db
         print("STORING TRANSCRIPTION TO DB....")
 
-        formatted_tsc_response = await service.retrieve_formatted_transcription_from_job_name(
-            transcribe_client=transcribe_client,
-            job_name=job_name
+        formatted_tsc_response = (
+            await service.retrieve_formatted_transcription_from_job_name(
+                transcribe_client=transcribe_client, job_name=job_name
+            )
         )
-        
+
         # Transcription Fields
         tsc_datetime_now = get_datetime_now_jkt()
         chunk_items = formatted_tsc_response["results"]["items"]
@@ -107,8 +108,7 @@ async def transcribe_audio(
 
         # Generate the TranscriptionChunk objects, and calculate total_duration first
         generate_chunks_response = service.generate_transcription_chunks(
-            transcription_id=tsc_id,
-            items=chunk_items
+            transcription_id=tsc_id, items=chunk_items
         )
 
         transcription_chunks = generate_chunks_response.chunks
@@ -123,7 +123,6 @@ async def transcribe_audio(
             created_at=tsc_datetime_now,
             updated_at=tsc_datetime_now,
             is_deleted=False,
-
             owner_id=owner_id,
             title=tsc_title,
             tags=req.tags,
@@ -131,51 +130,41 @@ async def transcribe_audio(
         )
 
         store_tsc_response = await service.insert_transcription_result(
-            session=session,
-            transcription_data=tsc_create_schema
+            session=session, transcription_data=tsc_create_schema
         )
 
-        if (store_tsc_response):
+        if store_tsc_response:
             print(f"Stored transcription object to db: {store_tsc_response.__str__()}")
-
 
         # Then, store TranscriptionChunk object to database, bcs it needs to maintain a ForeignKey
         print(f"Storing Transcription Chunks to db...")
         for chunk in transcription_chunks:
             await service.insert_transcription_chunks(
-                session=session,
-                transcription_chunk_data=chunk
+                session=session, transcription_chunk_data=chunk
             )
-        
+
         response = {
             "transcription": tsc_create_schema,
             "transcription_chunks": transcription_chunks,
         }
 
         return JSONResponse(
-            status_code=http.HTTPStatus.CREATED,
-            content=jsonable_encoder(response)
+            status_code=http.HTTPStatus.CREATED, content=jsonable_encoder(response)
         )
+
     except TimeoutError:
-        return JSONResponse(
+        return GenericResponseModel(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
-            content="Error: Timeout during audio transcription."
+            content="Error: Timeout during audio transcription.",
         )
     except RuntimeError:
         return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
-            content="Error: Audio Transcription job failed."
-        )
-    except Exception:
-        return JSONResponse(
-            status_code=http.HTTPStatus.BAD_REQUEST,
-            content="Error: Something went wrong while transcribing audio."
+            content="Audio Transcription job failed.",
         )
 
-@transcription_router.get(
-    "/poll", 
-    status_code=http.HTTPStatus.OK
-)
+
+@transcription_router.get("/poll", status_code=http.HTTPStatus.OK)
 async def poll_transcription_job(req: PollTranscriptionRequestSchema):
     transcribe_client = AWSTranscribeClient().get_client()
 
@@ -187,50 +176,46 @@ async def poll_transcription_job(req: PollTranscriptionRequestSchema):
         )
 
         return JSONResponse(
-            status_code=http.HTTPStatus.OK,
-            content=jsonable_encoder(response)
+            status_code=http.HTTPStatus.OK, content=jsonable_encoder(response)
         )
     except TimeoutError:
         return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
-            content="Error: Timeout while processing transcription job."
+            content="Error: Timeout while processing transcription job.",
         )
     except ClientError:
         return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
-            content="Error: Audio Transcription job failed."
+            content="Error: Audio Transcription job failed.",
         )
 
-@transcription_router.post(
-    "/view", 
-    status_code=http.HTTPStatus.OK
-)
+
+@transcription_router.post("/view", status_code=http.HTTPStatus.OK)
 async def view_transcription(req: ViewTranscriptionRequestSchema):
     transcribe_client = AWSTranscribeClient().get_client()
     job_name = req.job_name
-    
+
     service = TranscriptionService()
 
     try:
         response = await service.retrieve_formatted_transcription_from_job_name(
-            transcribe_client=transcribe_client,
-            job_name=job_name
+            transcribe_client=transcribe_client, job_name=job_name
         )
 
         return JSONResponse(
-            status_code=http.HTTPStatus.OK,
-            content=jsonable_encoder(response)
+            status_code=http.HTTPStatus.OK, content=jsonable_encoder(response)
         )
     except TimeoutError:
         return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
-            content="Error: Timeout while processing transcription job."
+            content="Error: Timeout while processing transcription job.",
         )
     except ClientError:
         return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
-            content="Error: Audio Transcription job failed.."
+            content="Error: Audio Transcription job failed..",
         )
+
 
 @transcription_router.delete(
     "/delete", status_code=http.HTTPStatus.OK, response_model=GenericResponseModel
@@ -246,13 +231,12 @@ async def delete_transcription(job_name: str):
         )
 
         return JSONResponse(
-            status_code=http.HTTPStatus.OK,
-            content=jsonable_encoder(response)
+            status_code=http.HTTPStatus.OK, content=jsonable_encoder(response)
         )
     except TimeoutError:
         return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
-            content="Error: Timeout while trying to delete transcription job."
+            content="Error: Timeout while trying to delete transcription job.",
         )
     except ClientError as e:
         return JSONResponse(

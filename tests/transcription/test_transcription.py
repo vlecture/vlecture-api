@@ -4,6 +4,9 @@ import asyncio
 import pytest
 from httpx import AsyncClient
 from tests.utils.test_db import client, test_db
+from tests.utils.login import (
+  register_login_and_token
+)
 from src.main import app
 
 test_server = "https://staging.api.vlecture.tech"
@@ -16,35 +19,6 @@ view_transcription_url = "/v1/transcription/view"
 
 
 pytest_plugins = ('pytest_asyncio',)
-
-
-def register_login_and_token(test_db):
-  # Register
-  register_response = client.post(
-      register_url,
-      json={
-          "email": "positive@example.com",
-          "first_name": "Positive",
-          "middle_name": "Test",
-          "last_name": "Case",
-          "password": "positivepassword",
-      },
-    )
-  
-  if (register_response.status_code != 200):
-    raise RuntimeError("Failed to register")
-  
-  # Login
-  login_response = client.post(
-        login_url,
-        json={"email": "positive@example.com", "password": "positivepassword"},
-    )
-  
-  access_token = login_response["access_token"]
-
-  return access_token
-
-
 
 # Positive Case
 @pytest.mark.anyio

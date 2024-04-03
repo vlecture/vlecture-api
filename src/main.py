@@ -7,7 +7,6 @@ from fastapi import (
 
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-from bson.binary import UuidRepresentation
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
@@ -23,7 +22,8 @@ from src.controllers import (
     auth, 
     upload, 
     waitlist,
-    note
+    note,
+    flashcards
 )
 from src.utils.db import Base, engine
 
@@ -66,7 +66,7 @@ app.add_middleware(
         "Keep-Alive",
         "Origin",
         "User-Agent",
-        "X-Requested-With"
+        "X-Requested-With",
     ],
 )
 
@@ -76,6 +76,7 @@ app.include_router(transcription.transcription_router)
 app.include_router(upload.upload_router)
 app.include_router(waitlist.waitlist_router)
 app.include_router(note.note_router)
+app.include_router(flashcards.flashcards_router)
 
 
 # Connect to MongoDB on startup
@@ -86,23 +87,23 @@ def startup_mongodb_client():
         server_api=ServerApi('1'),
 
         # MongoClient Configs
-        uuidRepresentation='standard',
-        tlsCAFile=certifi.where()
+        uuidRepresentation="standard",
+        tlsCAFile=certifi.where(),
     )
 
     try:
         client.admin.command('ping')
-        print("Pinged your deployment. You successfully connected to MongoDB!")
+        print("Pinged your deployment. Successfully connected to MongoDB!")
 
         # Assign MongoDB client to FastAPI app
         app.mongodb_client = client
+        app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
+        app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
+        
+        print("Connected to MongoDB Database.")
     except Exception as e:
         print(e)
-
-    app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
-    app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
-    print("Connected to MongoDB Database.")
-
+ 
 @app.on_event("shutdown")
 def shutdown_db_client():
     app.mongodb_client.close()
