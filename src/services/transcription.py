@@ -5,10 +5,20 @@ import time
 import requests
 import pytz
 from datetime import datetime
+from fastapi import (
+     Depends
+)
 
 from sqlalchemy.orm import Session
 from typing import List, Union
 from botocore.exceptions import ClientError
+from fastapi.encoders import jsonable_encoder
+
+from src.models.users import (
+     User
+)
+
+from src.services.users import get_current_user
 
 from src.models.transcription import (
     Transcription,
@@ -73,6 +83,42 @@ class TranscriptionService:
             return TimeoutError("Timeout when polling the transcription results")
 
         return job_result
+    
+    def fetch_all_transcriptions_chunks_db(
+        self,
+        session: Session,
+        user: User
+    ):
+        """
+        Fetches all user's transcriptions from the database
+        """
+
+        if user is None:
+            return None
+        
+        result = []
+
+        my_transcriptions = session.query(Transcription) \
+                                .filter(Transcription.owner_id == user.id) \
+                                .order_by(Transcription.created_at.desc()) \
+                                .all()
+        
+        for tsc in my_transcriptions:
+            # Create a new Result object to be put in result array
+            related_tsc_chunks = session.query(TranscriptionChunk) \
+                .filter(TranscriptionChunk.transcription_id == tsc.id) \
+                .order_by(TranscriptionChunk.created_at.asc()) \
+                .all()
+            
+            result_object = {
+                "transcription": jsonable_encoder(tsc),
+                "chunks": jsonable_encoder(related_tsc_chunks),
+            }
+
+            result.append(result_object)
+
+        return result
+
 
     async def transcribe_file(
         self,
@@ -159,6 +205,8 @@ class TranscriptionService:
         )
 
         job_name = transcription_data.get("jobName")
+
+        # NOTE DELETE - unused
         accountId = transcription_data.get("accountId")
         status = transcription_data.get("status")
         transcripts = transcription_data.get("results", {}).get("transcripts", [])

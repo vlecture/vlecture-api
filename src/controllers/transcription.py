@@ -2,7 +2,7 @@ from enum import Enum
 import http
 import uuid
 from datetime import datetime
-import pytz
+import json
 
 from fastapi import (
     APIRouter,
@@ -34,9 +34,10 @@ from src.schemas.base import GenericResponseModel
 from src.schemas.transcription import (
     TranscribeAudioRequestSchema,
     PollTranscriptionRequestSchema,
-    ViewTranscriptionRequestSchema,
+    ViewTranscriptionViaJobNameRequestSchema,
     TranscriptionSchema,
     TranscriptionChunksSchema,
+    ViewTranscriptionRequestSchema,
 )
 from src.services.transcription import TranscriptionService
 
@@ -189,9 +190,26 @@ async def poll_transcription_job(req: PollTranscriptionRequestSchema):
             content="Error: Audio Transcription job failed.",
         )
 
+@transcription_router.get("/all", status_code=http.HTTPStatus.OK)
+def view_all_transcriptions(
+    req: ViewTranscriptionRequestSchema,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    service = TranscriptionService()
+
+    response = service.fetch_all_transcriptions_chunks_db(
+        session=session,
+        user=user,
+    )
+    
+    return JSONResponse(
+        status_code=http.HTTPStatus.OK,
+        content=response,
+    )
 
 @transcription_router.post("/view", status_code=http.HTTPStatus.OK)
-async def view_transcription(req: ViewTranscriptionRequestSchema):
+async def view_transcription_from_jobname(req: ViewTranscriptionViaJobNameRequestSchema):
     transcribe_client = AWSTranscribeClient().get_client()
     job_name = req.job_name
 
