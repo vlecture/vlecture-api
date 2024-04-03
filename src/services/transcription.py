@@ -98,6 +98,8 @@ class TranscriptionService:
         
         result = []
 
+        # NOTE query optimization
+
         my_transcriptions = session.query(Transcription) \
                                 .filter(Transcription.owner_id == user.id) \
                                 .order_by(Transcription.created_at.desc()) \

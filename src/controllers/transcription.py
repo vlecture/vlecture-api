@@ -192,7 +192,6 @@ async def poll_transcription_job(req: PollTranscriptionRequestSchema):
 
 @transcription_router.get("/all", status_code=http.HTTPStatus.OK)
 def view_all_transcriptions(
-    req: ViewTranscriptionRequestSchema,
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
