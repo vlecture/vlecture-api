@@ -121,6 +121,38 @@ class TranscriptionService:
 
         return result
 
+    def fetch_one_transcriptions_chunks_db(
+        self,
+        tsc_id: UUID,
+        session: Session,
+        user: User
+    ):
+        """
+        Fetches all user's transcriptions from the database
+        """
+
+        if user is None:
+            return None
+        
+        # NOTE query optimization
+        my_transcription = session.query(Transcription) \
+                                .filter(Transcription.id == tsc_id) \
+                                .order_by(Transcription.created_at.desc()) \
+                                .first()
+        
+        # Create a new Result object to be put in result array
+        related_tsc_chunks = session.query(TranscriptionChunk) \
+            .filter(TranscriptionChunk.transcription_id == my_transcription.id) \
+            .order_by(TranscriptionChunk.created_at.asc()) \
+            .all()
+            
+        result_object = {
+            "transcription": jsonable_encoder(my_transcription),
+            "chunks": jsonable_encoder(related_tsc_chunks),
+        }
+
+
+        return result_object
 
     async def transcribe_file(
         self,

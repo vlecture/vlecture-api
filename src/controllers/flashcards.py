@@ -85,7 +85,7 @@ def view_flashcard_sets( user: User = Depends(get_current_user), session: Sessio
             status_code=http.HTTPStatus.OK,
             content=response
         )
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="Error: You don't have access to these flashcard sets or flashcard sets don't exist.",
@@ -108,7 +108,7 @@ def view_recommended_flashcard_sets( user: User = Depends(get_current_user), ses
             content=response
         )
     
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="Error: You don't have access to these flashcard sets or flashcard sets don't exist.",
@@ -124,7 +124,12 @@ def view_flashcards(set_id: str, user: User = Depends(get_current_user), session
         user_id = service.get_set_owner(set_id, session)
 
         if user.id != user_id:
-            raise Exception
+            TRY_LOGIN_MSG = "Try logging in to access your flashcards."
+            return JSONResponse(
+                status_code=http.HTTPStatus.UNAUTHORIZED,
+                content=TRY_LOGIN_MSG,
+            )
+    
 
         response = service.get_flashcards_by_set(
             set_id=set_id,
@@ -144,10 +149,12 @@ def view_flashcards(set_id: str, user: User = Depends(get_current_user), session
             status_code=http.HTTPStatus.OK,
             content=response,
         )
-    except Exception as e:
+    except Exception:
+        ERROR_MSG = "You don't have access to these flashcards or flashcards don't exist."
+        
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
-            content="You don't have access to these flashcards or flashcards don't exist.",
+            content=ERROR_MSG,
         )
     
 @flashcards_router.post(
@@ -160,7 +167,11 @@ def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = De
         user_id = service.get_flashcard_owner(req.id, session)
 
         if user.id != user_id:
-            raise Exception
+            TRY_LOGIN_MSG = "Try logging in to access your flashcards."
+            return JSONResponse(
+                status_code=http.HTTPStatus.UNAUTHORIZED,
+                content=TRY_LOGIN_MSG,
+            )
         
         service.update_flashcard_difficulty(
             flashcard_id=req.id,
@@ -173,7 +184,7 @@ def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = De
             content="Successfully updated flashcard difficulty.",
         )
 
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="You don't have access to this flashcard or flashcard doesn't exist.",
@@ -189,7 +200,11 @@ def update_flashcard_last_completed(req: FlashcardSetUpdateLastCompletedRequest,
         user_id = service.get_set_owner(req.id, session)
 
         if user.id != user_id:
-            raise Exception
+            TRY_LOGIN_MSG = "Try logging in to access your flashcards."
+            return JSONResponse(
+                status_code=http.HTTPStatus.UNAUTHORIZED,
+                content=TRY_LOGIN_MSG,
+            )
         
         service.update_flashcard_set_last_completed(
             set_id=req.id,

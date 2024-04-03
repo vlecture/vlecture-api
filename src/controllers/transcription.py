@@ -1,6 +1,8 @@
 from enum import Enum
 import http
 import uuid
+from uuid import UUID
+
 from datetime import datetime
 import json
 
@@ -198,6 +200,25 @@ def view_all_transcriptions(
     service = TranscriptionService()
 
     response = service.fetch_all_transcriptions_chunks_db(
+        session=session,
+        user=user,
+    )
+    
+    return JSONResponse(
+        status_code=http.HTTPStatus.OK,
+        content=response,
+    )
+
+@transcription_router.get("/{tsc_id}", status_code=http.HTTPStatus.OK)
+def view_a_transcription(
+    tsc_id: UUID,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    service = TranscriptionService()
+
+    response = service.fetch_one_transcriptions_chunks_db(
+        tsc_id=tsc_id,
         session=session,
         user=user,
     )
