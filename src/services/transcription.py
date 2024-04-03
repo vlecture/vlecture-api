@@ -230,7 +230,37 @@ class TranscriptionService:
         )
         aws_link = requests.get(response)
         return aws_link.json()
+    
+    # TODO main method
+    def convert_chunks_into_full_transcript(
+        self, 
+        tsc_id: UUID,
+        session: Session,
+        user: User,
 
+    ):
+        transcription_data = self.fetch_one_transcriptions_chunks_db(
+            tsc_id=tsc_id,
+            session=session,
+            user=user,
+        )
+
+        # NOTE DELETE - unused
+        chunks = transcription_data["chunks"]
+
+        temp_transcripts = []
+
+        for i in range(len(chunks)):
+            transcript_text = chunks[i]["content"]
+            temp_transcripts.append(transcript_text)
+        else:
+            print("No transcripts found in the response")
+
+        full_transcript = " ".join(temp_transcripts)
+
+        return full_transcript
+
+    # TODO remove since we have by id 
     async def retrieve_formatted_transcription_from_job_name(
         self, transcribe_client, job_name: str
     ):

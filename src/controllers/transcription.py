@@ -222,6 +222,14 @@ def view_a_transcription(
         session=session,
         user=user,
     )
+
+    full_transcript = service.convert_chunks_into_full_transcript(
+        tsc_id=tsc_id,
+        session=session,
+        user=user,
+    )
+
+    response["full_transcript"] = full_transcript
     
     return JSONResponse(
         status_code=http.HTTPStatus.OK,
