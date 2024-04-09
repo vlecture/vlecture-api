@@ -2,6 +2,7 @@ from tests.utils.test_db import client, test_db
 
 register_url = "/v1/auth/register"
 login_url = "/v1/auth/login"
+logout_url = "/v1/auth/logout"
 ## Authentication Tests ##
 
 # Positive Cases
@@ -34,10 +35,13 @@ def test_login_positive(test_db):
 
 def test_logout_successful():
     # Login
-    client.post("/login", data={"username": "user", "password": "password"})
+    client.post(
+        login_url, 
+        json={"email": "positive@example.com", "password": "positivepassword"},
+        )
 
     # Logout
-    response = client.post("/logout")
+    response = client.post(logout_url)
     assert response.status_code == 200
 
     # Ensure session token cookie is deleted
@@ -161,7 +165,7 @@ def test_register_with_long_values(test_db):
 
 def test_logout_not_logged_in():
     # Attempt to logout when not logged in
-    response = client.post("/logout")
+    response = client.post(logout_url)
     assert response.status_code == 404  
     assert "access_token" not in response.cookies
 
@@ -188,10 +192,13 @@ def test_register_edge_case_boundary_values(test_db):
 
 def test_logout_successful():
     # Login
-    client.post("/login", data={"username": "user", "password": "password"})
+    client.post(
+        login_url, 
+        json={"email": "positive@example.com", "password": "positivepassword"},
+        )
 
     # Logout
-    response = client.post("/logout")
+    response = client.post(logout_url)
     assert response.status_code == 200
 
     # Ensure session token cookie is deleted
@@ -203,32 +210,38 @@ def test_logout_successful():
 
 def test_logout_not_logged_in():
     # Attempt to logout when not logged in
-    response = client.post("/logout")
+    response = client.post(logout_url)
     assert response.status_code == 404  
     assert "access_token" not in response.cookies
 
 def test_logout_twice():
     # Login
-    client.post("/login", data={"username": "user", "password": "password"})
+    client.post(
+        login_url, 
+        json={"email": "positive@example.com", "password": "positivepassword"},
+        )
 
     # Logout once
-    response = client.post("/logout")
+    response = client.post(logout_url)
     assert response.status_code == 200
 
     # Attempt to logout again
-    response = client.post("/logout")
+    response = client.post(logout_url)
     assert response.status_code == 404
 
 def test_logout_twice():
     # Login
-    client.post("/login", data={"username": "user", "password": "password"})
+    client.post(
+        login_url, 
+        json={"email": "positive@example.com", "password": "positivepassword"},
+        )
 
     # Logout once
-    response = client.post("/logout")
+    response = client.post(logout_url)
     assert response.status_code == 200
 
     # Attempt to logout again
-    response = client.post("/logout")
+    response = client.post(logout_url)
     assert response.status_code == 404
 
 
