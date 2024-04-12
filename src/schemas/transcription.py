@@ -53,6 +53,7 @@ class TranscriptionSchema(DBBaseModel, BaseModel):
   title: str
   tags: Optional[Union[List[str], str]] = []
   duration: float
+  language: str
 
   class Config:
       orm_mode = True

@@ -130,6 +130,7 @@ async def transcribe_audio(
             title=tsc_title,
             tags=req.tags,
             duration=total_duration,
+            language=language_code,
         )
 
         store_tsc_response = await service.insert_transcription_result(

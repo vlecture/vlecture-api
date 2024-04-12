@@ -56,6 +56,9 @@ class Transcription(Base):
 
   duration = Column(Float(precision=1), default=0, nullable=False)
 
+  # Current use case: "id" | "en", future use case: "id-ID" | ...
+  language = Column(String(5), nullable=False) 
+
   def __to_model(self) -> TranscriptionSchema:
     """ Converts DB ORM object to Pydantic Model ('schema') """
     return TranscriptionSchema.model_validate(self)
