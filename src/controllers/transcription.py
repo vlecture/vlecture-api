@@ -151,6 +151,14 @@ async def transcribe_audio(
             "transcription_chunks": transcription_chunks,
         }
 
+        if (response and response["transcription"] and response["transcription_chunks"]):
+            print(f"Transcribe audio success, generating JSON response.")
+        else:
+            if not response:
+                print(f"No response object found.")
+            else:
+                print(f"Response object found, but is lacking appropriate field values.")
+
         return JSONResponse(
             status_code=http.HTTPStatus.CREATED, content=jsonable_encoder(response)
         )
