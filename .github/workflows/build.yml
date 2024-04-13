@@ -20,8 +20,6 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install tox and any other packages
         run: pip install tox
-      - name: Install packages for testing
-        run: pip install certifi
       - name: Run tox
         run: tox -e py
       - name: SonarQube Scan
