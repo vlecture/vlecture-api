@@ -38,6 +38,8 @@ jobs:
           echo USE_CREDENTIALS=${{ secrets.USE_CREDENTIALS }} >> .env
           echo VALIDATE_CERTS=${{ secrets.VALIDATE_CERTS }} >> .env
           echo OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} >> .env
+          echo ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }} >> .env
+          echo REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }} >> .env
       - name: Install tox and any other packages
         run: pip install tox
       - name: Run tox
