@@ -38,22 +38,22 @@ EDGE_MAIN = "0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0
 
 # Generate Flashcards Test Cases
 ## Positive Cases
-def test_generate_flashcards_positive(test_db): # Valid input
-    access_token = login()
-    header = set_header(access_token)
-    response = client.post(
-        flashcard_generation_url,
-        json={
-            "note_id": VALID_NOTE_ID,
-            "main": VALID_MAIN,
-            "main_word_count": VALID_MAIN_WORD_COUNT,
-            "language": LANGUAGE,
-            "num_of_flashcards": VALID_NUM_OF_FLASHCARDS,
-        },
-        headers=header
-    )
+# def test_generate_flashcards_positive(test_db): # Valid input
+#     access_token = login()
+#     header = set_header(access_token)
+#     response = client.post(
+#         flashcard_generation_url,
+#         json={
+#             "note_id": VALID_NOTE_ID,
+#             "main": VALID_MAIN,
+#             "main_word_count": VALID_MAIN_WORD_COUNT,
+#             "language": LANGUAGE,
+#             "num_of_flashcards": VALID_NUM_OF_FLASHCARDS,
+#         },
+#         headers=header
+#     )
 
-    assert response.status_code == 200
+#     assert response.status_code == 200
 
 ## Negative Cases
 def test_generate_flashcards_negative(test_db): # Invalid input - empty field

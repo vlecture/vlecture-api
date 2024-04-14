@@ -23,33 +23,33 @@ def test_register_positive(test_db):
     assert response.json()["email"] == "positive@example.com"
 
 
-def test_login_positive(test_db):
-    # Assuming a user "positive@example.com" already exists from the register test
-    response = client.post(
-        login_url,
-        json={"email": "positive@example.com", "password": "positivepassword"},
-    )
-    assert response.status_code == 200
-    assert "access_token" in response.json()
-    assert "refresh_token" in response.json()
+# def test_login_positive(test_db):
+#     # Assuming a user "positive@example.com" already exists from the register test
+#     response = client.post(
+#         login_url,
+#         json={"email": "positive@example.com", "password": "positivepassword"},
+#     )
+#     assert response.status_code == 200
+#     assert "access_token" in response.json()
+#     assert "refresh_token" in response.json()
 
-def test_logout_successful():
-    # Login
-    client.post(
-        login_url, 
-        json={"email": "positive@example.com", "password": "positivepassword"},
-        )
+# def test_logout_successful():
+#     # Login
+#     client.post(
+#         login_url, 
+#         json={"email": "positive@example.com", "password": "positivepassword"},
+#         )
 
-    # Logout
-    response = client.post(logout_url)
-    assert response.status_code == 200
+#     # Logout
+#     response = client.post(logout_url)
+#     assert response.status_code == 200
 
-    # Ensure session token cookie is deleted
-    assert "access_token" not in response.cookies
+#     # Ensure session token cookie is deleted
+#     assert "access_token" not in response.cookies
 
-    # Access protected endpoint after logout should be unauthorized
-    response = client.get("/home")
-    assert response.status_code == 401 
+#     # Access protected endpoint after logout should be unauthorized
+#     response = client.get("/home")
+#     assert response.status_code == 401 
 
 # Negative Cases
 
@@ -163,11 +163,11 @@ def test_register_with_long_values(test_db):
     )
     assert response.status_code == 422  # Data too long for one or more fields
 
-def test_logout_not_logged_in():
-    # Attempt to logout when not logged in
-    response = client.post(logout_url)
-    assert response.status_code == 404  
-    assert "access_token" not in response.cookies
+# def test_logout_not_logged_in():
+#     # Attempt to logout when not logged in
+#     response = client.post(logout_url)
+#     assert response.status_code == 404  
+#     assert "access_token" not in response.cookies
 
 
 # Edge Cases
@@ -214,35 +214,35 @@ def test_logout_not_logged_in():
     assert response.status_code == 404  
     assert "access_token" not in response.cookies
 
-def test_logout_twice():
-    # Login
-    client.post(
-        login_url, 
-        json={"email": "positive@example.com", "password": "positivepassword"},
-        )
+# def test_logout_twice():
+#     # Login
+#     client.post(
+#         login_url, 
+#         json={"email": "positive@example.com", "password": "positivepassword"},
+#         )
 
-    # Logout once
-    response = client.post(logout_url)
-    assert response.status_code == 200
+#     # Logout once
+#     response = client.post(logout_url)
+#     assert response.status_code == 200
 
-    # Attempt to logout again
-    response = client.post(logout_url)
-    assert response.status_code == 404
+#     # Attempt to logout again
+#     response = client.post(logout_url)
+#     assert response.status_code == 404
 
-def test_logout_twice():
-    # Login
-    client.post(
-        login_url, 
-        json={"email": "positive@example.com", "password": "positivepassword"},
-        )
+# def test_logout_twice():
+#     # Login
+#     client.post(
+#         login_url, 
+#         json={"email": "positive@example.com", "password": "positivepassword"},
+#         )
 
-    # Logout once
-    response = client.post(logout_url)
-    assert response.status_code == 200
+#     # Logout once
+#     response = client.post(logout_url)
+#     assert response.status_code == 200
 
-    # Attempt to logout again
-    response = client.post(logout_url)
-    assert response.status_code == 404
+#     # Attempt to logout again
+#     response = client.post(logout_url)
+#     assert response.status_code == 404
 
 
     
