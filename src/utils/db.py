@@ -14,6 +14,7 @@ try:
             password=POSTGRES_PASSWORD,
         )
     )
+    print(POSTGRES_USER, POSTGRES_DB, POSTGRES_HOST, POSTGRES_PORT)
 
 except Exception:
     raise ValueError("Database config values are missing or incorrect.")
