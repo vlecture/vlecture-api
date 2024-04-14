@@ -21,8 +21,6 @@ except Exception:
 if DATABASE_URL is None:
     raise ValueError("DB_URL environment variable is not set!")
 
-print(POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, POSTGRES_USER)
-
 engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
