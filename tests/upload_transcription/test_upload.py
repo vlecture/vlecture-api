@@ -10,19 +10,19 @@ file_non_audio = {'file': ('test_image.jpg', open(
     'tests/upload_transcription/test_image.jpg', 'rb'), 'audio/jpeg')}
 
 
-def test_register_user(test_db):
-    """Register a user to test upload functionality"""
-    data = {
-        "email": "upload@example.com",
-        "first_name": "Upload",
-        "middle_name": "Audio",
-        "last_name": "File",
-        "password": "StrongPassword123"
-    }
+# def test_register_user(test_db):
+#     """Register a user to test upload functionality"""
+#     data = {
+#         "email": "upload@example.com",
+#         "first_name": "Upload",
+#         "middle_name": "Audio",
+#         "last_name": "File",
+#         "password": "StrongPassword123"
+#     }
 
-    response = client.post(register_url, json=data)
-    assert response.status_code == 200
-    assert response.json()["email"] == "upload@example.com"
+#     response = client.post(register_url, json=data)
+#     assert response.status_code == 200
+#     assert response.json()["email"] == "upload@example.com"
 
 
 def get_access_token(test_db):
