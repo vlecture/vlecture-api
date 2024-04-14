@@ -1,10 +1,11 @@
 import os
 from dotenv import load_dotenv
 
-if not os.getenv("GITHUB_ACTIONS"):
-    load_dotenv(".env", override=True)
-    ENV_TYPE = os.getenv("ENV")
-    print(f"ENV: {ENV_TYPE}")
+load_dotenv(".env", override=True)
+
+ENV_TYPE = os.getenv("ENV")
+
+print(f"ENV: {ENV_TYPE}")
 
 # POSTGRES
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
