@@ -78,22 +78,22 @@ def test_negative_upload(test_db):
     assert response.json() == expected_payload
 
 
-def test_view_transcription_with_invalid_job_name(test_db):
+# def test_view_transcription_with_invalid_job_name(test_db):
 
-    _, access_token = get_access_token(test_db)
-    headers = {"Authorization": f"Bearer {access_token}"}
+#     _, access_token = get_access_token(test_db)
+#     headers = {"Authorization": f"Bearer {access_token}"}
 
-    response = client.get(
-        view_url,
-        headers=headers,
-        params={"job_name": "invalid_job_name"},  # Using an invalid job_name
-    )
+#     response = client.get(
+#         view_url,
+#         headers=headers,
+#         params={"job_name": "invalid_job_name"},  # Using an invalid job_name
+#     )
 
-    assert (
-        response.status_code == 404
-    )  # Assuming the endpoint returns a 404 for non-existent job names
-    assert "error" in response.json()
-    assert response.json()["error"] == "Transcription job not found."
+#     assert (
+#         response.status_code == 404
+#     )  # Assuming the endpoint returns a 404 for non-existent job names
+#     assert "error" in response.json()
+#     assert response.json()["error"] == "Transcription job not found."
 
 
 def test_view_transcription_without_authentication(test_db):

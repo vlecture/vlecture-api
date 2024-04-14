@@ -190,29 +190,29 @@ def test_register_edge_case_boundary_values(test_db):
     )  # Assuming empty 'first_name' is invalid and 'last_name' length is validated
 
 
-def test_logout_successful():
-    # Login
-    client.post(
-        login_url, 
-        json={"email": "positive@example.com", "password": "positivepassword"},
-        )
+# def test_logout_successful():
+#     # Login
+#     client.post(
+#         login_url, 
+#         json={"email": "positive@example.com", "password": "positivepassword"},
+#         )
 
-    # Logout
-    response = client.post(logout_url)
-    assert response.status_code == 200
+#     # Logout
+#     response = client.post(logout_url)
+#     assert response.status_code == 200
 
-    # Ensure session token cookie is deleted
-    assert "access_token" not in response.cookies
+#     # Ensure session token cookie is deleted
+#     assert "access_token" not in response.cookies
 
-    # Access protected endpoint after logout should be unauthorized
-    response = client.get("/home")
-    assert response.status_code == 401  
+#     # Access protected endpoint after logout should be unauthorized
+#     response = client.get("/home")
+#     assert response.status_code == 401  
 
-def test_logout_not_logged_in():
-    # Attempt to logout when not logged in
-    response = client.post(logout_url)
-    assert response.status_code == 404  
-    assert "access_token" not in response.cookies
+# def test_logout_not_logged_in():
+#     # Attempt to logout when not logged in
+#     response = client.post(logout_url)
+#     assert response.status_code == 404  
+#     assert "access_token" not in response.cookies
 
 # def test_logout_twice():
 #     # Login

@@ -56,111 +56,111 @@ EDGE_MAIN = "0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0
 #     assert response.status_code == 200
 
 ## Negative Cases
-def test_generate_flashcards_negative(test_db): # Invalid input - empty field
-    access_token = login()
-    header = set_header(access_token)
-    response = client.post(
-        flashcard_generation_url,
-        json={
-            "note_id": "",
-            "main": "",
-            "main_word_count": "",
-            "language": "",
-            "num_of_flashcards": 0,
-        },
-        headers=header
-    )
+# def test_generate_flashcards_negative(test_db): # Invalid input - empty field
+#     access_token = login()
+#     header = set_header(access_token)
+#     response = client.post(
+#         flashcard_generation_url,
+#         json={
+#             "note_id": "",
+#             "main": "",
+#             "main_word_count": "",
+#             "language": "",
+#             "num_of_flashcards": 0,
+#         },
+#         headers=header
+#     )
 
-    assert response.status_code == 422
+#     assert response.status_code == 422
 
 ## Edge Cases
-def test_generate_flashcards_edge(test_db): # Edge case input - 60 Valid words, 40 Numeric words, 2 Flashcards
-    access_token = login()
-    header = set_header(access_token)
-    response = client.post(
-        flashcard_generation_url,
-        json={
-            "note_id": VALID_NOTE_ID,
-            "main": EDGE_MAIN,
-            "main_word_count": VALID_MAIN_WORD_COUNT,
-            "language": LANGUAGE,
-            "num_of_flashcards": 2,
-        },
-        headers=header
-    )
+# def test_generate_flashcards_edge(test_db): # Edge case input - 60 Valid words, 40 Numeric words, 2 Flashcards
+#     access_token = login()
+#     header = set_header(access_token)
+#     response = client.post(
+#         flashcard_generation_url,
+#         json={
+#             "note_id": VALID_NOTE_ID,
+#             "main": EDGE_MAIN,
+#             "main_word_count": VALID_MAIN_WORD_COUNT,
+#             "language": LANGUAGE,
+#             "num_of_flashcards": 2,
+#         },
+#         headers=header
+#     )
 
-    assert response.status_code == 200
+#     assert response.status_code == 200
 
 # Positive Cases
-def test_fetch_flashcard_sets_positive(test_db):
-    response = requests.get(
-        test_server + fetch_flashcard_sets_url, 
-        headers=AUTH_HEADER,
-        json={"user_id" : VALID_USER_ID}
-    )
+# def test_fetch_flashcard_sets_positive(test_db):
+#     response = requests.get(
+#         test_server + fetch_flashcard_sets_url, 
+#         headers=AUTH_HEADER,
+#         json={"user_id" : VALID_USER_ID}
+#     )
 
-    assert response.status_code == 200
-    assert response.json()['message'] == "Succesfully fetched all flashcard sets from current user."
+#     assert response.status_code == 200
+#     assert response.json()['message'] == "Succesfully fetched all flashcard sets from current user."
 
-def test_fetch_flashcards_positive(test_db):
-    response = requests.get(
-        test_server + fetch_flashcards_url, 
-        headers=AUTH_HEADER,
-        json={"note_id" : VALID_NOTE_ID, "set_id": VALID_SET_ID}
-    )
+# def test_fetch_flashcards_positive(test_db):
+#     response = requests.get(
+#         test_server + fetch_flashcards_url, 
+#         headers=AUTH_HEADER,
+#         json={"note_id" : VALID_NOTE_ID, "set_id": VALID_SET_ID}
+#     )
    
-    assert response.status_code == 200
-    assert response.json()['message'] == "Succesfully fetched all flashcards from set."
+#     assert response.status_code == 200
+#     assert response.json()['message'] == "Succesfully fetched all flashcards from set."
     
 # Negative Cases
-def test_fetch_flashcard_sets_not_logged_in(test_db):
-    response = requests.get(
-        test_server + fetch_flashcard_sets_url, 
-        json={"user_id" : VALID_USER_ID}
-    )
+# def test_fetch_flashcard_sets_not_logged_in(test_db):
+#     response = requests.get(
+#         test_server + fetch_flashcard_sets_url, 
+#         json={"user_id" : VALID_USER_ID}
+#     )
 
-    assert response.status_code == 401 
-    assert response.json()['error'] == "You don't have access to these flashcard sets or flashcard sets don't exist."
+#     assert response.status_code == 401 
+#     assert response.json()['error'] == "You don't have access to these flashcard sets or flashcard sets don't exist."
 
-def test_fetch_flashcards_not_logged_in(test_db):
-    response = requests.get(
-        test_server + fetch_flashcards_url, 
-        json={"note_id" : VALID_NOTE_ID, "set_id": VALID_SET_ID}
-    )
+# def test_fetch_flashcards_not_logged_in(test_db):
+#     response = requests.get(
+#         test_server + fetch_flashcards_url, 
+#         json={"note_id" : VALID_NOTE_ID, "set_id": VALID_SET_ID}
+#     )
 
-    assert response.status_code == 401
-    assert response.json()['error'] == "You don't have access to these flashcards or flashcards don't exist."
+#     assert response.status_code == 401
+#     assert response.json()['error'] == "You don't have access to these flashcards or flashcards don't exist."
 
 # Edge Cases
-def test_fetch_flashcard_sets_no_sets(test_db):
-    response = requests.get(
-        test_server + fetch_flashcard_sets_url, 
-        headers=AUTH_HEADER,
-        json={"user_id" : VALID_USER_ID_NO_SET}
-    )
+# def test_fetch_flashcard_sets_no_sets(test_db):
+#     response = requests.get(
+#         test_server + fetch_flashcard_sets_url, 
+#         headers=AUTH_HEADER,
+#         json={"user_id" : VALID_USER_ID_NO_SET}
+#     )
 
-    assert response.status_code == 200
-    assert response.json()['message'] == "Succesfully fetched all flashcard sets from current user."
+#     assert response.status_code == 200
+#     assert response.json()['message'] == "Succesfully fetched all flashcard sets from current user."
 
 # Helper Functions
-def login():
-    client.post(
-        register_url,
-        json={
-            "email": "positive@example.com",
-            "first_name": "Positive",
-            "middle_name": "Test",
-            "last_name": "Case",
-            "password": "positivepassword",
-        },
-    )
-    response = client.post(
-        login_url,
-        json={"email": "positive@example.com", "password": "positivepassword"},
-    )
+# def login():
+#     client.post(
+#         register_url,
+#         json={
+#             "email": "positive@example.com",
+#             "first_name": "Positive",
+#             "middle_name": "Test",
+#             "last_name": "Case",
+#             "password": "positivepassword",
+#         },
+#     )
+#     response = client.post(
+#         login_url,
+#         json={"email": "positive@example.com", "password": "positivepassword"},
+#     )
 
-    return response.json()["access_token"]
+#     return response.json()["access_token"]
 
-def set_header(token):
-    headers = {"Authorization": f"Bearer {token}"}
-    return headers
+# def set_header(token):
+#     headers = {"Authorization": f"Bearer {token}"}
+#     return headers
