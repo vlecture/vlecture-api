@@ -7,26 +7,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  load-secrets:
-    name: Load Secrets
-    runs-on: ubuntu-latest
-    steps:
-      - name: Load POSTGRES_HOST
-        run: echo "::set-env name=POSTGRES_HOST::${{ secrets.POSTGRES_HOST }}"
-
-      - name: Load POSTGRES_PORT
-        run: echo "::set-env name=POSTGRES_PORT::${{ secrets.POSTGRES_PORT }}"
-
-      - name: Load POSTGRES_DB
-        run: echo "::set-env name=POSTGRES_DB::${{ secrets.POSTGRES_DB }}"
-
-      - name: Load POSTGRES_USER
-        run: echo "::set-env name=POSTGRES_USER::${{ secrets.POSTGRES_USER }}"
-
-      - name: Load POSTGRES_PASSWORD
-        run: echo "::set-env name=POSTGRES_PASSWORD::${{ secrets.POSTGRES_PASSWORD }}"
-        shell: bash -e {0}
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -38,16 +18,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      - name: Set Database Environment Variables
+        env:
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       - name: Install tox and any other packages
         run: pip install tox
       - name: Run tox
-        env:
-          POSTGRES_HOST: ${{ env.POSTGRES_HOST }}
-          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
         run: tox -e py
+        env:
+          <<: steps.Set-Database-Environment-Variables
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
         env:
