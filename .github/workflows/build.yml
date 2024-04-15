@@ -53,6 +53,11 @@ jobs:
         run: pip install tox
       - name: Run tox
         run: tox -e py -- -m coverage run --source=src -m pytest --cov-fail-under=0
+      - name: Upload coverage report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/index.html
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
         env:
