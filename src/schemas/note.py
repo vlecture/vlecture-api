@@ -73,7 +73,7 @@ class LLMCornellNoteFromTranscript(BaseModel):
 class GenerateVlectureNoteRequestSchema(BaseModel):
   title: str
   transcript: str
-  language: Optional[str]
+  language: str
 
 class GenerateNoteServiceRequestSchema(BaseModel):
   transcript: str
