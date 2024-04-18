@@ -130,6 +130,7 @@ async def transcribe_audio(
             title=tsc_title,
             tags=req.tags,
             duration=total_duration,
+            language=language_code,
         )
 
         store_tsc_response = await service.insert_transcription_result(
@@ -150,6 +151,8 @@ async def transcribe_audio(
             "transcription": tsc_create_schema,
             "transcription_chunks": transcription_chunks,
         }
+
+        print(f"{response}")
 
         return JSONResponse(
             status_code=http.HTTPStatus.CREATED, content=jsonable_encoder(response)

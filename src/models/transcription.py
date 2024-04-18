@@ -97,7 +97,9 @@ class TranscriptionChunk(Base):
   start_time = Column(Float(precision=1), nullable=False)
   end_time = Column(Float(precision=1), nullable=False)
 
-  content = Column(String(255), nullable=True)
+  content = Column(String(255), nullable=False)
+
+  language = Column(String(10), nullable=False)
 
   def __str__(self):
     return f"""
