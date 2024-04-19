@@ -120,11 +120,19 @@ def get_a_note(
   request: Request,
   user: User = Depends(get_current_user),
 ):
-  note_id = ObjectId(note_id)
-  my_note = request.app.note_collection.find_one({
-    "_id": note_id,
-    "is_deleted": False
-  })
+#   note_id = ObjectId(note_id)
+#   my_note = request.app.note_collection.find_one({
+#     "_id": note_id,
+#     "is_deleted": False
+#   })
+  service = NoteService()
+
+  my_note = service.fetch_note_from_mongodb(
+    note_id=note_id,
+    request=request,
+    user=user,
+  )
+
   if not my_note:
     return JSONResponse(status_code=http.HTTPStatus.NOT_FOUND, content={"message": "Note not found or already deleted."})
 
@@ -140,23 +148,19 @@ def delete_a_note(
   request: Request,
   user: User = Depends(get_current_user),
 ):
-  note_id = ObjectId(note_id)
-
-  existing_note = request.app.note_collection.find_one({
-    "_id": note_id,
-    "is_deleted": False 
-  })
-
-  if not existing_note:
-    return JSONResponse(status_code=http.HTTPStatus.NOT_FOUND, content={"message": "Note not found or already deleted."})
-
-  result = request.app.note_collection.update_one(
-    {"_id": note_id},
-    {"$set": {"is_deleted": True}}
+  service = NoteService()
+  
+  response = service.delete_note(
+    note_id=note_id,
+    request=request,
+    user=user,
   )
 
-  if result.modified_count == 0:
-    return JSONResponse(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, content={"message": "Failed to delete note."})
-  else:
-    return JSONResponse(status_code=http.HTTPStatus.OK, content={"message": "Note deleted successfully."})
+  if isinstance(response, str) and "NotFound" in response:    
+    return JSONResponse(status_code=http.HTTPStatus.NOT_FOUND, content={"message": response})
+  
+  if isinstance(response, str) and "OperationalFailure" in response:
+    return JSONResponse(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, content={"message": response})
+
+  return JSONResponse(status_code=http.HTTPStatus.OK, content={"message": "Success: Note deleted successfully."})
 
