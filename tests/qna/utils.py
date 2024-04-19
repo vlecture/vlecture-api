@@ -25,7 +25,7 @@ NOTE_MAIN_DATA = "\n".join(NOTE_MAIN_DATA_ARRAY)
 NOTE_CUES_DATA = "\n".join(NOTE_CUES_DATA_ARRAY)
 NOTE_SUMMARY_DATA = "\n".join(NOTE_SUMMARY_DATA_ARRAY)
 
-NOTE_TEXT_SPLITTING_INPUT = f"Note main content:\n{NOTE_MAIN_DATA}\n\nNote cues:\n{NOTE_CUES_DATA}\n\nNote summary: {NOTE_SUMMARY_DATA}"
+NOTE_TEXT_SPLITTING_INPUT = f"This is a Cornell-notetaking based Note. Note main content:\n{NOTE_MAIN_DATA}\n\nNote cues:\n{NOTE_CUES_DATA}\n\nNote summary: {NOTE_SUMMARY_DATA}"
 
 
 EXPECTED_RESPONSE_NOTE_MONGODB = {
