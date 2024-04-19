@@ -41,8 +41,8 @@ def test_fetch_note_mongodb():
 
     service = NoteService()
 
-    service.fetch_note_mongodb = MagicMock()
+    service.fetch_note_from_mongodb = MagicMock()
 
-    service.fetch_note_mongodb(**input_values)
+    service.fetch_note_from_mongodb(**input_values)
 
-    service.fetch_note_mongodb.assert_called_once_with(**input_values)
+    service.fetch_note_from_mongodb.assert_called_once_with(**input_values)
