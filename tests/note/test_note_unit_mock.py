@@ -1,7 +1,16 @@
+from unittest.mock import MagicMock
+
+from src.services.note import (
+   NoteService,
+)
+
 from .utils import (
   # GENERIC OBJECTS
   NOTE_LANGUAGE,
   TRANSCRIPT,
+
+  # INPUTS
+  NOTE_ID,
 
   # OUTPUTS
   EXPECTED_RESPONSE_CONVERT_CORNELL_JSON,
@@ -25,4 +34,15 @@ def test_convert_text_into_cornell_json(mocker, note_service):
 
   assert mocked_api_value == actual_mock_response
 
+def test_fetch_note_mongodb():
+    input_values = {
+        "note_id": NOTE_ID,
+    }
 
+    service = NoteService()
+
+    service.fetch_note_mongodb = MagicMock()
+
+    service.fetch_note_mongodb(**input_values)
+
+    service.fetch_note_mongodb.assert_called_once_with(**input_values)

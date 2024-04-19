@@ -18,18 +18,6 @@ from .utils import (
   EXPECTED_RESPONSE_NOTE_MONGODB,
 )
 
-def test_fetch_note_mongodb():
-    input_values = {
-        "note_id": NOTE_ID,
-    }
-
-    service = QNAService()
-
-    service.fetch_note_mongodb = MagicMock()
-
-    service.fetch_note_mongodb(**input_values)
-
-    service.fetch_note_mongodb.assert_called_once_with(**input_values)
     
 def test_flatten_note_contents(qna_service):
     input_value = {
