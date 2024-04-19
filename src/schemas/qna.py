@@ -11,6 +11,7 @@ from pydantic import (
   Field,
 )
 
+# OBJECT SCHEMAS
 class QNAAnswerSchema(BaseModel): 
   """
   Object schema for QnA Answer
@@ -96,3 +97,26 @@ class QNASetReviewSchema(BaseModel):
 
   score_obtained: float
   
+
+# REQUEST SCHEMAS
+class GenerateQNASetRequestSchema(BaseModel):
+  """
+  Schema for the Request object of Generate Note
+  
+  Example:
+
+  {
+    "note_id": "632883282481232",
+    "question_count": 3,
+  }
+  """
+
+  note_id: str
+  question_count: int
+  
+
+# RESPONSE SCHEMAS
+class GenerateQNASetResponseSchema(BaseModel):
+  # TODO
+  pass
+

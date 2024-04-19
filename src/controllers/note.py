@@ -57,7 +57,7 @@ def generate_vlecture_note(
   
   transcript = payload["transcript"]
   title = payload["title"]
-  language = payload["language"] if "language" in payload else "id"
+  language = payload["language"] if "language" in payload else "id-ID"
 
   # Convert Transcript into vlecture Note object
   req_generate_note = GenerateNoteServiceRequestSchema(
@@ -120,11 +120,6 @@ def get_a_note(
   request: Request,
   user: User = Depends(get_current_user),
 ):
-#   note_id = ObjectId(note_id)
-#   my_note = request.app.note_collection.find_one({
-#     "_id": note_id,
-#     "is_deleted": False
-#   })
   service = NoteService()
 
   my_note = service.fetch_note_from_mongodb(
@@ -134,7 +129,10 @@ def get_a_note(
   )
 
   if not my_note:
-    return JSONResponse(status_code=http.HTTPStatus.NOT_FOUND, content={"message": "Note not found or already deleted."})
+    return JSONResponse(
+      status_code=http.HTTPStatus.NOT_FOUND, 
+      content={"message": "NotFound: Note not found or already deleted."}
+    )
 
   return my_note
 

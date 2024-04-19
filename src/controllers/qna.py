@@ -21,16 +21,29 @@ from typing import (
 from bson.objectid import ObjectId
 
 from src.models.users import User
+
+from src.schemas.qna import (
+  # OBJECTS
+  QNAAnswerSchema,
+  QNAQuestionSchema,
+  QNAQuestionSetSchema,
+
+  # REQUESTS
+  GenerateQNASetRequestSchema,
+
+  # RESPONSE
+  GenerateQNASetResponseSchema,
+)
+
+
 from src.services.users import get_current_user
 
 from src.services.note import (
   NoteService
 )
 
-from src.schemas.qna import (
-  QNAAnswerSchema,
-  QNAQuestionSchema,
-  QNAQuestionSetSchema,
+from src.services.qna import (
+  QNAService
 )
 
 class QNARouterTags(Enum):
@@ -45,11 +58,30 @@ qna_router = APIRouter(
   "/generate",
   response_description="Create a new Note QnA set",
   status_code=http.HTTPStatus.OK,
-  response_model=QNASchema
+  response_model=GenerateQNASetResponseSchema
 )
 def generate_qna_set(
   request: Request,
-  payload: dict, # TODO
-  respnose_model: dict, # TODO
+  payload: GenerateQNASetRequestSchema,
+  user: User = Depends(get_current_user),
 ):
-  pass
+  note_service = NoteService()
+  qna_service = QNAService()
+
+  note_id = payload["note_id"]
+  question_count = payload["question_count"]
+  
+  my_note = note_service.fetch_note_from_mongodb(
+    note_id=note_id,
+    request=request,
+    user=user,
+  )
+
+  generated_qna_set = qna_service.generate_qna_set(
+    note=my_note,
+    question_count=question_count,
+    user=user,
+  )
+
+  return generated_qna_set
+
