@@ -65,7 +65,7 @@ class NoteService:
     note_id: str, 
     request: Request, 
     user: User,
-  ):
+  ) -> NoteSchema:
     note_id = ObjectId(note_id)
     my_note = request.app.note_collection.find_one({
       "_id": note_id,
@@ -83,19 +83,19 @@ class NoteService:
     client = self.get_openai()
 
     SYSTEM_PROMPT = construct_system_instructions(
-    context=transcript,
-    language=language,
+      context=transcript,
+      language=language,
     )
     
     chat_completion = client.chat.completions.create(
-    model=OPENAI_MODEL_NAME,
-    temperature=self.MODEL_TEMPERATURE,
-    messages=[
-      {
-      "role": "system",
-      "content": SYSTEM_PROMPT,
-      }
-    ]
+      model=OPENAI_MODEL_NAME,
+      temperature=self.MODEL_TEMPERATURE,
+      messages=[
+        {
+        "role": "system",
+        "content": SYSTEM_PROMPT,
+        }
+      ]
     )
 
     llm_answer = chat_completion.choices[0].message.content
@@ -105,21 +105,21 @@ class NoteService:
 
   def create_paragraph_block_from_text(self, text: str) -> NoteBlockSchema:
     return NoteBlockSchema(
-    id=uuid.uuid4(),
-    type="paragraph",
-    props={
-      "textColor": "default",
-      "backgroundColor": "default",
-      "textAlignment": "left"
-    },
-    content=[
-      {
-      "type": "text",
-      "text": f"{text}",
-      "styles": {}
-      }
-    ],
-    children=[]
+      id=uuid.uuid4(),
+      type="paragraph",
+      props={
+        "textColor": "default",
+        "backgroundColor": "default",
+        "textAlignment": "left"
+      },
+      content=[
+        {
+        "type": "text",
+        "text": f"{text}",
+        "styles": {}
+        }
+      ],
+      children=[]
     )
 
   def create_note_block_object(
@@ -136,19 +136,19 @@ class NoteService:
     datetime_now_jkt = get_datetime_now_jkt()
 
     new_note_object = NoteSchema(
-    owner_id=owner_id,
-    title=title,
-    subtitle=subtitle,
-    created_at=datetime_now_jkt,
-    updated_at=datetime_now_jkt,
-    is_deleted=False,
-    is_edited=False,
-    is_published=False,
-    main=main,
-    cues=cues,
-    summary=summary,
-    main_word_count=main_word_count,
-    language=language,
+      owner_id=owner_id,
+      title=title,
+      subtitle=subtitle,
+      created_at=datetime_now_jkt,
+      updated_at=datetime_now_jkt,
+      is_deleted=False,
+      is_edited=False,
+      is_published=False,
+      main=main,
+      cues=cues,
+      summary=summary,
+      main_word_count=main_word_count,
+      language=language,
     )
 
     return new_note_object
