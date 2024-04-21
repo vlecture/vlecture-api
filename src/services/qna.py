@@ -58,7 +58,7 @@ class QNAService:
     question_count: int,
     user: User,
   ):
-    note_documents_chunk = self.convert_note_into_chunks(
+    note_documents_chunk = self.split_note_into_chunks(
       note=note,
     )
 
@@ -78,8 +78,8 @@ class QNAService:
 
     # NOTE - to find the answer to the LLM generated question:
     # retrieved_docs = retriever.invoke("{your_question}"
-    BASE_PROMPT = self.get_base_prompt()
-    REFINED_PROMPT = self.get_refined_prompt()
+    BASE_PROMPT = self.get_base_prompt(question_count=question_count)
+    REFINED_PROMPT = self.get_refined_prompt(question_count=question_count)
 
     question_gen_chain = load_summarize_chain(
       llm=self.LLM,
@@ -105,8 +105,19 @@ class QNAService:
       retriever=retriever,
     )
 
+    # Run answer chain for each question
+    answer_list = []
+    for question in question_list:
+      print("Question:", question)
+
+      answer = answer_gen_chain.run(question)
+      answer_list.append(answer)
+
+      print("Answer", answer)
+      print("--------------------------------------------------\n\n")
+
     # Returns the generated questions and answers
-    return answer_gen_chain, question_list
+    return question_list, answer_list
 
 
   def extract_note_sections_to_array(
@@ -119,11 +130,14 @@ class QNAService:
 
     for section in sections:
       section_content = []
+
       for section_item in note[section]:
         # section_item is a NoteBlockSchema object
-        item_content = section_item["content"]["text"]
-        
-        section_content.append(item_content)
+        content_arr = section_item["content"]
+
+        for _content in content_arr:
+          content = _content["text"]
+          section_content.append(content)
       
       # Add section_content to response dict
       response[section] = section_content
@@ -182,7 +196,7 @@ class QNAService:
     return note_documents_chunk
 
   # PROMPT ENGINEERING HELPERS
-  def get_base_prompt(self):
+  def get_base_prompt(self, question_count: int):
     prompt_template = """
     You are an expert at creating quiz questions based on a lecture note.
     Your goal is to prepare a student for their exams based on the notes. 
@@ -191,22 +205,31 @@ class QNAService:
     ------------
     {text}
     ------------
+    """
 
-    Create questions that will prepare the students for their tests.
+    prompt_template += f"""
+    Create {question_count} AND ONLY {question_count} questions that will prepare the students for their tests.
     Make sure not to lose any important information.
 
     QUESTIONS:
     """
 
-    PROMPT_QUESTIONS = PromptTemplate(template=prompt_template, input_variables=["text"])
+    print(prompt_template)
+
+    PROMPT_QUESTIONS = PromptTemplate(
+      template=prompt_template, 
+      input_variables=["text"]
+    )
 
     return PROMPT_QUESTIONS
   
-  def get_refined_prompt(self):
+  def get_refined_prompt(self, question_count: int):
     refined_prompt = """
     You are an expert at creating practice questions based on lecture notes.
     Your goal is to help a student prepare for their test.
-    You have received some practice questions to a certain extent: {existing_answer}.
+    You have received some practice questions to a certain extent: 
+
+    {existing_answer}
     
     You have the option to refine the existing questions or add new ones.
     (only if necessary) with some more context below.
@@ -216,6 +239,14 @@ class QNAService:
 
     Given the new context, refine the original questions in English.
     If the context is not helpful, please provide the original questions.
+    QUESTIONS:
+    """
+
+    refined_prompt += f"""
+    Create {question_count} AND ONLY {question_count} questions only.
+    Given the new context, refine the original questions in English.
+    If the context is not helpful, please provide the original questions.
+
     QUESTIONS:
     """
 

@@ -62,14 +62,14 @@ qna_router = APIRouter(
 )
 def generate_qna_set(
   request: Request,
-  payload: GenerateQNASetRequestSchema,
+  payload: GenerateQNASetRequestSchema = Body(),
   user: User = Depends(get_current_user),
 ):
   note_service = NoteService()
   qna_service = QNAService()
 
-  note_id = payload["note_id"]
-  question_count = payload["question_count"]
+  note_id = payload.note_id
+  question_count = payload.question_count
   
   my_note = note_service.fetch_note_from_mongodb(
     note_id=note_id,
