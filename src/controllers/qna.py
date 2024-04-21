@@ -29,13 +29,10 @@ from src.schemas.qna import (
   QNAQuestionSetSchema,
 
   # REQUESTS
-  GenerateQNASetRequestSchema,
-
-  # RESPONSE
-  GenerateQNASetResponseSchema,
+  GenerateQNASetRequestSchema
 )
 
-
+ 
 from src.services.users import get_current_user
 
 from src.services.note import (
@@ -58,7 +55,6 @@ qna_router = APIRouter(
   "/generate",
   response_description="Create a new Note QnA set",
   status_code=http.HTTPStatus.OK,
-  response_model=GenerateQNASetResponseSchema
 )
 def generate_qna_set(
   request: Request,
@@ -83,5 +79,7 @@ def generate_qna_set(
     user=user,
   )
 
-  return generated_qna_set
+  response = generated_qna_set
+
+  return response
 

@@ -116,7 +116,4 @@ class GenerateQNASetRequestSchema(BaseModel):
   
 
 # RESPONSE SCHEMAS
-class GenerateQNASetResponseSchema(BaseModel):
-  # TODO
-  pass
 

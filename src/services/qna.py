@@ -1,39 +1,18 @@
-from openai import (
-  OpenAI
-)
-
-from fastapi import (
-  Request,
-)
-
+from typing import List
 from langchain_openai import (
   ChatOpenAI,
   OpenAIEmbeddings
 )
-from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains import RetrievalQA
+from langchain.chains.retrieval_qa.base import (
+  BaseRetrievalQA,
+  RetrievalQA,
+)
 from langchain.chains.summarize import load_summarize_chain
 
-import re
-import uuid
-from uuid import UUID
-
-import time
-import json
-import requests
-import pytz
-from datetime import datetime
-from bson import ObjectId
-
-from sqlalchemy.orm import Session
-from typing import List, Union
-from botocore.exceptions import ClientError
-
 from src.models.users import User
-
 from src.schemas.note import (
   NoteSchema
 )
@@ -44,13 +23,8 @@ from src.utils.settings import (
 )
 
 class QNAService:
-  MODEL_TEMPERATURE = 0.4
-
-  LLM = ChatOpenAI(
-    api_key=OPENAI_API_KEY,
-    model=OPENAI_MODEL_NAME,
-    temperature=MODEL_TEMPERATURE,
-  )
+  MODEL_TEMPERATURE_QUESTION = 0.6
+  MODEL_TEMPERATURE_ANSWER = 0.3
 
   def generate_qna_set(
     self, 
@@ -58,6 +32,20 @@ class QNAService:
     question_count: int,
     user: User,
   ):
+    # PREPARE LANGUAGE MODELS
+    LLM_QUESTION_GEN = ChatOpenAI(
+      temperature=self.MODEL_TEMPERATURE_QUESTION, 
+      model=OPENAI_MODEL_NAME, 
+      api_key=OPENAI_API_KEY,
+    )
+
+    LLM_ANSWER_GEN = ChatOpenAI(
+      temperature=self.MODEL_TEMPERATURE_ANSWER, 
+      model=OPENAI_MODEL_NAME, 
+      api_key=OPENAI_API_KEY,
+    )
+
+    # DATA PREPROCESSING AND PERSISTENCE
     note_documents_chunk = self.split_note_into_chunks(
       note=note,
     )
@@ -72,53 +60,72 @@ class QNAService:
     retriever = vectorstore.as_retriever(
       search_type="similarity",
       search_kwargs={
-        "k": 6,
+        "k": 5,
       },
     )
 
-    # NOTE - to find the answer to the LLM generated question:
-    # retrieved_docs = retriever.invoke("{your_question}"
-    BASE_PROMPT = self.get_base_prompt(question_count=question_count)
-    REFINED_PROMPT = self.get_refined_prompt(question_count=question_count)
+    # QUESTION GENERATION
+    Q_BASE_PROMPT = self.get_q_base_prompt(question_count=question_count)
+    Q_REFINED_PROMPT = self.get_q_refined_prompt(question_count=question_count)
 
     question_gen_chain = load_summarize_chain(
-      llm=self.LLM,
+      llm=LLM_QUESTION_GEN,
       chain_type="refine",
       verbose=True,
-      question_prompt=BASE_PROMPT,
-      refine_prompt=REFINED_PROMPT,
+      question_prompt=Q_BASE_PROMPT,
+      refine_prompt=Q_REFINED_PROMPT,
     )
 
     generated_questions = question_gen_chain.run(note_documents_chunk)
 
-    llm_answer_gen = ChatOpenAI(
-      temperature=0.2, 
-      model=OPENAI_MODEL_NAME, 
-      api_key=OPENAI_API_KEY,
-    )
-
     question_list = generated_questions.split("\n")
-    
+
+
+    # ANSWER GENERATION
+    ANS_GEN_PROMPT = self.get_ans_prompt()
+
     answer_gen_chain = RetrievalQA.from_chain_type(
-      llm=llm_answer_gen,
+      llm=LLM_ANSWER_GEN,
       chain_type="stuff",
       retriever=retriever,
+      chain_type_kwargs={
+        "prompt": ANS_GEN_PROMPT,
+      }
     )
 
     # Run answer chain for each question
-    answer_list = []
-    for question in question_list:
-      print("Question:", question)
+    result = {}
 
-      answer = answer_gen_chain.run(question)
-      answer_list.append(answer)
+    for q_id in range(len(question_list)):
+      question = question_list[q_id]
+      answers = []
 
-      print("Answer", answer)
+      for cnt in range(5):
+        if len(answers) >= 4:
+          break
+        
+        if cnt > 0:
+          # If not the first iteration, then previous iteration resulted in < 4 answers
+          print("Answer array has less than 4 items!")
+        
+        answers = self.generate_answers_for_question(
+          answer_gen_chain=answer_gen_chain,
+          question=question,
+        )
+
+      # Append to Result Dict
+      result[str(q_id)] = {
+        "question": question,
+        # First line = correct answer, the rest = incorrect answers
+        "answer_correct": answers[0],
+        "answers_incorrect": answers[1:],
+      }
+
+      # Print values
+      print(result[str(q_id)])
       print("--------------------------------------------------\n\n")
 
-    # Returns the generated questions and answers
-    return question_list, answer_list
-
+    return result
 
   def extract_note_sections_to_array(
     self,
@@ -144,6 +151,16 @@ class QNAService:
 
     return response
 
+  def generate_answers_for_question(
+      self, 
+      answer_gen_chain: BaseRetrievalQA,
+      question: str,
+  ) -> List[str]:
+    answers = answer_gen_chain.run(question)
+    answers = [line.strip() for line in answers.split("\n")]
+
+    return answers
+
   def flatten_note_contents(
     self,
     note: NoteSchema,
@@ -165,7 +182,7 @@ class QNAService:
     cues_f = "\n".join(cues)
     summary_f = "\n".join(summary)
 
-    response_text = f"This is a Cornell-notetaking based Note. Note main content:\n{main_f}\n\nNote cues:\n{cues_f}\n\nNote summary: {summary_f}"
+    response_text = f"This is a Cornell-notetaking based Note.\n Note main content:\n{main_f}\n\nNote cues:\n{cues_f}\n\nNote summary: {summary_f}"
 
     return response_text
     
@@ -196,7 +213,7 @@ class QNAService:
     return note_documents_chunk
 
   # PROMPT ENGINEERING HELPERS
-  def get_base_prompt(self, question_count: int):
+  def get_q_base_prompt(self, question_count: int):
     prompt_template = """
     You are an expert at creating quiz questions based on a lecture note.
     Your goal is to prepare a student for their exams based on the notes. 
@@ -209,7 +226,7 @@ class QNAService:
 
     prompt_template += f"""
     Create {question_count} AND ONLY {question_count} questions that will prepare the students for their tests.
-    Make sure not to lose any important information.
+    Please ensure both questions and answers are kept short, no more than 15-20 WORDS!
 
     QUESTIONS:
     """
@@ -223,30 +240,27 @@ class QNAService:
 
     return PROMPT_QUESTIONS
   
-  def get_refined_prompt(self, question_count: int):
+  def get_q_refined_prompt(self, question_count: int):
     refined_prompt = """
     You are an expert at creating practice questions based on lecture notes.
     Your goal is to help a student prepare for their test.
-    You have received some practice questions to a certain extent: 
+    You have received some draft questions:
 
     {existing_answer}
     
-    You have the option to refine the existing questions or add new ones.
-    (only if necessary) with some more context below.
+    Given the new context below, refine the original questions in English.
+    If the context is not helpful, please provide the original questions.
     ------------
     {text}
     ------------
-
-    Given the new context, refine the original questions in English.
-    If the context is not helpful, please provide the original questions.
-    QUESTIONS:
     """
 
     refined_prompt += f"""
-    Create {question_count} AND ONLY {question_count} questions only.
-    Given the new context, refine the original questions in English.
-    If the context is not helpful, please provide the original questions.
-
+    IMPORTANT COMMANDS:
+    First, create {question_count} AND ONLY {question_count} questions only.
+    Second, please omit any numbering (e.g. 1.) from both question and answer strings. Return only the text content.
+    Third, please ensure questions are kept short, each no more than 15 WORDS!
+  
     QUESTIONS:
     """
 
@@ -256,3 +270,37 @@ class QNAService:
     )
 
     return REFINE_PROMPT_QUESTIONS
+  
+  def get_ans_prompt(self) -> PromptTemplate:
+    ANS_GEN_TEMPLATE = """
+    For EACH question, please generate EXACTLY FOUR (4) answer options.
+    
+    The FIRST output line should be the CORRECT answer to the question, and the NEXT THREE LINES must be an incorrect answer. 
+    
+    On each line, ONLY OUTPUT THE OPTION TEXT, DO NOT output anything else (such as numbers). 
+
+    Example of a valid output:
+
+    Airtime on Radio East has been secured
+    Designer has created new stands
+    Looking at providing free gifts at exhibitions
+    Publicity material is listed in the annual catalog
+
+    We can interpret this as "Airtime on Radio East has been secured" as the correct answer for the question. The subsequent three lines are the incorrect answers.
+
+    ======
+
+    QUESTIONS:
+    {question}
+    
+    =====
+    CONTEXT:
+    {context}
+    """
+
+    ANS_GEN_PROMPT = PromptTemplate(
+      template=ANS_GEN_TEMPLATE,
+      input_variables=["context", "question"],
+    )
+
+    return ANS_GEN_PROMPT
