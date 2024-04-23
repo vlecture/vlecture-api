@@ -1,5 +1,7 @@
 NOTE_ID = "66214575dee0152b709ba24d"
 
+INVALID_NOTE_ID = "abcdefghijklmnopqrstuvwx"
+
 NOTE_MAIN_DATA_ARRAY = [
   "The UK Human Fertilisation and Embryology Authority approved a proposal for gene editing on human embryos at the Francis Crick Institute in London.",
   "Gene editing using CRISPR-Cas is a fast, cheap, and effective technique that has exploded in popularity in recent years.",
