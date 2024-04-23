@@ -164,6 +164,20 @@ class QNASetReviewSchema(BaseModel):
     arbitrary_types_allowed=True,
   )
   
+class QNAUserAnswerSchema(BaseModel):
+  id: UUID
+
+  question_id: UUID
+  created_at: datetime
+  answer: str
+
+class QNAReviewSetSchema(BaseModel):
+  id: UUID
+
+  qna_set_id: UUID
+  created_at: datetime
+  answers: List[QNAUserAnswerSchema]
+
 
 # REQUEST SCHEMAS
 class GenerateQNASetRequestSchema(BaseModel):

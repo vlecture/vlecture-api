@@ -2,6 +2,7 @@ from enum import Enum
 import http
 from datetime import datetime
 import pytz
+from uuid import UUID
 
 from fastapi import (
     APIRouter,
@@ -24,9 +25,9 @@ from src.models.users import User
 
 from src.schemas.qna import (
   # OBJECTS
-  QNAAnswerSchema,
-  QNAQuestionSchema,
   QNAQuestionSetSchema,
+  QNASetReviewSchema,
+  QNAReviewSetSchema,
 
   # REQUESTS
   GenerateQNASetRequestSchema
@@ -124,3 +125,15 @@ def get_qna_set_by_note(
   )
 
   return my_qna_set
+
+@qna_router.post(
+  "/review/{qna_set_id}",
+  status_code=http.HTTPStatus.CREATED,
+  response_model=QNASetReviewSchema,
+)
+def review_qna(
+  request: Request,
+  payload: QNAReviewSetSchema = Body(),
+  user: User = Depends(get_current_user),
+):
+  qna_service = QNAService()
