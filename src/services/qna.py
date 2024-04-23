@@ -147,7 +147,7 @@ class QNAService:
     user: User,
   ) -> QNAQuestionSetSchema:
     # Create QNA Set variables
-    qna_set_objectid = ObjectId()
+    qna_set_uuid = uuid.uuid4()
     datetime_now_jkt = get_datetime_now_jkt()
     PER_QUESTION_SCORE = round(100 / question_count, 3) # Score in { 33.333 | 20.000 | 10.000 }
 
@@ -194,7 +194,7 @@ class QNAService:
       # Create Question object
       qna_question_obj = QNAQuestionSchema(
         id=question_id,
-        qna_set_id=qna_set_objectid,
+        qna_set_uuid=qna_set_uuid,
 
         created_at=datetime_now_jkt,
         updated_at=datetime_now_jkt,
@@ -211,7 +211,7 @@ class QNAService:
       qna_set_questions_list.append(qna_question_obj)
 
     qna_set_obj = QNAQuestionSetSchema(
-      id=qna_set_objectid,
+      uuid=qna_set_uuid,
       owner_id=user.id,
 
       created_at=datetime_now_jkt,

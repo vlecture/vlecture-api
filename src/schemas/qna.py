@@ -21,6 +21,8 @@ from pydantic import (
 
 from pydantic_core import core_schema
 
+PyObjectId = Annotated[str, BeforeValidator(str)]
+
 class PydanticObjectId(str):
   """
   Pydantic-compatible MongoDB ObjectId type
@@ -76,14 +78,14 @@ class QNAQuestionSchema(BaseModel):
   """
 
   id: UUID
+  qna_set_uuid: UUID
+
   created_at: datetime
   updated_at: datetime 
   is_deleted: bool = Field(default=False)
 
-  qna_set_id: PydanticObjectId
   
   question: str
-
   answer_options: List[QNAAnswerSchema] # 4 items
   answer_key: QNAAnswerSchema # 1
 
@@ -96,8 +98,10 @@ class QNAQuestionSetSchema(BaseModel):
   Object schema for a Set of QnA Questions
   """
 
-  # id: Optional[PyObjectId] = Field(alias="_id", default=None)
-  id: PydanticObjectId
+  id: Optional[PyObjectId] = Field(alias="_id", default=None)
+  
+  # Create a new field UUID to identify MongoDB objects
+  uuid: UUID
   owner_id: UUID
 
   created_at: datetime
@@ -119,7 +123,7 @@ class QNAQuestionReviewSchema(BaseModel):
   """
 
   id: UUID
-  qna_set_review_id: PydanticObjectId
+  qna_set_review_uuid: UUID
 
   created_at: datetime
   updated_at: datetime
@@ -137,7 +141,9 @@ class QNASetReviewSchema(BaseModel):
   Schema for Review QnA Question object
   """
 
-  id: PydanticObjectId
+  id: Optional[PyObjectId] = Field(alias="_id", default=None)
+
+  uuid: UUID
   
   # created_at here serves as the "answered at" time for a QNA Set 
   # (when the user submits a QNA Set)
@@ -150,6 +156,11 @@ class QNASetReviewSchema(BaseModel):
   incorrectly_answered_q: List[QNAQuestionReviewSchema]
 
   score_obtained: float
+
+  model_config = ConfigDict(
+    populate_by_name=True,
+    arbitrary_types_allowed=True,
+  )
   
 
 # REQUEST SCHEMAS

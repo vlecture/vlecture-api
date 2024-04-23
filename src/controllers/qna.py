@@ -55,6 +55,7 @@ qna_router = APIRouter(
   "/generate",
   response_description="Create a new Note QnA set",
   status_code=http.HTTPStatus.OK,
+  response_model=QNAQuestionSetSchema,
 )
 def generate_qna_set(
   request: Request,
@@ -89,7 +90,7 @@ def generate_qna_set(
   new_qna_set_document = request.app.qna_collection.insert_one(
     created_qna_set_schema.model_dump(
       by_alias=True,
-      # exclude=["id"],
+      exclude=["id"],
     )
   )
 
@@ -97,7 +98,7 @@ def generate_qna_set(
     "_id": new_qna_set_document.inserted_id,
   }, {
     # Exclude "_id" field from the returned object -- bcs already came with "id" field
-    "_id": 0,
+    # "_id": 0,
   })
 
   return created_qna_set_document
