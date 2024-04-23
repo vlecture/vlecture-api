@@ -15,7 +15,8 @@ from src.utils.settings import (
     SENTRY_DSN,
     MONGODB_URL,
     MONGODB_DB_NAME,
-    MONGODB_COLLECTION_NAME,
+    MONGODB_COLLECTION_NOTE,
+    MONGODB_COLLECTION_QNA,
 )
 from src.controllers import (
     transcription, 
@@ -95,12 +96,13 @@ def startup_mongodb_client():
 
     try:
         client.admin.command('ping')
-        print("Pinged your deployment. Successfully connected to MongoDB!")
+        print("Successfully pinged your MongoDB deployment!")
 
         # Assign MongoDB client to FastAPI app
         app.mongodb_client = client
         app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
-        app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
+        app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NOTE)
+        app.qna_collection = app.database.get_collection(MONGODB_COLLECTION_QNA)
         
         print("Connected to MongoDB Database.")
     except Exception as e:
