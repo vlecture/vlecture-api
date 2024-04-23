@@ -5,9 +5,6 @@ import time
 import requests
 import pytz
 from datetime import datetime
-from fastapi import (
-  Depends
-)
 
 from sqlalchemy.orm import Session
 from typing import List, Union
@@ -55,29 +52,29 @@ class TranscriptionService:
     is_done = False
 
     while max_tries > 0:
-        max_tries -= 1
-        job_result = transcribe_client.get_transcription_job(
-            TranscriptionJobName=job_name
+      max_tries -= 1
+      job_result = transcribe_client.get_transcription_job(
+          TranscriptionJobName=job_name
+      )
+      job_status = job_result["TranscriptionJob"]["TranscriptionJobStatus"]
+
+      if job_status in ["COMPLETED", "FAILED"]:
+        print(f"Job {job_name} is {job_status}.")
+
+        if job_status == "COMPLETED":
+            is_done = True
+            # print(
+            #   f"Download the transcript from\n"
+            #   f"\t{job_result['TranscriptionJob']['Transcript']['TranscriptFileUri']}."
+            # )
+        break
+      else:
+        print(
+            f"Waiting for Transcription Job: {job_name}. Current status is {job_status}."
         )
-        job_status = job_result["TranscriptionJob"]["TranscriptionJobStatus"]
 
-        if job_status in ["COMPLETED", "FAILED"]:
-            print(f"Job {job_name} is {job_status}.")
-
-            if job_status == "COMPLETED":
-                is_done = True
-                # print(
-                #   f"Download the transcript from\n"
-                #   f"\t{job_result['TranscriptionJob']['Transcript']['TranscriptFileUri']}."
-                # )
-            break
-        else:
-            print(
-                f"Waiting for Transcription Job: {job_name}. Current status is {job_status}."
-            )
-
-        # Set interval to poll job status
-        time.sleep(self.POLL_INTERVAL_SEC)
+      # Set interval to poll job status
+      time.sleep(self.POLL_INTERVAL_SEC)
 
     if not is_done:
         return TimeoutError("Timeout when polling the transcription results")
@@ -106,18 +103,18 @@ class TranscriptionService:
                             .all()
     
     for tsc in my_transcriptions:
-        # Create a new Result object to be put in result array
-        related_tsc_chunks = session.query(TranscriptionChunk) \
-            .filter(TranscriptionChunk.transcription_id == tsc.id) \
-            .order_by(TranscriptionChunk.created_at.asc()) \
-            .all()
-        
-        result_object = {
-            "transcription": jsonable_encoder(tsc),
-            "chunks": jsonable_encoder(related_tsc_chunks),
-        }
+      # Create a new Result object to be put in result array
+      related_tsc_chunks = session.query(TranscriptionChunk) \
+          .filter(TranscriptionChunk.transcription_id == tsc.id) \
+          .order_by(TranscriptionChunk.created_at.asc()) \
+          .all()
+      
+      result_object = {
+          "transcription": jsonable_encoder(tsc),
+          "chunks": jsonable_encoder(related_tsc_chunks),
+      }
 
-        result.append(result_object)
+      result.append(result_object)
 
     return result
 
