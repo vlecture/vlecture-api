@@ -79,7 +79,28 @@ def generate_qna_set(
     user=user,
   )
 
-  response = generated_qna_set
+  created_qna_set_schema = qna_service.create_qna_set_obj(
+    question_count=question_count,
+    qna_set=generated_qna_set,
+    user=user,
+  )
 
-  return response
+  # Store to MongoDB
+  new_qna_set_document = request.app.qna_collection.insert_one(
+    created_qna_set_schema.model_dump(
+      by_alias=True,
+      # exclude=["id"],
+    )
+  )
+
+  created_qna_set_document = request.app.qna_collection.find_one({
+    "_id": new_qna_set_document.inserted_id,
+  }, {
+    # Exclude "_id" field from the returned object -- bcs already came with "id" field
+    "_id": 0,
+  })
+
+  return created_qna_set_document
+
+
 
