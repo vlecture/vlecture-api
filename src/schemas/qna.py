@@ -1,17 +1,60 @@
 from uuid import UUID
 from datetime import datetime
 
+from bson.objectid import (
+  ObjectId
+)
+
 from typing import (
+  Annotated,
   Optional,
   List,
   Any
 )
+
 from pydantic import (
   BaseModel, 
+  BeforeValidator,
   Field,
+  ConfigDict,
 )
 
-# OBJECT SCHEMAS
+from pydantic_core import core_schema
+
+class PydanticObjectId(str):
+  """
+  Pydantic-compatible MongoDB ObjectId type
+
+  Ref: https://stackoverflow.com/questions/76686888/using-bson-objectid-in-pydantic-v2
+  """
+  @classmethod
+  def __get_pydantic_core_schema__(
+    cls,
+    _source_type: Any,
+    _handler: Any,
+  ) -> core_schema.CoreSchema:
+    return core_schema.json_or_python_schema(
+      json_schema=core_schema.str_schema(),
+      python_schema=core_schema.union_schema([
+        core_schema.is_instance_schema(ObjectId),
+        core_schema.chain_schema([
+          core_schema.str_schema(),
+          core_schema.no_info_plain_validator_function(cls.validate),
+        ])
+      ]),
+      serialization=core_schema.plain_serializer_function_ser_schema(
+        lambda x: str(x)
+      ),
+    )
+  
+  @classmethod
+  def validate(cls, value) -> ObjectId:
+    if not ObjectId.is_valid(value):
+      raise ValueError("Invalid ObjectId")
+    
+    return ObjectId(value)
+
+# GENERATE QNA
 class QNAAnswerSchema(BaseModel): 
   """
   Object schema for QnA Answer
@@ -37,12 +80,12 @@ class QNAQuestionSchema(BaseModel):
   updated_at: datetime 
   is_deleted: bool = Field(default=False)
 
-  qna_set_id: UUID
+  qna_set_id: PydanticObjectId
   
   question: str
 
-  answer_options: List[QNAAnswerSchema]
-  answer_key: QNAAnswerSchema
+  answer_options: List[QNAAnswerSchema] # 4 items
+  answer_key: QNAAnswerSchema # 1
 
   question_score: float
 
@@ -53,7 +96,10 @@ class QNAQuestionSetSchema(BaseModel):
   Object schema for a Set of QnA Questions
   """
 
-  id: UUID
+  # id: Optional[PyObjectId] = Field(alias="_id", default=None)
+  id: PydanticObjectId
+  owner_id: UUID
+
   created_at: datetime
   updated_at: datetime 
   is_deleted: bool = Field(default=False)
@@ -61,13 +107,20 @@ class QNAQuestionSetSchema(BaseModel):
   question_count: int
   questions: List[QNAQuestionSchema]
 
+  model_config = ConfigDict(
+    populate_by_name=True,
+    arbitrary_types_allowed=True,
+  )
 
+# REVIEW QNA
 class QNAQuestionReviewSchema(BaseModel):
   """
   Schema for Review QnA Question object
   """
 
   id: UUID
+  qna_set_review_id: PydanticObjectId
+
   created_at: datetime
   updated_at: datetime
   is_deleted: bool = Field(default=False)
@@ -84,9 +137,10 @@ class QNASetReviewSchema(BaseModel):
   Schema for Review QnA Question object
   """
 
-  id: UUID
+  id: PydanticObjectId
   
-  # created_at here serves as the "answered at" time for a QNA Set (when the user attempts a QNA Set)
+  # created_at here serves as the "answered at" time for a QNA Set 
+  # (when the user submits a QNA Set)
   created_at: datetime
   updated_at: datetime
   is_deleted: bool = Field(default=False)
