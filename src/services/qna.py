@@ -1,4 +1,9 @@
-from typing import List
+import uuid
+from typing import List, Optional
+
+from sqlalchemy.orm import Session
+from bson.objectid import ObjectId
+
 from langchain_openai import (
   ChatOpenAI,
   OpenAIEmbeddings
@@ -17,10 +22,18 @@ from src.schemas.note import (
   NoteSchema
 )
 
+from src.schemas.qna import (
+  QNAAnswerSchema,
+  QNAQuestionSchema,
+  QNAQuestionSetSchema,
+)
+
 from src.utils.settings import (
   OPENAI_MODEL_NAME,
   OPENAI_API_KEY,
 )
+
+from src.utils.time import get_datetime_now_jkt
 
 class QNAService:
   MODEL_TEMPERATURE_QUESTION = 0.6
@@ -126,6 +139,91 @@ class QNAService:
       print("--------------------------------------------------\n\n")
 
     return result
+
+  def create_qna_set_obj(
+    self, 
+    question_count: int,
+    qna_set: dict,
+    user: User,
+  ) -> QNAQuestionSetSchema:
+    # Create QNA Set variables
+    qna_set_objectid = ObjectId()
+    datetime_now_jkt = get_datetime_now_jkt()
+    PER_QUESTION_SCORE = round(100 / question_count, 3) # Score in { 33.333 | 20.000 | 10.000 }
+
+    qna_set_questions_list: Optional[List[QNAQuestionSchema]] = []
+
+    for q_id in range(question_count):
+      qna_pair = qna_set[str(q_id)]
+
+      question: str = qna_pair["question"]
+      ans_correct: str = qna_pair["answer_correct"]
+      ans_incorrect: List[str] = qna_pair["answers_incorrect"]
+
+      # Generate question-specific constants
+      question_id = uuid.uuid4()
+
+      question_answer_key: Optional[QNAAnswerSchema] = None
+      question_answers_list: Optional[List[QNAAnswerSchema]] = []
+
+      # Create all Answer schemas for each answer option, convert ans_correct to list first
+      options_list = [ans_correct] + ans_incorrect
+      for option in options_list:
+        is_correct_answer = False
+
+        if option == ans_correct:
+          is_correct_answer = True
+
+        qna_answer_obj = QNAAnswerSchema(
+          id=uuid.uuid4(),
+          question_id=question_id,
+
+          created_at=datetime_now_jkt,
+          updated_at=datetime_now_jkt,
+          is_deleted=False,
+
+          content=option,
+          is_correct_answer=is_correct_answer,
+        )
+
+        if is_correct_answer:
+          question_answer_key = qna_answer_obj
+
+        question_answers_list.append(qna_answer_obj)
+
+      # Create Question object
+      qna_question_obj = QNAQuestionSchema(
+        id=question_id,
+        qna_set_id=qna_set_objectid,
+
+        created_at=datetime_now_jkt,
+        updated_at=datetime_now_jkt,
+        is_deleted=False,
+
+        question=question,
+        answer_options=question_answers_list,
+        answer_key=question_answer_key,
+
+        question_score=PER_QUESTION_SCORE,
+        marked_irrelevant=False,
+      )
+
+      qna_set_questions_list.append(qna_question_obj)
+
+    qna_set_obj = QNAQuestionSetSchema(
+      id=qna_set_objectid,
+      owner_id=user.id,
+
+      created_at=datetime_now_jkt,
+      updated_at=datetime_now_jkt,
+      is_deleted=False,
+
+      question_count=question_count,
+      questions=qna_set_questions_list,
+    )
+
+    return qna_set_obj
+
 
   def extract_note_sections_to_array(
     self,
