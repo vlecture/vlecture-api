@@ -1,6 +1,9 @@
 import uuid
 from typing import List, Optional
 
+from fastapi import (
+  Request,
+)
 from sqlalchemy.orm import Session
 from bson.objectid import ObjectId
 
@@ -140,8 +143,25 @@ class QNAService:
 
     return result
 
+  def fetch_qna_set_from_note(
+    self,
+    note_id: str,
+    request: Request,
+    user: User,
+  ) -> QNAQuestionSetSchema | None:
+    if user is None:
+      return None
+    
+    my_qna_set = request.app.qna_collection.find_one({
+      "note_id": note_id,
+      "owner_id": user.id,
+    })
+
+    return my_qna_set
+
   def create_qna_set_obj(
     self, 
+    note_id: str,
     question_count: int,
     qna_set: dict,
     user: User,
@@ -213,6 +233,7 @@ class QNAService:
     qna_set_obj = QNAQuestionSetSchema(
       uuid=qna_set_uuid,
       owner_id=user.id,
+      note_id=note_id,
 
       created_at=datetime_now_jkt,
       updated_at=datetime_now_jkt,

@@ -103,6 +103,7 @@ class QNAQuestionSetSchema(BaseModel):
   # Create a new field UUID to identify MongoDB objects
   uuid: UUID
   owner_id: UUID
+  note_id: str
 
   created_at: datetime
   updated_at: datetime 
@@ -144,6 +145,7 @@ class QNASetReviewSchema(BaseModel):
   id: Optional[PyObjectId] = Field(alias="_id", default=None)
 
   uuid: UUID
+  note_id: str
   
   # created_at here serves as the "answered at" time for a QNA Set 
   # (when the user submits a QNA Set)

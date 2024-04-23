@@ -82,6 +82,7 @@ def generate_qna_set(
 
   created_qna_set_schema = qna_service.create_qna_set_obj(
     question_count=question_count,
+    note_id=note_id,
     qna_set=generated_qna_set,
     user=user,
   )
@@ -103,5 +104,23 @@ def generate_qna_set(
 
   return created_qna_set_document
 
+@qna_router.get(
+  "/{note_id}",
+  response_description="Fetch a QnA Set for a specific Note",
+  status_code=http.HTTPStatus.OK,
+  response_model=QNAQuestionSetSchema,
+)
+def get_qna_set_by_note(
+    note_id: str,
+    request: Request,
+    user: User = Depends(get_current_user),
+):
+  qna_service = QNAService()
+  
+  my_qna_set = qna_service.fetch_qna_set_from_note(
+    note_id=note_id,
+    request=request,
+    user=user,
+  )
 
-
+  return my_qna_set
