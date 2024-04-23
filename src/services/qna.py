@@ -29,6 +29,10 @@ from src.schemas.qna import (
   QNAAnswerSchema,
   QNAQuestionSchema,
   QNAQuestionSetSchema,
+  QNAQuestionReviewSchema,
+  QNASetReviewSchema,
+  QNAUserAnswerPayloadSchema,
+  QNASetReviewPayloadSchema,
 )
 
 from src.utils.settings import (
@@ -423,3 +427,79 @@ class QNAService:
     )
 
     return ANS_GEN_PROMPT
+
+  def review_qna(
+      self,
+      request: Request,
+      payload: QNASetReviewPayloadSchema,
+  ):
+    review_owner_id = payload["owner_id"]
+    review_note_id = payload["note_id"]
+    review_qna_set_id = payload["qna_set_id"]
+    review_user_answers = payload["answers"]
+    review_created_at = payload["created_at"]
+
+    original_qna_set = request.app.qna_collection.find_one({
+      "uuid": review_qna_set_id,
+      "owner_id": review_owner_id,
+    })
+    original_num_of_questions = original_qna_set["question_count"]
+    original_questions = original_qna_set["questions"]
+
+    correctly_answered_q: List[QNAQuestionReviewSchema] = [] 
+    incorrectly_answered_q: List[QNAQuestionReviewSchema] = [] 
+    total_score = 0
+
+    for i, answer in enumerate(review_user_answers):
+      review_question_id = answer["question_id"]
+      review_user_answer = answer["answer_id"]
+      review_user_answer_created_at = answer["created_at"]
+
+      for question in original_questions:
+        if question["id"] != review_question_id:
+          continue
+
+        answer_key = question["answer_key"]
+        if answer_key["id"] == review_user_answer:
+          score = 100/original_num_of_questions
+          new_question_review_object = QNAQuestionReviewSchema(
+            id=uuid.uuid4(),
+            qna_set_review_uuid=review_qna_set_id,
+            created_at=review_user_answer_created_at,
+            updated_at=review_user_answer_created_at,
+            is_deleted=False,
+            question_id=review_question_id,
+            #user_answer
+            is_answered_correctly=True,
+            score_obtained=score
+          )
+          correctly_answered_q.append(new_question_review_object)
+          total_score += score
+        else:
+          new_question_review_object = QNAQuestionReviewSchema(
+            id=uuid.uuid4(),
+            qna_set_review_uuid=review_qna_set_id,
+            created_at=review_user_answer_created_at,
+            updated_at=review_user_answer_created_at,
+            is_deleted=False,
+            question_id=review_question_id,
+            #user_answer
+            is_answered_correctly=False,
+            score_obtained=0
+          )
+          incorrectly_answered_q.append(new_question_review_object)
+
+    new_qna_set_review_object = QNASetReviewSchema(
+      #id
+      uuid=uuid.uuid4(),
+      note_id=review_note_id,
+      created_at=review_created_at,
+      updated_at=review_created_at,
+      is_deleted=False,
+      qna_set_id=review_qna_set_id,
+      correctly_answered_q=correctly_answered_q,
+      incorrectly_answered_q=incorrectly_answered_q,
+      score_obtained=total_score
+    )
+
+    return new_qna_set_review_object

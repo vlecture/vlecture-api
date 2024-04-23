@@ -164,19 +164,21 @@ class QNASetReviewSchema(BaseModel):
     arbitrary_types_allowed=True,
   )
   
-class QNAUserAnswerSchema(BaseModel):
+class QNAUserAnswerPayloadSchema(BaseModel):
   id: UUID
 
   question_id: UUID
+  answer_id: UUID
   created_at: datetime
-  answer: str
 
-class QNAReviewSetSchema(BaseModel):
+class QNASetReviewPayloadSchema(BaseModel):
   id: UUID
 
+  owner_id: UUID
+  note_id: str
   qna_set_id: UUID
   created_at: datetime
-  answers: List[QNAUserAnswerSchema]
+  answers: List[QNAUserAnswerPayloadSchema]
 
 
 # REQUEST SCHEMAS

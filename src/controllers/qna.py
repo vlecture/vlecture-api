@@ -27,7 +27,7 @@ from src.schemas.qna import (
   # OBJECTS
   QNAQuestionSetSchema,
   QNASetReviewSchema,
-  QNAReviewSetSchema,
+  QNASetReviewPayloadSchema,
 
   # REQUESTS
   GenerateQNASetRequestSchema
@@ -133,7 +133,14 @@ def get_qna_set_by_note(
 )
 def review_qna(
   request: Request,
-  payload: QNAReviewSetSchema = Body(),
+  payload: QNASetReviewPayloadSchema = Body(),
   user: User = Depends(get_current_user),
 ):
   qna_service = QNAService()
+
+  review_qna_response = qna_service.review_qna(
+    request=request,
+    payload=payload
+  )
+
+  return review_qna_response
