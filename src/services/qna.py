@@ -209,7 +209,9 @@ class QNAService:
         if is_correct_answer:
           question_answer_key = qna_answer_obj
 
-        question_answers_list.append(qna_answer_obj)
+        # Truncate to 4 answers only - avoid 
+        if len(question_answers_list) <= 4:
+          question_answers_list.append(qna_answer_obj)
 
       # Create Question object
       qna_question_obj = QNAQuestionSchema(
