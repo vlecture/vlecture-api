@@ -29,16 +29,14 @@ from sqlalchemy.orm import (
   relationship,
 )
 
-UTC = timezone("UTC")
-def time_now():
-    return datetime.now(UTC)
+from utils.time import get_datetime_now_jkt
 
 class Transcription(Base):
   __tablename__ = "transcriptions"
 
   id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
-  created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
-  updated_at = Column(TIMESTAMP(timezone=True), default=time_now, onupdate=time_now, nullable=False)
+  created_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, nullable=False)
+  updated_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, onupdate=get_datetime_now_jkt, nullable=False)
   is_deleted = Column(Boolean, default=False)
 
   ## Foreign Relationships
@@ -81,8 +79,8 @@ class TranscriptionChunk(Base):
   __tablename__ = "transcription_chunks"
 
   id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
-  created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
-  updated_at = Column(TIMESTAMP(timezone=True), default=time_now, onupdate=time_now, nullable=False)
+  created_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, nullable=False)
+  updated_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, onupdate=get_datetime_now_jkt, nullable=False)
   is_deleted = Column(Boolean, default=False)
 
   # Extra fields
