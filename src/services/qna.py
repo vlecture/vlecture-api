@@ -433,17 +433,24 @@ class QNAService:
       request: Request,
       payload: QNASetReviewPayloadSchema,
   ):
-    review_qna_set_id = payload["id"]
-    review_owner_id = payload["owner_id"]
-    review_note_id = payload["note_id"]
-    review_created_at = payload["created_at"]
-    review_user_answers = payload["answers"]
+    print(" ")
+    print("PAYLOAD ", payload)
+    print(" ")
+
+    review_qna_set_id = payload.id
+    review_owner_id = payload.owner_id
+    review_note_id = payload.note_id
+    review_created_at = payload.created_at
+    review_user_answers = payload.answers
 
     original_qna_set = request.app.qna_collection.find_one({
-      "_id": review_qna_set_id,
+      "id": review_qna_set_id,
       "owner_id": review_owner_id,
     })
-    original_num_of_questions = original_qna_set["question_count"]
+    print(" ")
+    print("ORIGINAL QNA SET ", original_qna_set)
+    print(" ")
+
     original_questions = original_qna_set["questions"]
 
     correctly_answered_q: List[QNAQuestionReviewSchema] = [] 
@@ -451,10 +458,14 @@ class QNAService:
     total_score = 0
 
     for i, answer in enumerate(review_user_answers):
-      review_question_id = answer["question_id"]
-      review_user_answer = answer["answer_id"]
-      review_answer_content = answer["content"]
-      review_user_answer_created_at = answer["created_at"]
+      print(" ")
+      print("ANSWER ", answer)
+      print(" ")
+
+      review_question_id = answer.question_id
+      review_user_answer = answer.answer_id
+      review_answer_content = answer.content
+      review_user_answer_created_at = answer.created_at
 
 
       for question in original_questions:
@@ -526,5 +537,9 @@ class QNAService:
       incorrectly_answered_q=incorrectly_answered_q,
       score_obtained=total_score
     )
+
+    print(" ")
+    print("QNA SET OBJECT ", new_qna_set_review_object)
+    print(" ")
 
     return new_qna_set_review_object
