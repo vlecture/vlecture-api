@@ -148,7 +148,7 @@ def upgrade() -> None:
         sa.Column('is_active', sa.Boolean(), nullable=False),
 
         sa.Column('started_at', sa.TIMESTAMP(timezone=True), nullable=False),
-        sa.Column('ended_at', sa.TIMESTAMP(timezone=True), nullable=True),
+        sa.Column('ended_at', sa.TIMESTAMP(timezone=True), nullable=False),
     )
 
     # ### end Alembic commands ###

@@ -45,7 +45,9 @@ class Streaks(Base):
   is_active = Column(Boolean, default=True, nullable=False)
 
   started_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, nullable=False)
-  ended_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+  # Each streak update, also update ended_at to eliminate the need to create regular CRON jobs -- refer to the last updated moment instead!
+  ended_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, nullable=False)
 
 
 
