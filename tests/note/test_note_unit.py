@@ -18,12 +18,7 @@ from .utils import (
   INPUT_GENERATE_NOTE_FROM_TRANSCRIPTION,
 )
 
-generate_note_url = "/v1/notes/generate"
-get_all_notes_url = "/v1/notes/all"
-get_one_note_url = lambda note_id: f"/v1/notes/{note_id}"
-
 # Source: https://pytest-with-eric.com/introduction/python-testing-strategy/
-
 
 # Incoming Query Messages
 def test_get_openai(note_service):
