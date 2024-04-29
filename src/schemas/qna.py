@@ -132,6 +132,7 @@ class QNAQuestionReviewSchema(BaseModel):
 
   question_id: UUID
   user_answer: QNAAnswerSchema
+  answer_options: List[QNAAnswerSchema]
 
   is_answered_correctly: bool
 
@@ -165,18 +166,15 @@ class QNASetReviewSchema(BaseModel):
   )
   
 class QNAUserAnswerPayloadSchema(BaseModel):
-  id: UUID
-
   question_id: UUID
   answer_id: UUID
+  content: str
   created_at: datetime
 
 class QNASetReviewPayloadSchema(BaseModel):
-  id: UUID
-
+  id: PyObjectId
   owner_id: UUID
-  note_id: str
-  qna_set_id: UUID
+  note_id: PyObjectId
   created_at: datetime
   answers: List[QNAUserAnswerPayloadSchema]
 

@@ -433,14 +433,14 @@ class QNAService:
       request: Request,
       payload: QNASetReviewPayloadSchema,
   ):
+    review_qna_set_id = payload["id"]
     review_owner_id = payload["owner_id"]
     review_note_id = payload["note_id"]
-    review_qna_set_id = payload["qna_set_id"]
-    review_user_answers = payload["answers"]
     review_created_at = payload["created_at"]
+    review_user_answers = payload["answers"]
 
     original_qna_set = request.app.qna_collection.find_one({
-      "uuid": review_qna_set_id,
+      "_id": review_qna_set_id,
       "owner_id": review_owner_id,
     })
     original_num_of_questions = original_qna_set["question_count"]
@@ -453,7 +453,9 @@ class QNAService:
     for i, answer in enumerate(review_user_answers):
       review_question_id = answer["question_id"]
       review_user_answer = answer["answer_id"]
+      review_answer_content = answer["content"]
       review_user_answer_created_at = answer["created_at"]
+
 
       for question in original_questions:
         if question["id"] != review_question_id:
@@ -461,21 +463,17 @@ class QNAService:
 
         answer_key = question["answer_key"]
         if answer_key["id"] == review_user_answer:
-          score = 100/original_num_of_questions
-          new_question_review_object = QNAQuestionReviewSchema(
+
+          new_user_answer_object = QNAAnswerSchema(
             id=uuid.uuid4(),
-            qna_set_review_uuid=review_qna_set_id,
             created_at=review_user_answer_created_at,
             updated_at=review_user_answer_created_at,
             is_deleted=False,
             question_id=review_question_id,
-            #user_answer
-            is_answered_correctly=True,
-            score_obtained=score
+            content=review_answer_content,
+            is_correct_answer=True
           )
-          correctly_answered_q.append(new_question_review_object)
-          total_score += score
-        else:
+
           new_question_review_object = QNAQuestionReviewSchema(
             id=uuid.uuid4(),
             qna_set_review_uuid=review_qna_set_id,
@@ -483,14 +481,41 @@ class QNAService:
             updated_at=review_user_answer_created_at,
             is_deleted=False,
             question_id=review_question_id,
-            #user_answer
+            user_answer=new_user_answer_object,
+            answer_options=question["answer_options"],
+            is_answered_correctly=True,
+            score_obtained=question["question_score"]
+          )
+
+          correctly_answered_q.append(new_question_review_object)
+          total_score += question["question_score"]
+        else:
+          new_user_answer_object = QNAAnswerSchema(
+            id=uuid.uuid4(),
+            created_at=review_user_answer_created_at,
+            updated_at=review_user_answer_created_at,
+            is_deleted=False,
+            question_id=review_question_id,
+            content=review_answer_content,
+            is_correct_answer=False
+          )
+
+          new_question_review_object = QNAQuestionReviewSchema(
+            id=uuid.uuid4(),
+            qna_set_review_uuid=review_qna_set_id,
+            created_at=review_user_answer_created_at,
+            updated_at=review_user_answer_created_at,
+            is_deleted=new_user_answer_object,
+            question_id=review_question_id,
+            user_answer=None,
+            answer_options=question["answer_options"],
             is_answered_correctly=False,
             score_obtained=0
           )
+
           incorrectly_answered_q.append(new_question_review_object)
 
     new_qna_set_review_object = QNASetReviewSchema(
-      #id
       uuid=uuid.uuid4(),
       note_id=review_note_id,
       created_at=review_created_at,

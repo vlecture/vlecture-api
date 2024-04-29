@@ -127,7 +127,7 @@ def get_qna_set_by_note(
   return my_qna_set
 
 @qna_router.post(
-  "/review/{qna_set_id}",
+  "/review",
   status_code=http.HTTPStatus.CREATED,
   response_model=QNASetReviewSchema,
 )
