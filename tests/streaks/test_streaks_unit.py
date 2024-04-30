@@ -3,10 +3,6 @@ import pytest
 from datetime import timedelta
 from unittest.mock import Mock, MagicMock
 
-from src.services.qna import (
-  QNAService
-)
-
 from src.utils.time import get_datetime_now_jkt
 
 from .utils import (
@@ -18,7 +14,6 @@ from .utils import (
   streak_obj_terminate_streak_after_30h,
   new_streak_obj_after_30h,
 
-  time_creation,
   time_after_12h,
   time_after_30h,
 )
@@ -29,7 +24,7 @@ def test_determine_streak_decision_continue(streaks_service):
 
   input_value = {
     "current_time": time_now,
-    "streak_updated_at": time_now - timedelta(hours=6), # still within 24h
+    "streak_last_updated": time_now - timedelta(hours=6), # still within 24h
   }
 
   expected_response = "CONTINUE"
@@ -45,7 +40,7 @@ def test_determine_streak_decision_terminate(streaks_service):
 
   input_value = {
     "current_time": time_now,
-    "streak_updated_at": time_now - timedelta(hours=25), # outside of 24h
+    "streak_last_updated": time_now - timedelta(hours=25), # outside of 24h
   }
 
   expected_response = "TERMINATE"
