@@ -161,3 +161,19 @@ def review_qna(
   })
 
   return created_review_qna_document
+
+@qna_router.get(
+  "/review/{qna_set_id}",
+  status_code=http.HTTPStatus.OK,
+  response_model=QNASetReviewSchema,
+)
+def get_qna_review_result_by_qna_set_id(
+    qna_set_id: str,
+    request: Request,
+    user: User = Depends(get_current_user),
+):
+  qna_review_result = request.app.qna_collection.find_one({
+      "qna_set_id": qna_set_id,
+    })
+
+  return qna_review_result
