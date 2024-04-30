@@ -39,10 +39,7 @@ class AWSS3Client:
     # Upload the file
     s3_client = self.get_client()
     try:
-        response = s3_client.upload_file(file_name, bucket, object_name)
-        
-        # NOTE add logging
-        # logger.info(response)
+        s3_client.upload_file(file_name, bucket, object_name)
     except ClientError as e:
         logging.error(e)
         return False
