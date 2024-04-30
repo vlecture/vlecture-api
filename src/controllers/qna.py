@@ -160,7 +160,16 @@ def review_qna(
     # "_id": 0,
   })
 
-  return created_review_qna_document
+  if created_review_qna_document:
+    return JSONResponse(
+      status_code=http.HTTPStatus.CREATED, 
+      content={"message": "Created: QNA Review Result successfully created."}
+    )
+  else:
+    return JSONResponse(
+      status_code=http.HTTPStatus.BAD_REQUEST, 
+      content={"message": "BadRequest: Internal Server Error."}
+    )
 
 @qna_router.get(
   "/review/{qna_set_id}",
