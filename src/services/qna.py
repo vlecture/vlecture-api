@@ -545,3 +545,17 @@ class QNAService:
     print(" ")
 
     return new_qna_set_review_object
+
+  def fetch_qna_review_result_from_mongodb(
+    self, 
+    qna_set_id: str, 
+    request: Request, 
+    user: User,
+  ) -> NoteSchema:
+    qna_review_result = request.app.qna_results_collection.find_one({
+      "qna_set_id": qna_set_id,
+      "owner_id": user.id,
+      "is_deleted": False
+    })
+    
+    return qna_review_result

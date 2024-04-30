@@ -30,7 +30,7 @@ from src.schemas.qna import (
   QNASetReviewPayloadSchema,
 
   # REQUESTS
-  GenerateQNASetRequestSchema
+  GenerateQNASetRequestSchema,
 )
 
  
@@ -172,8 +172,18 @@ def get_qna_review_result_by_qna_set_id(
     request: Request,
     user: User = Depends(get_current_user),
 ):
-  qna_review_result = request.app.qna_collection.find_one({
-      "qna_set_id": qna_set_id,
-    })
+  qna_service = QNAService()
+
+  qna_review_result = qna_service.fetch_qna_review_result_from_mongodb(
+    qna_set_id=qna_set_id,
+    request=request,
+    user=user,
+  )
+
+  if not qna_review_result:
+    return JSONResponse(
+      status_code=http.HTTPStatus.NOT_FOUND, 
+      content={"message": "NotFound: QNA Review Result not found or already deleted."}
+    )
 
   return qna_review_result
