@@ -143,4 +143,21 @@ def review_qna(
     payload=payload
   )
 
-  return review_qna_response
+  # Store to MongoDB
+  new_review_qna_document = request.app.qna_results_collection.insert_one(
+    review_qna_response.model_dump(
+      by_alias=True,
+      exclude=["id"],
+    )
+  )
+
+  print("NEW QNA SET DOCUMENT ", new_review_qna_document)
+
+  created_review_qna_document = request.app.qna_results_collection.find_one({
+    "_id": new_review_qna_document.inserted_id,
+  }, {
+    # Exclude "_id" field from the returned object -- bcs already came with "id" field
+    # "_id": 0,
+  })
+
+  return created_review_qna_document
