@@ -147,6 +147,7 @@ class QNASetReviewSchema(BaseModel):
 
   uuid: UUID
   note_id: str
+  owner_id: UUID
   
   # created_at here serves as the "answered at" time for a QNA Set 
   # (when the user submits a QNA Set)

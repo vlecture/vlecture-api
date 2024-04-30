@@ -531,6 +531,7 @@ class QNAService:
     new_qna_set_review_object = QNASetReviewSchema(
       uuid=uuid.uuid4(),
       note_id=review_note_id,
+      owner_id=review_owner_id,
       created_at=review_created_at,
       updated_at=review_created_at,
       is_deleted=False,
