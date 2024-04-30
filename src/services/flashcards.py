@@ -187,7 +187,7 @@ class FlashcardService:
         ).one()
 
         if (flashcard_set.is_deleted):
-            raise Exception
+            raise Exception("Flashcard has been deleted")
         else:
             flashcard_set.update_last_completed(new_last_completed, session)
 
@@ -241,14 +241,16 @@ class FlashcardService:
             )
             .all()
         )
+
+        return flashcard
     
     def get_set_owner(self, set_id, session):
-        set = session.query(FlashcardSet).filter(
+        set_obj = session.query(FlashcardSet).filter(
             FlashcardSet.id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
 
-        return set.user_id
+        return set_obj.user_id
     
     def get_flashcard_owner(self, flashcard_id, session):
         flashcard = session.query(Flashcard).filter(
@@ -259,20 +261,20 @@ class FlashcardService:
         return self.get_set_owner(flashcard.set_id, session)
     
     def get_set_title(self, set_id, session):
-        set = session.query(FlashcardSet).filter(
+        set_obj = session.query(FlashcardSet).filter(
             FlashcardSet.id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
 
-        return set.title
+        return set_obj.title
 
     def get_set_note_id(self, set_id, session):
-        set = session.query(FlashcardSet).filter(
+        set_obj = session.query(FlashcardSet).filter(
             FlashcardSet.id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
 
-        return set.note_id
+        return set_obj.note_id
 
     # Helper Functions
     def extract_main_text(self, main):
