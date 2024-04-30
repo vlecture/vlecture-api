@@ -1,8 +1,10 @@
 from enum import Enum
 import http
 import uuid
+from uuid import UUID
+
 from datetime import datetime
-import pytz
+import json
 
 from fastapi import (
     APIRouter,
@@ -34,9 +36,10 @@ from src.schemas.base import GenericResponseModel
 from src.schemas.transcription import (
     TranscribeAudioRequestSchema,
     PollTranscriptionRequestSchema,
-    ViewTranscriptionRequestSchema,
+    ViewTranscriptionViaJobNameRequestSchema,
     TranscriptionSchema,
     TranscriptionChunksSchema,
+    ViewTranscriptionRequestSchema,
 )
 from src.services.transcription import TranscriptionService
 
@@ -127,6 +130,7 @@ async def transcribe_audio(
             title=tsc_title,
             tags=req.tags,
             duration=total_duration,
+            language=language_code,
         )
 
         store_tsc_response = await service.insert_transcription_result(
@@ -139,7 +143,6 @@ async def transcribe_audio(
         # Then, store TranscriptionChunk object to database, bcs it needs to maintain a ForeignKey
         print(f"Storing Transcription Chunks to db...")
         for chunk in transcription_chunks:
-            print(chunk)
             await service.insert_transcription_chunks(
                 session=session, transcription_chunk_data=chunk
             )
@@ -154,7 +157,7 @@ async def transcribe_audio(
         )
 
     except TimeoutError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
             content="Error: Timeout during audio transcription.",
         )
@@ -190,9 +193,52 @@ async def poll_transcription_job(req: PollTranscriptionRequestSchema):
             content="Error: Audio Transcription job failed.",
         )
 
+@transcription_router.get("/all", status_code=http.HTTPStatus.OK)
+def view_all_transcriptions(
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    service = TranscriptionService()
+
+    response = service.fetch_all_transcriptions_chunks_db(
+        session=session,
+        user=user,
+    )
+    
+    return JSONResponse(
+        status_code=http.HTTPStatus.OK,
+        content=response,
+    )
+
+@transcription_router.get("/{tsc_id}", status_code=http.HTTPStatus.OK)
+def view_a_transcription(
+    tsc_id: UUID,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    service = TranscriptionService()
+
+    response = service.fetch_one_transcriptions_chunks_db(
+        tsc_id=tsc_id,
+        session=session,
+        user=user,
+    )
+
+    full_transcript = service.convert_chunks_into_full_transcript(
+        tsc_id=tsc_id,
+        session=session,
+        user=user,
+    )
+
+    response["full_transcript"] = full_transcript
+    
+    return JSONResponse(
+        status_code=http.HTTPStatus.OK,
+        content=response,
+    )
 
 @transcription_router.post("/view", status_code=http.HTTPStatus.OK)
-async def view_transcription(req: ViewTranscriptionRequestSchema):
+async def view_transcription_from_jobname(req: ViewTranscriptionViaJobNameRequestSchema):
     transcribe_client = AWSTranscribeClient().get_client()
     job_name = req.job_name
 

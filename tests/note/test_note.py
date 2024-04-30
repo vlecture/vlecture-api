@@ -26,8 +26,8 @@ def test_generate_vlecture_note(mongo_test_db):
   note_title = "My test note"
 
   headers = {
+    'Authorization': f'Bearer {token}',
     'Content-Type': 'application/json', 
-    'Authorization': f'Bearer {token}'
   },
 
   payload = {
@@ -46,3 +46,32 @@ def test_generate_vlecture_note(mongo_test_db):
 
   assert result["title"] == note_title
   
+def test_get_all_notes(mongo_test_db):
+  # Login
+  token = login_and_token(test_db)
+
+  headers = {
+    'Authorization': f'Bearer {token}',
+  }
+  
+  response = client.get(
+    url=get_all_notes_url,
+    headers=headers,
+  )
+
+  assert response.status_code == 200 
+
+def test_get_one_note(mongo_test_db):
+  # Logim
+  token = login_and_token(test_db)
+  
+  headers = {
+    'Authorization': f'Bearer {token}',
+  }
+
+  response = client.get(
+    url=get_one_note_url,
+    headers=headers,
+  )
+
+  assert response.status_code == 200 

@@ -182,21 +182,15 @@ class FlashcardService:
             flashcard.update_latest_judged_difficulty(new_difficulty, session)
 
     def update_flashcard_set_last_completed(self, session: Session, set_id: UUID4, new_last_completed: str):
-        set = session.query(FlashcardSet).filter(
+        flashcard_set = session.query(FlashcardSet).filter(
             FlashcardSet.id == set_id,
         ).one()
 
-    def get_flashcard_by_id(self, session: Session, flashcard_id):
-      flashcard = (
-          session.query(Flashcard)
-          .filter(Flashcard.id == flashcard_id, Flashcard.is_deleted == False)
-          .all()
-      )
+        if (flashcard_set.is_deleted):
+            raise Exception("Flashcard has been deleted")
+        else:
+            flashcard_set.update_last_completed(new_last_completed, session)
 
-      if (set.is_deleted):
-          raise Exception
-      else:
-          set.update_last_completed(new_last_completed, session)
 
     def build_json_flashcard_sets(self, flashcard_sets):
         data = []
@@ -247,14 +241,16 @@ class FlashcardService:
             )
             .all()
         )
+
+        return flashcard
     
     def get_set_owner(self, set_id, session):
-        set = session.query(FlashcardSet).filter(
+        set_obj = session.query(FlashcardSet).filter(
             FlashcardSet.id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
 
-        return set.user_id
+        return set_obj.user_id
     
     def get_flashcard_owner(self, flashcard_id, session):
         flashcard = session.query(Flashcard).filter(
@@ -265,20 +261,20 @@ class FlashcardService:
         return self.get_set_owner(flashcard.set_id, session)
     
     def get_set_title(self, set_id, session):
-        set = session.query(FlashcardSet).filter(
+        set_obj = session.query(FlashcardSet).filter(
             FlashcardSet.id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
 
-        return set.title
+        return set_obj.title
 
     def get_set_note_id(self, set_id, session):
-        set = session.query(FlashcardSet).filter(
+        set_obj = session.query(FlashcardSet).filter(
             FlashcardSet.id == set_id,
             FlashcardSet.is_deleted == False
         ).one()
 
-        return set.note_id
+        return set_obj.note_id
 
     # Helper Functions
     def extract_main_text(self, main):
@@ -315,6 +311,8 @@ class FlashcardService:
                 return 1
             
     def check_recommended(self, avg_cum_difficulty, last_completed):
+        if (last_completed == None):
+            return True
         if (avg_cum_difficulty <= int(VERY_EASY_DIFF_THRESHOLD)):
             delta =  datetime.timedelta(days=7)
         elif (avg_cum_difficulty <= int(EASY_DIFF_THRESHOLD)):

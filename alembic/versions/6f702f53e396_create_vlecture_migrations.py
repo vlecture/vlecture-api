@@ -65,6 +65,9 @@ def upgrade() -> None:
         sa.Column('title', sa.String(255), nullable=False),
         sa.Column('tags', sa.ARRAY(item_type=sa.String), nullable=True),
         sa.Column('duration', sa.Float(precision=1), nullable=False),
+        sa.Column('language', sa.String(10), nullable=False),
+
+        sa.Column('language', sa.String(5), nullable=False),
 
         sa.PrimaryKeyConstraint('id', name='transcriptions_pkey'),
     )
@@ -102,7 +105,7 @@ def upgrade() -> None:
         'flashcards',
         sa.Column('id', sa.UUID(), nullable=False),
         sa.Column('set_id', sa.UUID(), nullable=False),
-        sa.Column('note_id', sa.UUID(), nullable=False),
+        sa.Column('note_id', sa.String, nullable=False),
         sa.Column('type', sa.Enum("Question", "TrueOrFalse", "Definition", name="type_enum"), nullable=False,),
         sa.Column('front', sa.String(300), nullable=False),
         sa.Column('back', sa.String(300), nullable=False),
@@ -118,9 +121,9 @@ def upgrade() -> None:
     op.create_table(
         'flashcard_sets',
         sa.Column('id', sa.UUID(), nullable=False),
-        sa.Column('note_id', sa.UUID(), nullable=False),
+        sa.Column('note_id', sa.String, nullable=False),
         sa.Column('user_id', sa.UUID(), nullable=False),
-        sa.Column('title', sa.String(255), nullable=False),
+        sa.Column('title', sa.String(255), nullable=True),
         sa.Column('date_generated', sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column('tags', sa.ARRAY(sa.String), nullable=True, unique=False), 
         sa.Column('num_of_flashcards', sa.Integer(), nullable=False),

@@ -7,7 +7,6 @@ from fastapi import (
 
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-from bson.binary import UuidRepresentation
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
@@ -16,7 +15,8 @@ from src.utils.settings import (
     SENTRY_DSN,
     MONGODB_URL,
     MONGODB_DB_NAME,
-    MONGODB_COLLECTION_NAME,
+    MONGODB_COLLECTION_NOTE,
+    MONGODB_COLLECTION_QNA,
 )
 from src.controllers import (
     transcription, 
@@ -24,7 +24,8 @@ from src.controllers import (
     upload, 
     waitlist,
     note,
-    flashcards
+    flashcards,
+    qna,
 )
 from src.utils.db import Base, engine
 
@@ -78,6 +79,7 @@ app.include_router(upload.upload_router)
 app.include_router(waitlist.waitlist_router)
 app.include_router(note.note_router)
 app.include_router(flashcards.flashcards_router)
+app.include_router(qna.qna_router)
 
 
 # Connect to MongoDB on startup
@@ -94,12 +96,13 @@ def startup_mongodb_client():
 
     try:
         client.admin.command('ping')
-        print("Pinged your deployment. Successfully connected to MongoDB!")
+        print("Successfully pinged your MongoDB deployment!")
 
         # Assign MongoDB client to FastAPI app
         app.mongodb_client = client
         app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
-        app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NAME)
+        app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NOTE)
+        app.qna_collection = app.database.get_collection(MONGODB_COLLECTION_QNA)
         
         print("Connected to MongoDB Database.")
     except Exception as e:

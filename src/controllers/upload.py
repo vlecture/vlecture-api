@@ -32,8 +32,11 @@ async def upload_file(
 ):
     user_id = user.id
     try:
-        allowed_types = ["audio/mp4", "audio/mpeg"]
+        allowed_types = ["audio/mp4", "audio/mp4a-latm", "audio/x-m4a", "audio/mpeg"]
         file_type, _ = mimetypes.guess_type(file.filename)
+
+        # NOTE delete
+        print(file_type)
         if file_type not in allowed_types:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,

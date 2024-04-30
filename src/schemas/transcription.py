@@ -25,6 +25,9 @@ class TranscriptionChunksSchema(DBBaseModel, BaseModel):
   end_time: float
 
   content: Optional[str] = ""
+
+  class Config:
+      orm_mode = True
   
 
   @field_validator("duration")
@@ -50,6 +53,10 @@ class TranscriptionSchema(DBBaseModel, BaseModel):
   title: str
   tags: Optional[Union[List[str], str]] = []
   duration: float
+  language: str
+
+  class Config:
+      orm_mode = True
 
 ### REQUEST SCHEMAS
 class TranscribeAudioRequestSchema(BaseModel):
@@ -65,8 +72,11 @@ class TranscribeAudioRequestSchema(BaseModel):
 class PollTranscriptionRequestSchema(BaseModel):
    job_name: str
 
-class ViewTranscriptionRequestSchema(BaseModel):
+class ViewTranscriptionViaJobNameRequestSchema(BaseModel):
    job_name: str
+
+class ViewTranscriptionRequestSchema(BaseModel):
+   id: UUID
 
 ### RESPONSE SCHEMAS
 class TranscriptionResponseSchema(BaseModel):

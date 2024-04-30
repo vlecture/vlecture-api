@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import requests
 
+from src.schemas.base import GenericResponseModel
 from src.utils.db import get_db
 from src.services.flashcards import FlashcardService
 from src.services.users import get_current_user
@@ -28,6 +29,9 @@ class FlashcardsRouterTags(Enum):
 flashcards_router = APIRouter(
     prefix="/v1/flashcards", tags=[FlashcardsRouterTags.flashcards]
 )
+
+TRY_LOGIN_MSG = "Try logging in to access your flashcards."
+ERROR_MSG_FLASHCARDS_404 = "You don't have access to these flashcards or flashcards don't exist."
 
 @flashcards_router.post(
     "/generate", status_code=http.HTTPStatus.OK
@@ -84,7 +88,7 @@ def view_flashcard_sets( user: User = Depends(get_current_user), session: Sessio
             status_code=http.HTTPStatus.OK,
             content=response
         )
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="Error: You don't have access to these flashcard sets or flashcard sets don't exist.",
@@ -107,7 +111,7 @@ def view_recommended_flashcard_sets( user: User = Depends(get_current_user), ses
             content=response
         )
     
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="Error: You don't have access to these flashcard sets or flashcard sets don't exist.",
@@ -123,7 +127,11 @@ def view_flashcards(set_id: str, user: User = Depends(get_current_user), session
         user_id = service.get_set_owner(set_id, session)
 
         if user.id != user_id:
-            raise Exception
+            return JSONResponse(
+                status_code=http.HTTPStatus.UNAUTHORIZED,
+                content=TRY_LOGIN_MSG,
+            )
+    
 
         response = service.get_flashcards_by_set(
             set_id=set_id,
@@ -143,10 +151,10 @@ def view_flashcards(set_id: str, user: User = Depends(get_current_user), session
             status_code=http.HTTPStatus.OK,
             content=response,
         )
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
-            content="You don't have access to these flashcards or flashcards don't exist.",
+            content=ERROR_MSG_FLASHCARDS_404,
         )
     
 @flashcards_router.post(
@@ -159,7 +167,10 @@ def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = De
         user_id = service.get_flashcard_owner(req.id, session)
 
         if user.id != user_id:
-            raise Exception
+            return JSONResponse(
+                status_code=http.HTTPStatus.UNAUTHORIZED,
+                content=TRY_LOGIN_MSG,
+            )
         
         service.update_flashcard_difficulty(
             flashcard_id=req.id,
@@ -172,7 +183,7 @@ def update_flashcard_difficulty(req: FlashcardUpdateDiffRequest, user: User = De
             content="Successfully updated flashcard difficulty.",
         )
 
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="You don't have access to this flashcard or flashcard doesn't exist.",
@@ -188,7 +199,10 @@ def update_flashcard_last_completed(req: FlashcardSetUpdateLastCompletedRequest,
         user_id = service.get_set_owner(req.id, session)
 
         if user.id != user_id:
-            raise Exception
+            return JSONResponse(
+                status_code=http.HTTPStatus.UNAUTHORIZED,
+                content=TRY_LOGIN_MSG,
+            )
         
         service.update_flashcard_set_last_completed(
             set_id=req.id,
@@ -201,10 +215,11 @@ def update_flashcard_last_completed(req: FlashcardSetUpdateLastCompletedRequest,
                 content="Successfully updated flashcard set last completed timestamp.",
             )
 
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="You don't have access to this flashcard set or flashcard set doesn't exist.",
+        )
 
 @flashcards_router.delete("/{flashcard_id}", status_code=200)
 async def delete_flashcard(flashcard_id: str, session: Session = Depends(get_db)):
@@ -212,11 +227,11 @@ async def delete_flashcard(flashcard_id: str, session: Session = Depends(get_db)
     try:
         flashcard_service.delete_flashcard(flashcard_id, session)
         return {"message": "Flashcard deleted successfully"}
-    except Exception as e:
+    except Exception:
         return GenericResponseModel(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             message="Error",
-            error="You don't have access to these flashcards or flashcards don't exist.",
+            error=ERROR_MSG_FLASHCARDS_404,
             data={},
         )
 
@@ -229,10 +244,10 @@ async def delete_flashcard_set(
     try:
         flashcard_service.delete_flashcards_by_set(flashcard_set_id, session)
         return {"message": "Flashcard set deleted successfully"}
-    except Exception as e:
+    except Exception:
         return GenericResponseModel(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             message="Error",
-            error="You don't have access to these flashcards or flashcards don't exist.",
+            error=ERROR_MSG_FLASHCARDS_404,
             data={},
         )
