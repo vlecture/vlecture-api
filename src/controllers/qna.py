@@ -172,19 +172,19 @@ def review_qna(
     )
 
 @qna_router.get(
-  "/review/{qna_set_id}",
+  "/review/{note_id}",
   status_code=http.HTTPStatus.OK,
   response_model=QNASetReviewSchema,
 )
-def get_qna_review_result_by_qna_set_id(
-    qna_set_id: str,
+def get_qna_review_result_by_note_id(
+    note_id: str,
     request: Request,
     user: User = Depends(get_current_user),
 ):
   qna_service = QNAService()
 
   qna_review_result = qna_service.fetch_qna_review_result_from_mongodb(
-    qna_set_id=qna_set_id,
+    note_id=note_id,
     request=request,
     user=user,
   )

@@ -442,7 +442,7 @@ class QNAService:
     review_user_answers = payload.answers
 
     original_qna_set = request.app.qna_collection.find_one({
-      "id": review_qna_set_id,
+      "note_id": review_note_id,
       "owner_id": review_owner_id,
     })
 
@@ -535,12 +535,12 @@ class QNAService:
 
   def fetch_qna_review_result_from_mongodb(
     self, 
-    qna_set_id: str, 
+    note_id: str, 
     request: Request, 
     user: User,
   ) -> NoteSchema:
     qna_review_result = request.app.qna_results_collection.find_one({
-      "qna_set_id": qna_set_id,
+      "note_id": note_id,
       "owner_id": user.id,
       "is_deleted": False
     })
