@@ -518,9 +518,9 @@ class QNAService:
             qna_set_review_uuid=review_qna_set_id,
             created_at=review_user_answer_created_at,
             updated_at=review_user_answer_created_at,
-            is_deleted=new_user_answer_object,
+            is_deleted=False,
             question_id=review_question_id,
-            user_answer=None,
+            user_answer=new_user_answer_object,
             answer_options=question["answer_options"],
             is_answered_correctly=False,
             score_obtained=0

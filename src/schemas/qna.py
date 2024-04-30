@@ -124,7 +124,7 @@ class QNAQuestionReviewSchema(BaseModel):
   """
 
   id: UUID
-  qna_set_review_uuid: UUID
+  qna_set_review_uuid: PyObjectId
 
   created_at: datetime
   updated_at: datetime
@@ -154,7 +154,7 @@ class QNASetReviewSchema(BaseModel):
   updated_at: datetime
   is_deleted: bool = Field(default=False)
 
-  qna_set_id: UUID
+  qna_set_id: PyObjectId
   correctly_answered_q: List[QNAQuestionReviewSchema]
   incorrectly_answered_q: List[QNAQuestionReviewSchema]
 
