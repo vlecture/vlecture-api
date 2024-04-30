@@ -1,3 +1,6 @@
+import asyncio
+import pytest
+
 from tests.utils.test_db import (
   client, 
   test_db
@@ -19,9 +22,10 @@ get_one_note_url = lambda note_id: f"/v1/notes/{note_id}"
 login_url = "/v1/auth/login"
 
 # INTEGRATION TESTS FOR NOTES SERVICE
-def test_generate_vlecture_note(mongo_test_db):
+@pytest.mark.asyncio
+async def test_generate_vlecture_note(mongo_test_db):
   # Login
-  token = login_and_token(test_db)
+  token = await login_and_token(test_db)
 
   note_title = "My test note"
 
@@ -46,9 +50,10 @@ def test_generate_vlecture_note(mongo_test_db):
 
   assert result["title"] == note_title
   
-def test_get_all_notes(mongo_test_db):
+@pytest.mark.asyncio
+async def test_get_all_notes(mongo_test_db):
   # Login
-  token = login_and_token(test_db)
+  token = await login_and_token(test_db)
 
   headers = {
     'Authorization': f'Bearer {token}',
@@ -61,9 +66,10 @@ def test_get_all_notes(mongo_test_db):
 
   assert response.status_code == 200 
 
-def test_get_one_note(mongo_test_db):
+@pytest.mark.asyncio
+async def test_get_one_note(mongo_test_db):
   # Logim
-  token = login_and_token(test_db)
+  token = await login_and_token(test_db)
   
   headers = {
     'Authorization': f'Bearer {token}',

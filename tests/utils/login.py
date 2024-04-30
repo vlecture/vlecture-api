@@ -2,6 +2,12 @@ from tests.utils.test_db import (
   client, 
   test_db
 )
+
+import asyncio
+import pytest
+
+pytest_plugins = ('pytest_asyncio',)
+
 register_url = "/v1/auth/register"
 login_url = "/v1/auth/login"
 
@@ -31,14 +37,15 @@ def register_login_and_token(test_db):
 
   return access_token
 
-def login_and_token(test_db):
-  # NOTE don't forget to check whether jere@email.com user exists in staging db
+@pytest.mark.asyncio
+async def login_and_token(test_db):
+  # NOTE don't forget to check whether jere@email.com user exists in Test/Staging DB
 
   # Login
-  login_response = client.post(
-        login_url,
-        json={"email": "jere@email.com", "password": "password"},
-    )
+  login_response = await client.post(
+      login_url,
+      json={"email": "jere@email.com", "password": "password"},
+  )
   
   print(f"login_response: {login_response}")
 

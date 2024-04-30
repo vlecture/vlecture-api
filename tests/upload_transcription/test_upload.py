@@ -6,8 +6,8 @@ upload_url = "/v1/upload"
 
 file_audio = {'file': ('test_audio.mp3', open(
     'tests/test_audio.mp3', 'rb'), 'audio/mp3')}
-file_non_audio = {'file': ('test_image.jpg', open(
-    'tests/test_image.jpg', 'rb'), 'audio/jpeg')}
+file_non_audio = {'file': ('test_image.png' , open(
+    'tests/test_image.png', 'rb'), 'audio/jpeg')}
 
 
 def test_register_user(test_db):
