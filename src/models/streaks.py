@@ -39,7 +39,7 @@ class Streaks(Base):
   
   is_deleted = Column(Boolean, default=False, nullable=False)
 
-  length_days = Column(Integer, default=0, nullable=False)
+  length_days = Column(Integer, default=1, nullable=False)
   is_active = Column(Boolean, default=True, nullable=False)
 
   # Each streak update, also update updated_at to eliminate the need to create regular CRON jobs -- refer to the last updated moment instead!
