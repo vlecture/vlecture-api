@@ -25,7 +25,4 @@ class StreaksSchema(DBBaseModel, BaseModel):
   owner_id: UUID
   length_days: int
   is_active: bool
-  
-  started_at: datetime
-  ended_at: Optional[datetime]
 
