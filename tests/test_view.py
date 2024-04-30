@@ -40,91 +40,91 @@ def view_transcription(test_db):
     return data
 
 
-# def test_positive_view(test_db):
+def test_positive_view(test_db):
 
-#     access_token = get_access_token(test_db)
+    access_token = get_access_token(test_db)
 
-#     headers = {"Authorization": f"Bearer {access_token}"}
+    headers = {"Authorization": f"Bearer {access_token}"}
 
-#     response_view = client.post(
-#         view_url,
-#         json={"job_name": "67208f3b-fec6-4dd0-b9c7-711b5159c761"},
-#         headers=headers,
-#     )
+    response_view = client.post(
+        view_url,
+        json={"job_name": "67208f3b-fec6-4dd0-b9c7-711b5159c761"},
+        headers=headers,
+    )
 
-#     # Assertions
-#     assert response_view.status_code == 200
-#     assert "data" in response_view.json()
-
-
-# def test_negative_upload(test_db):
-#     """Attempt to upload a non audio file"""
-#     access_token = get_access_token(test_db)
-
-#     headers = {"Authorization": f"Bearer {access_token}"}
-
-#     response = client.post(
-#         view_url,
-#         json={"job_name": "67208f3b-fec6-4dd0-b9c7-711b5159c761"},
-#         headers=headers,
-#     )
-
-#     assert response.status_code == 200
-#     expected_payload = {
-#         "status_code": 400,
-#         "detail": "Only job_name are allowed",
-#         "headers": None,
-#     }
-#     assert response.json() == expected_payload
+    # Assertions
+    assert response_view.status_code == 200
+    assert "data" in response_view.json()
 
 
-# def test_view_transcription_with_invalid_job_name(test_db):
+def test_negative_upload(test_db):
+    """Attempt to upload a non audio file"""
+    access_token = get_access_token(test_db)
 
-#     _, access_token = get_access_token(test_db)
-#     headers = {"Authorization": f"Bearer {access_token}"}
+    headers = {"Authorization": f"Bearer {access_token}"}
 
-#     response = client.get(
-#         view_url,
-#         headers=headers,
-#         params={"job_name": "invalid_job_name"},  # Using an invalid job_name
-#     )
+    response = client.post(
+        view_url,
+        json={"job_name": "67208f3b-fec6-4dd0-b9c7-711b5159c761"},
+        headers=headers,
+    )
 
-#     assert (
-#         response.status_code == 404
-#     )  # Assuming the endpoint returns a 404 for non-existent job names
-#     assert "error" in response.json()
-#     assert response.json()["error"] == "Transcription job not found."
-
-
-# def test_view_transcription_without_authentication(test_db):
-#     response = client.get(
-#         view_url,
-#         params={
-#             "job_name": "67208f3b-fec6-4dd0-b9c7-711b5159c761"
-#         },  # Using a valid job_name for this test
-#     )
-
-#     assert (
-#         response.status_code == 401
-#     )  # Expecting unauthorized access due to missing credentials
-#     assert "detail" in response.json()
-#     assert response.json()["detail"] == "Not authenticated"
+    assert response.status_code == 200
+    expected_payload = {
+        "status_code": 400,
+        "detail": "Only job_name are allowed",
+        "headers": None,
+    }
+    assert response.json() == expected_payload
 
 
-# def test_view_transcription_with_expired_token(test_db):
-#     _, access_token = get_access_token(
-#         test_db, expire_token=True
-#     )  # Assuming this helper can simulate an expired token
-#     headers = {"Authorization": f"Bearer {access_token}"}
+def test_view_transcription_with_invalid_job_name(test_db):
 
-#     response = client.get(
-#         view_url,
-#         headers=headers,
-#         params={"job_name": "67208f3b-fec6-4dd0-b9c7-711b5159c761"},
-#     )
+    _, access_token = get_access_token(test_db)
+    headers = {"Authorization": f"Bearer {access_token}"}
 
-#     assert (
-#         response.status_code == 403
-#     )  # Assuming the API returns 403 for expired tokens
-#     assert "detail" in response.json()
-#     assert response.json()["detail"] == "Token has expired"
+    response = client.get(
+        view_url,
+        headers=headers,
+        params={"job_name": "invalid_job_name"},  # Using an invalid job_name
+    )
+
+    assert (
+        response.status_code == 404
+    )  # Assuming the endpoint returns a 404 for non-existent job names
+    assert "error" in response.json()
+    assert response.json()["error"] == "Transcription job not found."
+
+
+def test_view_transcription_without_authentication(test_db):
+    response = client.get(
+        view_url,
+        params={
+            "job_name": "67208f3b-fec6-4dd0-b9c7-711b5159c761"
+        },  # Using a valid job_name for this test
+    )
+
+    assert (
+        response.status_code == 401
+    )  # Expecting unauthorized access due to missing credentials
+    assert "detail" in response.json()
+    assert response.json()["detail"] == "Not authenticated"
+
+
+def test_view_transcription_with_expired_token(test_db):
+    _, access_token = get_access_token(
+        test_db, expire_token=True
+    )  # Assuming this helper can simulate an expired token
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response = client.get(
+        view_url,
+        headers=headers,
+        params={"job_name": "67208f3b-fec6-4dd0-b9c7-711b5159c761"},
+    )
+
+    assert (
+        response.status_code == 403
+    )  # Assuming the API returns 403 for expired tokens
+    assert "detail" in response.json()
+    assert response.json()["detail"] == "Token has expired"

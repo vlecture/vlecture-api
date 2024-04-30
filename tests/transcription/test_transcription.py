@@ -21,167 +21,167 @@ view_transcription_url = "/v1/transcription/view"
 pytest_plugins = ('pytest_asyncio',)
 
 # Positive Case
-# @pytest.mark.anyio
-# async def test_transcription_positive(test_db):
-#   async with AsyncClient(app=app, base_url=test_server) as ac:
-#     job_name = "test-" + uuid.uuid4()
-#     payload = {
-#       "title": "My Transcription",
-#       "s3_filename": "test_audio.mp3",
-#       "job_name": job_name,
-#       "language_code": "id-ID"
-#     }
+@pytest.mark.anyio
+async def test_transcription_positive(test_db):
+  async with AsyncClient(app=app, base_url=test_server) as ac:
+    job_name = "test-" + uuid.uuid4()
+    payload = {
+      "title": "My Transcription",
+      "s3_filename": "test_audio.mp3",
+      "job_name": job_name,
+      "language_code": "id-ID"
+    }
 
-#     try:
-#       token = register_login_and_token()
+    try:
+      token = register_login_and_token()
 
-#       response = await ac.post(
-#         url=create_transcription_url,
-#         headers={
-#           'Content-Type': 'application/json', 
-#           'Authorization': f'Bearer {token}'
-#         },
-#         json=payload
-#       )
+      response = await ac.post(
+        url=create_transcription_url,
+        headers={
+          'Content-Type': 'application/json', 
+          'Authorization': f'Bearer {token}'
+        },
+        json=payload
+      )
 
-#       assert response.status_code == 201 # Created
-#     except RuntimeError:
-#       pytest.fail()
+      assert response.status_code == 201 # Created
+    except RuntimeError:
+      pytest.fail()
 
 # Negative Cases
 
 # File does not exist
-# @pytest.mark.asyncio
-# async def test_transcription_file_dne(test_db):
-#   async with AsyncClient(app=app, base_url=test_server) as ac:
-#     job_name = "test-" + uuid.uuid4()
-#     payload = {
-#         "title": "My Transcription",
-#         "s3_filename": "file-does-not-exist777777.mp3",
-#         "job_name": job_name,
-#         "language_code": "id-ID"
-#     }
+@pytest.mark.asyncio
+async def test_transcription_file_dne(test_db):
+  async with AsyncClient(app=app, base_url=test_server) as ac:
+    job_name = "test-" + uuid.uuid4()
+    payload = {
+        "title": "My Transcription",
+        "s3_filename": "file-does-not-exist777777.mp3",
+        "job_name": job_name,
+        "language_code": "id-ID"
+    }
 
-#     try:
-#       token = register_login_and_token()
+    try:
+      token = register_login_and_token()
 
-#       response = await ac.post(
-#         url=create_transcription_url,
-#         headers={
-#           'Content-Type': 'application/json', 
-#           'Authorization': f'Bearer {token}'
-#         },
-#         json=payload,
-#       )
+      response = await ac.post(
+        url=create_transcription_url,
+        headers={
+          'Content-Type': 'application/json', 
+          'Authorization': f'Bearer {token}'
+        },
+        json=payload,
+      )
 
-#       assert response.status_code == 400 # Bad Request
-#     except RuntimeError:
-#       pytest.fail()
+      assert response.status_code == 400 # Bad Request
+    except RuntimeError:
+      pytest.fail()
 
 
 # Job name already exists
-# @pytest.mark.asyncio
-# async def test_transcription_jobname_exists(test_db):
-#   async with AsyncClient(app=app, base_url=test_server) as ac:
-#     existing_job_name = "ABCDEFGHIJKLM_1"
-#     payload = {
-#       "s3_filename": "test_audio.mp3",
-#       "job_name": existing_job_name,
-#       "language_code": "id-ID"
-#     }
+@pytest.mark.asyncio
+async def test_transcription_jobname_exists(test_db):
+  async with AsyncClient(app=app, base_url=test_server) as ac:
+    existing_job_name = "ABCDEFGHIJKLM_1"
+    payload = {
+      "s3_filename": "test_audio.mp3",
+      "job_name": existing_job_name,
+      "language_code": "id-ID"
+    }
 
-#     try:
-#       token = register_login_and_token()
+    try:
+      token = register_login_and_token()
 
-#       response = await ac.post(
-#         url=create_transcription_url,
-#         headers={
-#           'Content-Type': 'application/json', 
-#           'Authorization': f'Bearer {token}'
-#         },
-#         json=payload,
-#       )
+      response = await ac.post(
+        url=create_transcription_url,
+        headers={
+          'Content-Type': 'application/json', 
+          'Authorization': f'Bearer {token}'
+        },
+        json=payload,
+      )
 
-#       assert response.status_code == 400 # Bad Request
-#     except RuntimeError:
-#       pytest.fail()
+      assert response.status_code == 400 # Bad Request
+    except RuntimeError:
+      pytest.fail()
 
-# @pytest.mark.anyio
-# async def test_create_transcription_without_login(test_db):
-#     async with AsyncClient(app=app, base_url=test_server) as ac:
-#       job_name = "test-" + uuid.uuid4()
-#       payload = {
-#         "s3_filename": "test_audio.mp3",
-#         "job_name": job_name,
-#         "language_code": "id-ID"
-#       }
+@pytest.mark.anyio
+async def test_create_transcription_without_login(test_db):
+    async with AsyncClient(app=app, base_url=test_server) as ac:
+      job_name = "test-" + uuid.uuid4()
+      payload = {
+        "s3_filename": "test_audio.mp3",
+        "job_name": job_name,
+        "language_code": "id-ID"
+      }
 
-#       response = await ac.post(
-#         url=create_transcription_url,
-#         json=payload,
-#       )
+      response = await ac.post(
+        url=create_transcription_url,
+        json=payload,
+      )
 
-#       assert response.status_code == 401 # Unauthorized
+      assert response.status_code == 401 # Unauthorized
 
-# @pytest.mark.anyio
-# async def test_view_transcription_success(test_db):
-#     async with AsyncClient(app=app, base_url=test_server) as ac:
-#       job_name = "test-" + uuid.uuid4()
-#       payload = {
-#         "title": "My Transcription",
-#         "s3_filename": "test_audio.mp3",
-#         "job_name": job_name,
-#         "language_code": "id-ID"
-#       }
+@pytest.mark.anyio
+async def test_view_transcription_success(test_db):
+    async with AsyncClient(app=app, base_url=test_server) as ac:
+      job_name = "test-" + uuid.uuid4()
+      payload = {
+        "title": "My Transcription",
+        "s3_filename": "test_audio.mp3",
+        "job_name": job_name,
+        "language_code": "id-ID"
+      }
 
-#       try:
-#         token = register_login_and_token()
+      try:
+        token = register_login_and_token()
 
-#         response = await ac.post(
-#           url=create_transcription_url,
-#           headers={
-#             'Content-Type': 'application/json', 
-#             'Authorization': f'Bearer {token}'
-#           },
-#           json=payload
-#         )
+        response = await ac.post(
+          url=create_transcription_url,
+          headers={
+            'Content-Type': 'application/json', 
+            'Authorization': f'Bearer {token}'
+          },
+          json=payload
+        )
 
-#         view_tsc_payload = {
-#           "job_name": job_name
-#         }
+        view_tsc_payload = {
+          "job_name": job_name
+        }
 
-#         view_response = await ac.post(
-#           url=view_transcription_url,
-#           json=view_tsc_payload
-#         )
+        view_response = await ac.post(
+          url=view_transcription_url,
+          json=view_tsc_payload
+        )
 
-#         assert view_response.status_code == 200 # OK
-#       except RuntimeError:
-#         pytest.fail()
+        assert view_response.status_code == 200 # OK
+      except RuntimeError:
+        pytest.fail()
 
-# @pytest.mark.anyio
-# async def test_view_transcription_dne(test_db):
-#     async with AsyncClient(app=app, base_url=test_server) as ac:
-#       job_name = "test-" + uuid.uuid4()
-#       payload = {
-#         "title": "My Transcription",
-#         "s3_filename": "test_audio_not_exists2394828.mp3",
-#         "job_name": job_name,
-#         "language_code": "id-ID"
-#       }
+@pytest.mark.anyio
+async def test_view_transcription_dne(test_db):
+    async with AsyncClient(app=app, base_url=test_server) as ac:
+      job_name = "test-" + uuid.uuid4()
+      payload = {
+        "title": "My Transcription",
+        "s3_filename": "test_audio_not_exists2394828.mp3",
+        "job_name": job_name,
+        "language_code": "id-ID"
+      }
 
-#       try:
-#         token = register_login_and_token()
+      try:
+        token = register_login_and_token()
 
-#         view_tsc_payload = {
-#           "job_name": job_name
-#         }
+        view_tsc_payload = {
+          "job_name": job_name
+        }
 
-#         view_response = await ac.post(
-#           url=view_transcription_url,
-#           json=view_tsc_payload
-#         )
+        view_response = await ac.post(
+          url=view_transcription_url,
+          json=view_tsc_payload
+        )
 
-#         assert view_response.status_code == 400 # BAD REQUEST
-#       except RuntimeError:
-#         pytest.fail()
+        assert view_response.status_code == 400 # BAD REQUEST
+      except RuntimeError:
+        pytest.fail()

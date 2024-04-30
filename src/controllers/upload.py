@@ -2,6 +2,7 @@ from enum import Enum
 import mimetypes
 import boto3
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 from src.models.users import User
 from src.services.users import get_current_user
 from src.services.upload import UploadService, sha
@@ -35,7 +36,8 @@ async def upload_file(
 ):
     user_id = user.id
     try:
-        allowed_types = ["audio/mp4", "audio/mp4a-latm", "audio/x-m4a", "audio/mpeg"]
+        allowed_types = ["audio/mp4", "audio/mp4a-latm",
+                         "audio/x-m4a", "audio/mpeg"]
         file_type, _ = mimetypes.guess_type(file.filename)
 
         # NOTE delete
@@ -62,7 +64,7 @@ async def upload_file(
 
 @upload_router.delete("/delete/{filename}")
 async def delete_audio(filename: str, user: User = Depends(get_current_user)):
-    service =  UploadService(AWS_BUCKET_NAME)
+    service = UploadService(AWS_BUCKET_NAME)
     if not service.check_user_ownership(filename, str(user.id)):
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
@@ -82,4 +84,5 @@ async def delete_audio(filename: str, user: User = Depends(get_current_user)):
             detail=str(e)
         )
 
-    return {"status_code": 200, "message": "Successfully deleted the audio file"}
+    return JSONResponse(status_code=HTTP_200_OK, content="Successfully deleted the audio file")
+
