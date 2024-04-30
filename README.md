@@ -19,9 +19,11 @@
 4. Run the app using `make dev` or `.\build.bat`
 
 ### Running Docker container
+
 1. Build Docker image: `docker build -t vlecture-api .`
 2. Run image on container port 8080: `docker run -p 8080:8080 vlecture-api`
 
 ### Running Tests in Standardized Virtual Environments using tox
+
 1. Swap the environment variable into `test` environment (`bash scripts/swap-env.sh test`)
 2. Run `tox` and you'll see that `pytest` will automatically collect and run all your tests!
