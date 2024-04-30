@@ -230,7 +230,6 @@ class TranscriptionService:
     aws_link = requests.get(response)
     return aws_link.json()
   
-  # TODO main method
   def convert_chunks_into_full_transcript(
     self, 
     tsc_id: UUID,
@@ -243,7 +242,6 @@ class TranscriptionService:
       user=user,
     )
 
-    # NOTE DELETE - unused
     chunks = transcription_data["chunks"]
 
     temp_transcripts = []
@@ -251,14 +249,12 @@ class TranscriptionService:
     for i in range(len(chunks)):
       transcript_text = chunks[i]["content"]
       temp_transcripts.append(transcript_text)
-    else:
-      print("No transcripts found in the response")
 
     full_transcript = " ".join(temp_transcripts)
 
     return full_transcript
 
-  # TODO remove since we have by id 
+  # NOTE can be replaced, since we have API which fetches by id 
   async def retrieve_formatted_transcription_from_job_name(
     self, 
     transcribe_client, 
@@ -271,7 +267,7 @@ class TranscriptionService:
     job_name = transcription_data.get("jobName")
 
     # NOTE DELETE - unused
-    accountId = transcription_data.get("accountId")
+    account_id = transcription_data.get("accountId")
     status = transcription_data.get("status")
     transcripts = transcription_data.get("results", {}).get("transcripts", [])
 
@@ -292,7 +288,7 @@ class TranscriptionService:
 
     response = {
         "jobName": job_name,
-        "accountId": accountId,
+        "accountId": account_id,
         "status": status,
         "results": {"transcripts": full_transcript, "items": grouped_items},
     }
@@ -302,7 +298,7 @@ class TranscriptionService:
   def generate_grouped_items_and_format_chunks(
     self,
     items: Union[List[TranscriptionChunkItemSchema], None],
-  ):
+  ) -> List[ServiceRetrieveTranscriptionChunkItemSchema]:
     grouped_items = []
     temp_group = []
 
@@ -319,13 +315,14 @@ class TranscriptionService:
           end_time = temp_group[-1].get("end_time")
           duration = float(end_time) - float(start_time)
 
-          tsc_chunk_formatted: ServiceRetrieveTranscriptionChunkItemSchema = {
-              "content": str(contents),
-              "start_time": str(start_time),
-              "end_time": str(end_time),
-              "duration": "{:.2f}".format(duration),
-          }
-
+          tsc_chunk_formatted: ServiceRetrieveTranscriptionChunkItemSchema = \
+            ServiceRetrieveTranscriptionChunkItemSchema(
+              content=str(contents),
+              start_time=str(start_time),
+              end_time=str(end_time),
+              duration="{:.2f}".format(duration),
+            )
+          
           grouped_items.append(tsc_chunk_formatted)
 
           temp_group = []
@@ -375,10 +372,8 @@ class TranscriptionService:
     return response
 
   async def delete_transcription_job(self, transcribe_client, job_name: str):
-    try:
-      response = transcribe_client.delete_transcription_job(
-          TranscriptionJobName=job_name
-      )
-      return response
-    except ClientError as e:
-      raise e
+    response = transcribe_client.delete_transcription_job(
+        TranscriptionJobName=job_name,
+    )
+    
+    return response

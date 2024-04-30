@@ -50,8 +50,7 @@ class QNAService:
     self, 
     note: NoteSchema,
     question_count: int,
-    user: User,
-  ):
+  ) -> dict:
     # PREPARE LANGUAGE MODELS
     LLM_QUESTION_GEN = ChatOpenAI(
       temperature=self.MODEL_TEMPERATURE_QUESTION, 

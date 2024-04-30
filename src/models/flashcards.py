@@ -101,8 +101,6 @@ class FlashcardSet(Base):
         ),
     )
 
-    # flashcards = relationship("Flashcard", back_populates="flashcard_set")
-
     def update_is_deleted(self, is_deleted, session: Session):
         self.is_deleted = is_deleted
         session.commit()

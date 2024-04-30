@@ -59,10 +59,6 @@ class Transcription(Base):
   # Current use case: "id" | "en", future use case: "id-ID" | ...
   language = Column(String(10), nullable=False)
 
-  def __to_model(self) -> TranscriptionSchema:
-    """ Converts DB ORM object to Pydantic Model ('schema') """
-    return TranscriptionSchema.model_validate(self)
-  
   @classmethod
   def get_by_id(cls, uuid: UUID) -> TranscriptionSchema:
     base = super().get_by_id(uuid)
@@ -110,10 +106,6 @@ class TranscriptionChunk(Base):
     content: {self.content}
     """
 
-  def __to_model(self) -> TranscriptionChunksSchema:
-    """ Converts DB ORM object to Pydantic Model ('schema') """
-    return TranscriptionChunksSchema.model_validate(self)
-  
   @classmethod
   def get_by_id(cls, uuid: UUID) -> TranscriptionChunksSchema:
     base = super().get_by_id(uuid)
