@@ -56,10 +56,9 @@ class Transcription(Base):
 
   duration = Column(Float(precision=1), default=0, nullable=False)
 
-  def __to_model(self) -> TranscriptionSchema:
-    """ Converts DB ORM object to Pydantic Model ('schema') """
-    return TranscriptionSchema.model_validate(self)
-  
+  # Current use case: "id" | "en", future use case: "id-ID" | ...
+  language = Column(String(10), nullable=False)
+
   @classmethod
   def get_by_id(cls, uuid: UUID) -> TranscriptionSchema:
     base = super().get_by_id(uuid)
@@ -97,7 +96,7 @@ class TranscriptionChunk(Base):
   start_time = Column(Float(precision=1), nullable=False)
   end_time = Column(Float(precision=1), nullable=False)
 
-  content = Column(String(255), nullable=True)
+  content = Column(String(255), nullable=False)
 
   def __str__(self):
     return f"""
@@ -107,10 +106,6 @@ class TranscriptionChunk(Base):
     content: {self.content}
     """
 
-  def __to_model(self) -> TranscriptionChunksSchema:
-    """ Converts DB ORM object to Pydantic Model ('schema') """
-    return TranscriptionChunksSchema.model_validate(self)
-  
   @classmethod
   def get_by_id(cls, uuid: UUID) -> TranscriptionChunksSchema:
     base = super().get_by_id(uuid)

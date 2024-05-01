@@ -99,7 +99,7 @@ async def send_verif_email(
             status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
             content="Error: Invalid value when sending email.",
         )
-    except Exception as err:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
             content="Error: Unknown problem while sending email.",

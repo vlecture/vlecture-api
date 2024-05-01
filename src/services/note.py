@@ -2,6 +2,10 @@ from openai import (
   OpenAI
 )
 
+from fastapi import (
+  Request,
+)
+
 import re
 import uuid
 from uuid import UUID
@@ -16,6 +20,9 @@ from bson import ObjectId
 from sqlalchemy.orm import Session
 from typing import List, Union
 from botocore.exceptions import ClientError
+
+
+from src.models.users import User
 
 from src.schemas.note import (
   # OBJ SCHEMA
@@ -46,17 +53,32 @@ class NoteService:
   def __init__(self) -> None:
     # Init OpenAI Client
     self.openai_client = OpenAI(
-      api_key=OPENAI_API_KEY,
-      organization=OPENAI_ORG_ID,
-    ) 
+    api_key=OPENAI_API_KEY,
+    organization=OPENAI_ORG_ID,
+  ) 
 
   def get_openai(self):
     return self.openai_client
   
+  def fetch_note_from_mongodb(
+    self, 
+    note_id: str, 
+    request: Request, 
+    user: User,
+  ) -> NoteSchema:
+    note_id = ObjectId(note_id)
+    my_note = request.app.note_collection.find_one({
+      "_id": note_id,
+      "owner_id": user.id,
+      "is_deleted": False
+    })
+    
+    return my_note
+  
   def convert_text_into_cornell_json(
-      self, 
-      transcript: str,
-      language: str,
+    self, 
+    transcript: str,
+    language: str,
   ) -> LLMCornellNoteFromTranscript:
     client = self.get_openai()
 
@@ -70,8 +92,8 @@ class NoteService:
       temperature=self.MODEL_TEMPERATURE,
       messages=[
         {
-          "role": "system",
-          "content": SYSTEM_PROMPT,
+        "role": "system",
+        "content": SYSTEM_PROMPT,
         }
       ]
     )
@@ -80,7 +102,7 @@ class NoteService:
     llm_answer: LLMCornellNoteFromTranscript = json.loads(llm_answer)
 
     return llm_answer
-  
+
   def create_paragraph_block_from_text(self, text: str) -> NoteBlockSchema:
     return NoteBlockSchema(
       id=uuid.uuid4(),
@@ -92,24 +114,24 @@ class NoteService:
       },
       content=[
         {
-          "type": "text",
-          "text": f"{text}",
-          "styles": {}
+        "type": "text",
+        "text": f"{text}",
+        "styles": {}
         }
       ],
       children=[]
     )
-  
+
   def create_note_block_object(
-      self, 
-      owner_id: UUID,
-      title: str,
-      subtitle: str,
-      main: List[NoteBlockSchema],
-      cues: List[NoteBlockSchema],
-      summary: List[NoteBlockSchema],
-      language: str,
-      main_word_count: int,
+    self, 
+    owner_id: UUID,
+    title: str,
+    subtitle: str,
+    main: List[NoteBlockSchema],
+    cues: List[NoteBlockSchema],
+    summary: List[NoteBlockSchema],
+    language: str,
+    main_word_count: int,
   ) -> NoteSchema:
     datetime_now_jkt = get_datetime_now_jkt()
 
@@ -130,10 +152,10 @@ class NoteService:
     )
 
     return new_note_object
-  
+
   def format_cornell_section_into_blocknote_array(
-      self, 
-      payload: List[str]
+    self, 
+    payload: List[str]
   ) -> List[NoteBlockSchema]:
     blocknote_json: List[NoteBlockSchema] = []
 
@@ -141,22 +163,22 @@ class NoteService:
     for text_chunk in payload:
       blocknote_chunk_json = self.create_paragraph_block_from_text(text=str(text_chunk))
 
-      blocknote_json.append(blocknote_chunk_json)
+    blocknote_json.append(blocknote_chunk_json)
 
     return blocknote_json
-  
+
   def get_word_count_str_array(self, str_list: List[str]) -> int:
     total_word = 0
 
     for sentence in str_list:
       sentence_word = len(re.findall(r"\w+", sentence))
       total_word += sentence_word
-    
-    return total_word
   
+    return total_word
+
   def generate_note_from_transcription(
-      self, 
-      payload: GenerateNoteServiceRequestSchema
+    self, 
+    payload: GenerateNoteServiceRequestSchema
   ) -> NoteSchema:
     transcript = payload.transcript
     title = payload.title
@@ -165,8 +187,8 @@ class NoteService:
     language = payload.language
 
     note_json = self.convert_text_into_cornell_json(
-      transcript=transcript,
-      language=language,
+    transcript=transcript,
+    language=language,
     )
 
     # Calculate word length for main section
@@ -192,19 +214,46 @@ class NoteService:
 
     return new_note_object
     
-  def is_valid_note(note_id: str, user_id: str, note_collection) -> bool:
+  def is_valid_note(self, note_id: str, user_id: str, note_collection) -> bool:
     note_id = ObjectId(note_id)
     existing_note = note_collection.find_one({
-        "_id": note_id,
-        "owner_id": user_id,
-        "is_deleted": False
+      "_id": note_id,
+      "owner_id": user_id,
+      "is_deleted": False
     })
     return existing_note is not None
 
-  def delete_note(note_id: str, note_collection) -> bool:
-      result = note_collection.update_one(
-          {"_id": ObjectId(note_id)},
-          {"$set": {"is_deleted": True}}
-      )
-      return result.modified_count > 0
+  def delete_note(
+    self, 
+    note_id: str, 
+    request: Request,
+    user: User,
+  ) -> NoteSchema | str:
+    note_item = self.fetch_note_from_mongodb(
+      note_id=note_id,
+      request=request,
+      user=user,
+    )
+
+    # Return None if failure
+    if not note_item:
+      return "NotFound: Note item not found"
     
+    result = request.app.note_collection.update_one(
+      {
+        "_id": ObjectId(note_id), 
+        # Users can only delete their own Notes
+        "owner_id": user.id,
+      },
+      {
+        "$set": {"is_deleted": True}
+      }
+    )
+
+    # Return None if failure
+    if result.modified_count == 0:
+      return "OperationalFailure: Error when deleting Notes from database"
+    
+    # Return the deleted item
+    return note_item
+  

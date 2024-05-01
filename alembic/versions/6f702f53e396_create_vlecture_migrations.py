@@ -65,6 +65,9 @@ def upgrade() -> None:
         sa.Column('title', sa.String(255), nullable=False),
         sa.Column('tags', sa.ARRAY(item_type=sa.String), nullable=True),
         sa.Column('duration', sa.Float(precision=1), nullable=False),
+        sa.Column('language', sa.String(10), nullable=False),
+
+        sa.Column('language', sa.String(5), nullable=False),
 
         sa.PrimaryKeyConstraint('id', name='transcriptions_pkey'),
     )

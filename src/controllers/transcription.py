@@ -130,6 +130,7 @@ async def transcribe_audio(
             title=tsc_title,
             tags=req.tags,
             duration=total_duration,
+            language=language_code,
         )
 
         store_tsc_response = await service.insert_transcription_result(
@@ -156,7 +157,7 @@ async def transcribe_audio(
         )
 
     except TimeoutError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
             content="Error: Timeout during audio transcription.",
         )
