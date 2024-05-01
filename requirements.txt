@@ -55,7 +55,6 @@ httpx==0.26.0
 huggingface-hub==0.22.2
 humanfriendly==10.0
 idna==3.6
-importlib-metadata==7.0.0
 importlib_resources==6.4.0
 importlib_metadata==7.1.0
 iniconfig==2.0.0
