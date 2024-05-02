@@ -39,7 +39,7 @@ class StreaksRouterTags(Enum):
 
 streaks_router = APIRouter(
   prefix="/v1/streaks",
-  tags=[StreaksRouterTags],
+  tags=[StreaksRouterTags.streaks],
 )
 
 @streaks_router.post(
