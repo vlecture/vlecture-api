@@ -448,8 +448,7 @@ class QNAService:
 
     original_questions = original_qna_set["questions"]
 
-    correctly_answered_q: List[QNAQuestionReviewSchema] = [] 
-    incorrectly_answered_q: List[QNAQuestionReviewSchema] = [] 
+    answered_q: List[QNAQuestionReviewSchema] = [] 
     total_score = 0
 
     for i, answer in enumerate(review_user_answers):
@@ -490,7 +489,7 @@ class QNAService:
             score_obtained=question["question_score"]
           )
 
-          correctly_answered_q.append(new_question_review_object)
+          answered_q.append(new_question_review_object)
           total_score += question["question_score"]
         else:
           new_user_answer_object = QNAAnswerSchema(
@@ -516,7 +515,7 @@ class QNAService:
             score_obtained=0
           )
 
-          incorrectly_answered_q.append(new_question_review_object)
+          answered_q.append(new_question_review_object)
 
     new_qna_set_review_object = QNASetReviewSchema(
       uuid=uuid.uuid4(),
@@ -526,8 +525,7 @@ class QNAService:
       updated_at=review_created_at,
       is_deleted=False,
       qna_set_id=review_qna_set_id,
-      correctly_answered_q=correctly_answered_q,
-      incorrectly_answered_q=incorrectly_answered_q,
+      answered_q=answered_q,
       score_obtained=total_score
     )
 
