@@ -1,4 +1,9 @@
+OWNER_ID = "af81b095-20ca-453a-8caf-d6448359443a"
 NOTE_ID = "66214575dee0152b709ba24d"
+QNA_SET_ID = "33346a57-333e-4503-b11b-54626613e176"
+
+QUESTION_ID = "02f69793-23d0-4f4d-be91-9b2eea406929"
+CORRECT_ANSWER_ID = "ef92e9b2-3550-4ce2-b53d-08c0229fa4c8"
 
 NOTE_MAIN_DATA_ARRAY = [
   "The UK Human Fertilisation and Embryology Authority approved a proposal for gene editing on human embryos at the Francis Crick Institute in London.",

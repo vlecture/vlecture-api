@@ -2,6 +2,7 @@ from enum import Enum
 import http
 from datetime import datetime
 import pytz
+from uuid import UUID
 
 from fastapi import (
     APIRouter,
@@ -24,12 +25,12 @@ from src.models.users import User
 
 from src.schemas.qna import (
   # OBJECTS
-  QNAAnswerSchema,
-  QNAQuestionSchema,
   QNAQuestionSetSchema,
+  QNASetReviewSchema,
+  QNASetReviewPayloadSchema,
 
   # REQUESTS
-  GenerateQNASetRequestSchema
+  GenerateQNASetRequestSchema,
 )
 
  
@@ -124,3 +125,74 @@ def get_qna_set_by_note(
   )
 
   return my_qna_set
+
+@qna_router.post(
+  "/review",
+  status_code=http.HTTPStatus.CREATED,
+  response_model=QNASetReviewSchema,
+)
+def review_qna(
+  request: Request,
+  payload: QNASetReviewPayloadSchema = Body(),
+  user: User = Depends(get_current_user),
+):
+  qna_service = QNAService()
+
+  review_qna_response = qna_service.review_qna(
+    request=request,
+    payload=payload
+  )
+
+  # Store to MongoDB
+  new_review_qna_document = request.app.qna_results_collection.insert_one(
+    review_qna_response.model_dump(
+      by_alias=True,
+      exclude=["id"],
+    )
+  )
+
+  print("NEW QNA SET DOCUMENT ", new_review_qna_document)
+
+  created_review_qna_document = request.app.qna_results_collection.find_one({
+    "_id": new_review_qna_document.inserted_id,
+  }, {
+    # Exclude "_id" field from the returned object -- bcs already came with "id" field
+    # "_id": 0,
+  })
+
+  if created_review_qna_document:
+    return JSONResponse(
+      status_code=http.HTTPStatus.CREATED, 
+      content={"message": "Created: QNA Review Result successfully created."}
+    )
+  else:
+    return JSONResponse(
+      status_code=http.HTTPStatus.BAD_REQUEST, 
+      content={"message": "BadRequest: Internal Server Error."}
+    )
+
+@qna_router.get(
+  "/review/{note_id}",
+  status_code=http.HTTPStatus.OK,
+  response_model=QNASetReviewSchema,
+)
+def get_qna_review_result_by_note_id(
+    note_id: str,
+    request: Request,
+    user: User = Depends(get_current_user),
+):
+  qna_service = QNAService()
+
+  qna_review_result = qna_service.fetch_qna_review_result_from_mongodb(
+    note_id=note_id,
+    request=request,
+    user=user,
+  )
+
+  if not qna_review_result:
+    return JSONResponse(
+      status_code=http.HTTPStatus.NOT_FOUND, 
+      content={"message": "NotFound: QNA Review Result not found or already deleted."}
+    )
+
+  return qna_review_result
