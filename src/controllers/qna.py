@@ -143,6 +143,25 @@ def review_qna(
     payload=payload
   )
 
+  qna_review_result = request.app.qna_results_collection.find_one({
+      "note_id": payload.note_id,
+      "owner_id": user.id,
+      "is_deleted": False
+    })
+
+  if qna_review_result:
+    qna_review_result.is_deleted = True
+    updated_qna_review_result = request.app.qna_results_collection.find_one_and_update(
+      {
+        "note_id": payload.note_id,
+        "owner_id": user.id,
+        "is_deleted": False
+      },
+      {
+        "$set": qna_review_result
+      }
+    )
+
   # Store to MongoDB
   new_review_qna_document = request.app.qna_results_collection.insert_one(
     review_qna_response.model_dump(

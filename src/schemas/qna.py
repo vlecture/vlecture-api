@@ -130,6 +130,7 @@ class QNAQuestionReviewSchema(BaseModel):
   updated_at: datetime
   is_deleted: bool = Field(default=False)
 
+  question: str
   question_id: UUID
   user_answer: QNAAnswerSchema
   answer_options: List[QNAAnswerSchema]
