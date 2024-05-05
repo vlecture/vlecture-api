@@ -156,8 +156,7 @@ class QNASetReviewSchema(BaseModel):
   is_deleted: bool = Field(default=False)
 
   qna_set_id: PyObjectId
-  correctly_answered_q: List[QNAQuestionReviewSchema]
-  incorrectly_answered_q: List[QNAQuestionReviewSchema]
+  answered_q: List[QNAQuestionReviewSchema]
 
   score_obtained: float
 
