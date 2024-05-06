@@ -1,8 +1,8 @@
 
 # Select base image - Python 3.10
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim
 
-# Set working directory to `app`
+# Set working directory to app
 WORKDIR /app
 
 # Copy requirements into working directory
@@ -11,7 +11,8 @@ COPY requirements.txt .
 # Install psycopg2 and required libs before installing the requirements
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
-    && pip install psycopg2
+    && pip install psycopg2 \
+    && apt-get install build-essential -y
 
 
 # Install dependencies from .txt file

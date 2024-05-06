@@ -8,11 +8,26 @@ ENV_TYPE = os.getenv("ENV")
 print(f"ENV: {ENV_TYPE}")
 
 # POSTGRES
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT")
-POSTGRES_DB = os.getenv("POSTGRES_DB")
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+try:
+    host = os.getenv("POSTGRES_HOST")
+    port = os.getenv("POSTGRES_PORT")
+    db_name = os.getenv("POSTGRES_DB")
+    username = os.getenv("POSTGRES_USER")
+    password = os.getenv("POSTGRES_PASSWORD")
+
+    # Database url configuration
+    DATABASE_URL = (
+        "postgresql+psycopg2://{username}:{password}@{host}:{port}/{db_name}".format(
+            host=host,
+            port=port,
+            db_name=db_name,
+            username=username,
+            password=password,
+        )
+    )
+
+except Exception:
+    raise ValueError("Database config values are missing or incorrect.")
 
 # TESTDB
 TESTDB_URL = os.getenv("TESTDB_URL")
@@ -23,6 +38,7 @@ MONGODB_URL = os.getenv("MONGODB_URL")
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME")
 MONGODB_COLLECTION_NOTE = os.getenv("MONGODB_COLLECTION_NOTE")
 MONGODB_COLLECTION_QNA = os.getenv("MONGODB_COLLECTION_QNA")
+MONGODB_COLLECTION_QNA_RESULTS = os.getenv("MONGODB_COLLECTION_QNA_RESULTS")
 
 MONGODB_URL_RW = os.getenv("MONGODB_URL_RW")
 MONGODB_URL_MAJORITY = os.getenv("MONGODB_URL_MAJORITY")

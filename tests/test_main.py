@@ -6,18 +6,18 @@ def test_read_root():
     assert response.status_code == 200
 
 
-# def test_delete_transcription_positive():
-#     transcription_id = "valid_transcription_id"
-#     response = client.delete(f"/transcriptions/{transcription_id}")
-#     assert response.status_code == 200
-#     assert response.json() == {"message": "Transcription deleted successfully"}
+def test_delete_transcription_positive():
+    transcription_id = "valid_transcription_id"
+    response = client.delete(f"/transcriptions/{transcription_id}")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Transcription deleted successfully"}
 
 
-# def test_delete_transcription_invalid_id():
-#     invalid_transcription_id = "invalid_transcription_id"
-#     response = client.delete(f"/transcriptions/{invalid_transcription_id}")
-#     assert response.status_code == 404
-#     assert response.json() == {"detail": "Transcription not found"}
+def test_delete_transcription_invalid_id():
+    invalid_transcription_id = "invalid_transcription_id"
+    response = client.delete(f"/transcriptions/{invalid_transcription_id}")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Transcription not found"}
 
 
 def test_delete_transcription_missing_id():

@@ -17,6 +17,7 @@ from src.utils.settings import (
     MONGODB_DB_NAME,
     MONGODB_COLLECTION_NOTE,
     MONGODB_COLLECTION_QNA,
+    MONGODB_COLLECTION_QNA_RESULTS,
 )
 from src.controllers import (
     transcription, 
@@ -103,6 +104,7 @@ def startup_mongodb_client():
         app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
         app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NOTE)
         app.qna_collection = app.database.get_collection(MONGODB_COLLECTION_QNA)
+        app.qna_results_collection = app.database.get_collection(MONGODB_COLLECTION_QNA_RESULTS)
         
         print("Connected to MongoDB Database.")
     except Exception as e:

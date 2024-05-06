@@ -29,6 +29,10 @@ from src.schemas.qna import (
   QNAAnswerSchema,
   QNAQuestionSchema,
   QNAQuestionSetSchema,
+  QNAQuestionReviewSchema,
+  QNASetReviewSchema,
+  QNAUserAnswerPayloadSchema,
+  QNASetReviewPayloadSchema,
 )
 
 from src.utils.settings import (
@@ -424,3 +428,121 @@ class QNAService:
     )
 
     return ANS_GEN_PROMPT
+
+  def review_qna(
+      self,
+      request: Request,
+      payload: QNASetReviewPayloadSchema,
+  ):
+
+    review_qna_set_id = payload.id
+    review_owner_id = payload.owner_id
+    review_note_id = payload.note_id
+    review_created_at = payload.created_at
+    review_user_answers = payload.answers
+
+    original_qna_set = request.app.qna_collection.find_one({
+      "note_id": review_note_id,
+      "owner_id": review_owner_id,
+    })
+
+    original_questions = original_qna_set["questions"]
+
+    answered_q: List[QNAQuestionReviewSchema] = [] 
+    total_score = 0
+
+    for i, answer in enumerate(review_user_answers):
+
+      review_question_id = answer.question_id
+      review_user_answer = answer.answer_id
+      review_answer_content = answer.content
+      review_user_answer_created_at = answer.created_at
+
+
+      for question in original_questions:
+        if question["id"] != review_question_id:
+          continue
+
+        answer_key = question["answer_key"]
+        if answer_key["id"] == review_user_answer:
+
+          new_user_answer_object = QNAAnswerSchema(
+            id=uuid.uuid4(),
+            created_at=review_user_answer_created_at,
+            updated_at=review_user_answer_created_at,
+            is_deleted=False,
+            question_id=review_question_id,
+            content=review_answer_content,
+            is_correct_answer=True
+          )
+
+          new_question_review_object = QNAQuestionReviewSchema(
+            id=uuid.uuid4(),
+            qna_set_review_uuid=review_qna_set_id,
+            created_at=review_user_answer_created_at,
+            updated_at=review_user_answer_created_at,
+            is_deleted=False,
+            question=question["question"],
+            question_id=review_question_id,
+            user_answer=new_user_answer_object,
+            answer_options=question["answer_options"],
+            is_answered_correctly=True,
+            score_obtained=question["question_score"]
+          )
+
+          answered_q.append(new_question_review_object)
+          total_score += question["question_score"]
+        else:
+          new_user_answer_object = QNAAnswerSchema(
+            id=uuid.uuid4(),
+            created_at=review_user_answer_created_at,
+            updated_at=review_user_answer_created_at,
+            is_deleted=False,
+            question_id=review_question_id,
+            content=review_answer_content,
+            is_correct_answer=False
+          )
+
+          new_question_review_object = QNAQuestionReviewSchema(
+            id=uuid.uuid4(),
+            qna_set_review_uuid=review_qna_set_id,
+            created_at=review_user_answer_created_at,
+            updated_at=review_user_answer_created_at,
+            is_deleted=False,
+            question=question["question"],
+            question_id=review_question_id,
+            user_answer=new_user_answer_object,
+            answer_options=question["answer_options"],
+            is_answered_correctly=False,
+            score_obtained=0
+          )
+
+          answered_q.append(new_question_review_object)
+
+    new_qna_set_review_object = QNASetReviewSchema(
+      uuid=uuid.uuid4(),
+      note_id=review_note_id,
+      owner_id=review_owner_id,
+      created_at=review_created_at,
+      updated_at=review_created_at,
+      is_deleted=False,
+      qna_set_id=review_qna_set_id,
+      answered_q=answered_q,
+      score_obtained=total_score
+    )
+
+    return new_qna_set_review_object
+
+  def fetch_qna_review_result_from_mongodb(
+    self, 
+    note_id: str, 
+    request: Request, 
+    user: User,
+  ) -> NoteSchema:
+    qna_review_result = request.app.qna_results_collection.find_one({
+      "note_id": note_id,
+      "owner_id": user.id,
+      "is_deleted": False
+    })
+    
+    return qna_review_result

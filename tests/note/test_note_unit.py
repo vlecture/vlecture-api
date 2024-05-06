@@ -70,14 +70,14 @@ def test_get_word_count_str_array(note_service):
 
   assert actual_response == EXPECTED_RESPONSE
 
-# def test_generate_note_from_transcription(note_service):
-#   input_value = {
-#     "payload": INPUT_GENERATE_NOTE_FROM_TRANSCRIPTION,
-#   }
+def test_generate_note_from_transcription(note_service):
+  input_value = {
+    "payload": INPUT_GENERATE_NOTE_FROM_TRANSCRIPTION,
+  }
 
-#   actual_response = note_service.generate_note_from_transcription(
-#     **input_value
-#   )
+  actual_response = note_service.generate_note_from_transcription(
+    **input_value
+  )
 
-#   assert isinstance(actual_response, NoteSchema)
+  assert isinstance(actual_response, NoteSchema)
 
