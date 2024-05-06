@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from fastapi_mail import MessageSchema, MessageType
 
 from src.models.otp import OTP
-from src.schemas.base import GenericResponseModel
 from src.schemas.auth import EmailSchema, CheckUserExistsSchema, OTPCreateSchema, OTPCheckSchema
 from src.utils.mail import get_mail_client
 from src.services.users import get_user
@@ -54,7 +53,7 @@ class EmailVerificationService:
       """
       token = ""
 
-      for i in range(TOKEN_LENGTH):
+      for _ in range(TOKEN_LENGTH):
          token += str(secrets.choice(string.ascii_uppercase + string.digits))
 
       return token

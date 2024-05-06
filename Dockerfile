@@ -2,7 +2,7 @@
 # Select base image - Python 3.10
 FROM python:3.12-slim
 
-# Set working directory to `app`
+# Set working directory to app
 WORKDIR /app
 
 # Copy requirements into working directory
