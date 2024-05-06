@@ -18,13 +18,6 @@ from src.schemas.streaks import (
   StreaksSchema
 )
 
-from src.utils.settings import (
-  OPENAI_MODEL_NAME,
-  OPENAI_API_KEY,
-)
-
-from src.utils.time import get_datetime_now_jkt
-
 class StreakDecisionEnum(str, Enum):
   CONTINUE = "CONTINUE"
   TERMINATE = "TERMINATE"
@@ -32,48 +25,83 @@ class StreakDecisionEnum(str, Enum):
 
 class StreaksService:
   SECONDS_IN_HOUR = 3600
+  SECONDS_TO_HOUR_PRECISION = 6
+  HOURS_IN_DAY = 24
+  BASE_LENGTH_DAYS = 1
+
+  def fetch_all_my_streak(
+    self,
+    session: Session,
+    user_id: UUID,
+  ) -> (List[Streaks] | None):
+    """
+    Get all streaks from a user
+    """
+
+    all_streaks = session.query(Streaks) \
+      .filter(Streaks.owner_id == user_id, Streaks.is_active == True) \
+      .order_by(Streaks.updated_at.desc()) \
+      .all()
+    
+    return all_streaks
+
+  def fetch_latest_streak(
+    self, 
+    session: Session,
+    user_id: UUID
+  ) -> (Streaks | None):
+    """
+    Get the latest Streak from a user
+    """
+    latest_streak = session.query(Streaks) \
+      .filter(Streaks.owner_id == user_id, Streaks.is_active == True) \
+      .order_by(Streaks.updated_at.desc()) \
+      .first()
+    
+    return latest_streak
 
   def determine_streak_decision(
     self, 
     current_time: datetime, 
     streak_last_updated: datetime
   ) -> StreakDecisionEnum:
-    if (current_time <= streak_last_updated):
+    if (current_time < streak_last_updated):
       return StreakDecisionEnum.ERROR
     
+    SECONDS_IN_DAY = self.SECONDS_IN_HOUR * self.HOURS_IN_DAY
     seconds_diff = (current_time - streak_last_updated).total_seconds()
 
-    hours_diff = round(seconds_diff / self.SECONDS_IN_HOUR, 1)
-    
-    if (hours_diff >= 24.0):
+    if seconds_diff > SECONDS_IN_DAY:
       return StreakDecisionEnum.TERMINATE
 
     return StreakDecisionEnum.CONTINUE
 
-  def save_streak_to_db(
+  def create_streak_and_store_db(
     self,
     session: Session,
     user_id: UUID,
     time_created: datetime,
-  ) -> StreaksSchema:
-    streak_obj = self.create_new_streak(
+  ) -> Streaks:
+    streak_schema = self._create_new_streak(
       user_id=user_id,
       time_created=time_created,
     )
 
+    streak_obj_db = Streaks(**streak_schema.model_dump())
+
     try:
-      session.add(streak_obj)
+      session.add(streak_obj_db)
       session.commit()
-      session.refresh(streak_obj)
+      session.refresh(streak_obj_db)
     except Exception as e:
       session.rollback()
       raise RuntimeError(f"Error while creating new Streak: ${e}")
     finally:
       session.close()
 
-    return streak_obj
+    return streak_obj_db
   
-  def create_new_streak(
+  def _create_new_streak(
     self,
     user_id: UUID,
     time_created: datetime,
@@ -91,33 +119,37 @@ class StreaksService:
   def update_streak_length(
     self,
     streak: Streaks,
-    user_id: UUID,
-    session: Session,
     time_updated: datetime,
+    session: Session,
   ) -> bool:
     # Update updated_at and length_days (if needed)
-    self.sync_streak_updated_at(streak=streak, time_updated=time_updated, session=session)
-
-    is_increment_length = self.check_if_increment_length(streak=streak, time_updated=time_updated)
-
-    if not is_increment_length:
-      return False
-    
-    # Else, also update streak length
-    streak_length_incremented = self.increment_streak_length(
-      streak=streak,
-      time_updated=time_updated,
+    self._sync_streak_updated_at(
+      streak=streak, 
+      time_updated=time_updated, 
       session=session
     )
 
-    if streak_length_incremented:
-      print("Streak length is incremented!")
-    else:
-      print("Streak length stays the same.")
+    is_increment_length = self.decide_if_increment_length(
+      streak=streak, 
+      time_updated=time_updated
+    )
+
+    if not is_increment_length:
+      print("Streak length is NOT incremented...")
+      return False
+    
+    # Else, also update streak length
+    self.increment_streak_length(
+      streak=streak,
+      time_updated=time_updated,
+      session=session,
+    )
+
+    print("Streak length is incremented!")
 
     return True
 
-  def sync_streak_updated_at(
+  def _sync_streak_updated_at(
     self, 
     streak: Streaks, 
     time_updated: datetime, 
@@ -126,7 +158,15 @@ class StreaksService:
     streak.updated_at = time_updated
     session.commit()
 
-  def check_if_increment_length(
+  def make_streak_inactive(
+    self,
+    streak: Streaks,
+    session: Session,
+  ):
+    streak.is_active = False
+    session.commit()
+
+  def decide_if_increment_length(
     self,
     streak: Streaks,
     time_updated: datetime,
@@ -148,45 +188,43 @@ class StreaksService:
       streak_created_at=streak_created_at
     )
 
-    if new_streak_length_days > streak.length_days:
-      return True
+    if new_streak_length_days == -1:
+      return False
+
+    if new_streak_length_days <= streak.length_days:
+      return False
     
-    return False
+    return True
   
   def increment_streak_length(
     self,
     streak: Streaks,
     time_updated: datetime,
     session: Session,
-  ) -> bool:
+  ) -> None:
     streak_created_at = streak.created_at
     new_streak_length_days = self.calc_new_streak_length_days(
       time_updated=time_updated, 
       streak_created_at=streak_created_at
     )
 
-    if new_streak_length_days > streak.length_days:
-      streak.length_days = new_streak_length_days
-      session.commit()
-      return True
-    
-    return False
+    streak.length_days = new_streak_length_days
+    session.commit()
 
   def calc_new_streak_length_days(
     self,
     time_updated: datetime,
     streak_created_at: datetime,
   ) -> int:
-    HOURS_IN_DAY = 24
-    BASE_LENGTH_DAYS = 1
-
     seconds_diff_from_creation = (time_updated - streak_created_at).total_seconds()
-    hours_diff_from_creation = float(seconds_diff_from_creation / self.SECONDS_IN_HOUR, 1)
+    
+    hours_diff_from_creation = round(seconds_diff_from_creation / self.SECONDS_IN_HOUR, self.SECONDS_TO_HOUR_PRECISION)
+    print("hours_diff_from_creation", seconds_diff_from_creation / self.SECONDS_IN_HOUR)
 
     ### Formula: length_days = (diff_hours // HOURS_IN_DAY) + BASE
     # HOURS_IN_DAY = 24
     # BASE = 1 (initial length_days value)
-    new_streak_length_days = int((hours_diff_from_creation // HOURS_IN_DAY) + BASE_LENGTH_DAYS)
+    new_streak_length_days = int((hours_diff_from_creation // self.HOURS_IN_DAY) + self.BASE_LENGTH_DAYS)
 
     return new_streak_length_days
 

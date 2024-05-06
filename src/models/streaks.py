@@ -29,7 +29,7 @@ from sqlalchemy.orm import (
   relationship,
 )
 
-from utils.time import get_datetime_now_jkt
+from src.utils.time import get_datetime_now_jkt
 
 class Streaks(Base):
   __tablename__ = "streaks"

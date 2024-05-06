@@ -5,7 +5,7 @@ load_dotenv(".env", override=True)
 
 ENV_TYPE = os.getenv("ENV")
 
-print(f"ENV: {ENV_TYPE}")
+print(f"ENVIRONMENT: {ENV_TYPE}")
 
 # POSTGRES
 try:
