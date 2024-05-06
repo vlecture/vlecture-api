@@ -161,6 +161,7 @@ tenacity==8.2.3
 tiktoken==0.6.0
 tokenizers==0.19.1
 tomlkit==0.12.4
+tox==4.14.2
 tqdm==4.66.2
 trio==0.24.0
 trove-classifiers==2024.3.3
