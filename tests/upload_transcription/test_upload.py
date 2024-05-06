@@ -6,9 +6,9 @@ upload_url = "/v1/upload"
 delete_url = "/v1/upload/delete/"
 
 file_audio = {'file': ('test_audio.mp3', open(
-    './test_audio.mp3', 'rb'), 'audio/mp3')}
+    'test_audio.mp3', 'rb'), 'audio/mp3')}
 file_non_audio = {'file': ('test_image.jpg', open(
-    './test_image.jpg', 'rb'), 'audio/jpeg')}
+    'test_image.jpg', 'rb'), 'audio/jpeg')}
 
 user_id = None
 filename_test = None
