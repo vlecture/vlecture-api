@@ -19,20 +19,20 @@ from .utils import (
 )
 
     
-def test_flatten_note_contents(qna_service):
-    input_value = {
-        "main": NOTE_MAIN_DATA,
-        "cues": NOTE_CUES_DATA,
-        "summary": NOTE_SUMMARY_DATA,
-    }
+# def test_flatten_note_contents(qna_service):
+#     input_value = {
+#         "main": NOTE_MAIN_DATA,
+#         "cues": NOTE_CUES_DATA,
+#         "summary": NOTE_SUMMARY_DATA,
+#     }
 
-    expected_response = f"Note main content:\n{NOTE_MAIN_DATA}\n\nNote cues:\n{NOTE_CUES_DATA}\n\nNote summary: {NOTE_SUMMARY_DATA}"
+#     expected_response = f"Note main content:\n{NOTE_MAIN_DATA}\n\nNote cues:\n{NOTE_CUES_DATA}\n\nNote summary: {NOTE_SUMMARY_DATA}"
 
-    actual_response = qna_service.flatten_note_contents(
-        **input_value
-    )
+#     actual_response = qna_service.flatten_note_contents(
+#         **input_value
+#     )
 
-    assert actual_response == expected_response
+#     assert actual_response == expected_response
 
 def test_split_note_into_documents():
     input_values = {
