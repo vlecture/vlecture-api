@@ -344,7 +344,7 @@ class TranscriptionService:
 
     for item in items:
       datetime_now_jkt = get_datetime_now_jkt()
-      chunk_duration = float(item["duration"])
+      chunk_duration = float(item.duration)
 
       chunk = TranscriptionChunksSchema(
           id=uuid.uuid4(),
@@ -352,11 +352,11 @@ class TranscriptionService:
           updated_at=datetime_now_jkt,
           is_deleted=False,
           transcription_id=transcription_id,
-          content=item["content"],
-          start_time=float(item["start_time"]),
-          end_time=float(item["end_time"]),
+          content=item.content,
+          start_time=float(item.start_time),
+          end_time=float(item.end_time),
           duration=chunk_duration,
-          is_edited=False,
+          is_edited=False,  
       )
 
       # Use `append` to correctly add the object to chunks list
