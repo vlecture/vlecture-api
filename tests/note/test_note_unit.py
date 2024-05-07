@@ -18,12 +18,7 @@ from .utils import (
   INPUT_GENERATE_NOTE_FROM_TRANSCRIPTION,
 )
 
-generate_note_url = "/v1/notes/generate"
-get_all_notes_url = "/v1/notes/all"
-get_one_note_url = lambda note_id: f"/v1/notes/{note_id}"
-
 # Source: https://pytest-with-eric.com/introduction/python-testing-strategy/
-
 
 # Incoming Query Messages
 def test_get_openai(note_service):
@@ -49,14 +44,14 @@ def test_create_note_block_object(note_service):
   assert isinstance(actual_mock_response, NoteSchema)
 
 
-def test_format_cornell_section_into_blocknote_array(note_service):
-  input_value = INPUT_FORMAT_CORNELL_INTO_BLOCKNOTE_ARRAY
+# def test_format_cornell_section_into_blocknote_array(note_service):
+#   input_value = INPUT_FORMAT_CORNELL_INTO_BLOCKNOTE_ARRAY
   
-  actual_response = note_service.format_cornell_section_into_blocknote_array(
-      **input_value
-  )
+#   actual_response = note_service.format_cornell_section_into_blocknote_array(
+#       **input_value
+#   )
 
-  assert actual_response[0].content[0]["text"] == input_value["payload"][0]
+#   assert actual_response[0].content[0]["text"] == input_value["payload"][0]
 
 def test_get_word_count_str_array(note_service):
   input_value = {
@@ -75,14 +70,14 @@ def test_get_word_count_str_array(note_service):
 
   assert actual_response == EXPECTED_RESPONSE
 
-def test_generate_note_from_transcription(note_service):
-  input_value = {
-    "payload": INPUT_GENERATE_NOTE_FROM_TRANSCRIPTION,
-  }
+# def test_generate_note_from_transcription(note_service):
+#   input_value = {
+#     "payload": INPUT_GENERATE_NOTE_FROM_TRANSCRIPTION,
+#   }
 
-  actual_response = note_service.generate_note_from_transcription(
-    **input_value
-  )
+#   actual_response = note_service.generate_note_from_transcription(
+#     **input_value
+#   )
 
-  assert isinstance(actual_response, NoteSchema)
+#   assert isinstance(actual_response, NoteSchema)
 

@@ -99,7 +99,7 @@ async def send_verif_email(
             status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
             content="Error: Invalid value when sending email.",
         )
-    except Exception as err:
+    except Exception:
         return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
             content="Error: Unknown problem while sending email.",
@@ -154,12 +154,20 @@ def logout(
     return auth.logout(response, session, payload)
 
 @auth_router.get("/name", tags=[AuthRouterTags.auth])
-def get_username( user: User = Depends(get_current_user)):
+def get_username( 
+    user: User = Depends(get_current_user),
+):
+    if not user:
+        return JSONResponse(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            content="Unauthorized. Please log in."
+        )
+    
     return JSONResponse(
             status_code=HTTP_200_OK,
             content={
                 "email":user.email,
-            }
+        }
     )
 
 @auth_router.get("/verify_token", tags=[AuthRouterTags.auth])

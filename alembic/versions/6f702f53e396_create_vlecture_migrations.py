@@ -66,9 +66,6 @@ def upgrade() -> None:
         sa.Column('tags', sa.ARRAY(item_type=sa.String), nullable=True),
         sa.Column('duration', sa.Float(precision=1), nullable=False),
         sa.Column('language', sa.String(10), nullable=False),
-
-        sa.Column('language', sa.String(5), nullable=False),
-
         sa.PrimaryKeyConstraint('id', name='transcriptions_pkey'),
     )
 
@@ -135,6 +132,18 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id', name="flashcard_sets_pkey"),
         sa.CheckConstraint("cardinality(tags) <= 10", name="max_tags_constraint"),
         sa.CheckConstraint("array_length(tags, 1) <= 50", name="max_tag_length_constraint")
+    )
+
+    op.create_table(
+        'streaks',
+        sa.Column('id', sa.UUID(), nullable=False),
+        sa.Column('owner_id', sa.UUID(), nullable=False),
+        sa.Column('is_deleted', sa.Boolean(), nullable=False),
+        sa.Column('length_days', sa.Integer(), nullable=False),
+        sa.Column('is_active', sa.Boolean(), nullable=False),
+
+        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=False),
     )
 
     # ### end Alembic commands ###

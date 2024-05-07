@@ -157,7 +157,7 @@ async def transcribe_audio(
         )
 
     except TimeoutError:
-        return GenericResponseModel(
+        return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
             content="Error: Timeout during audio transcription.",
         )

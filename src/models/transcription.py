@@ -29,17 +29,15 @@ from sqlalchemy.orm import (
   relationship,
 )
 
-UTC = timezone("UTC")
-def time_now():
-    return datetime.now(UTC)
+from src.utils.time import get_datetime_now_jkt
 
 class Transcription(Base):
   __tablename__ = "transcriptions"
 
   id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
-  created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
-  updated_at = Column(TIMESTAMP(timezone=True), default=time_now, onupdate=time_now, nullable=False)
-  is_deleted = Column(Boolean, default=False)
+  created_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, nullable=False)
+  updated_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, onupdate=get_datetime_now_jkt, nullable=False)
+  is_deleted = Column(Boolean, default=False, nullable=False)
 
   ## Foreign Relationships
   # Foreign key to User
@@ -59,10 +57,6 @@ class Transcription(Base):
   # Current use case: "id" | "en", future use case: "id-ID" | ...
   language = Column(String(10), nullable=False)
 
-  def __to_model(self) -> TranscriptionSchema:
-    """ Converts DB ORM object to Pydantic Model ('schema') """
-    return TranscriptionSchema.model_validate(self)
-  
   @classmethod
   def get_by_id(cls, uuid: UUID) -> TranscriptionSchema:
     base = super().get_by_id(uuid)
@@ -81,8 +75,8 @@ class TranscriptionChunk(Base):
   __tablename__ = "transcription_chunks"
 
   id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
-  created_at = Column(TIMESTAMP(timezone=True), default=time_now, nullable=False)
-  updated_at = Column(TIMESTAMP(timezone=True), default=time_now, onupdate=time_now, nullable=False)
+  created_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, nullable=False)
+  updated_at = Column(TIMESTAMP(timezone=True), default=get_datetime_now_jkt, onupdate=get_datetime_now_jkt, nullable=False)
   is_deleted = Column(Boolean, default=False)
 
   # Extra fields
@@ -110,10 +104,6 @@ class TranscriptionChunk(Base):
     content: {self.content}
     """
 
-  def __to_model(self) -> TranscriptionChunksSchema:
-    """ Converts DB ORM object to Pydantic Model ('schema') """
-    return TranscriptionChunksSchema.model_validate(self)
-  
   @classmethod
   def get_by_id(cls, uuid: UUID) -> TranscriptionChunksSchema:
     base = super().get_by_id(uuid)
