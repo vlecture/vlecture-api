@@ -49,7 +49,7 @@ class QNARouterTags(Enum):
 
 qna_router = APIRouter(
   prefix="/v1/qna",
-  tags=[QNARouterTags],
+  tags=[QNARouterTags.qna],
 )
 
 @qna_router.post(
