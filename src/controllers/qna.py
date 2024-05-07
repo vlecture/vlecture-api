@@ -1,25 +1,15 @@
 from enum import Enum
 import http
 from datetime import datetime
-import pytz
-from uuid import UUID
 
 from fastapi import (
     APIRouter,
     Request,
-    Response,
     Depends,
     Body,
 )
 
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
-from typing import (
-  List
-)
-
-from bson.objectid import ObjectId
 
 from src.models.users import User
 
@@ -78,7 +68,6 @@ def generate_qna_set(
   generated_qna_set = qna_service.generate_qna_set(
     note=my_note,
     question_count=question_count,
-    user=user,
   )
 
   created_qna_set_schema = qna_service.create_qna_set_obj(
@@ -98,9 +87,6 @@ def generate_qna_set(
 
   created_qna_set_document = request.app.qna_collection.find_one({
     "_id": new_qna_set_document.inserted_id,
-  }, {
-    # Exclude "_id" field from the returned object -- bcs already came with "id" field
-    # "_id": 0,
   })
 
   return created_qna_set_document
@@ -170,13 +156,8 @@ def review_qna(
     )
   )
 
-  print("NEW QNA SET DOCUMENT ", new_review_qna_document)
-
   created_review_qna_document = request.app.qna_results_collection.find_one({
     "_id": new_review_qna_document.inserted_id,
-  }, {
-    # Exclude "_id" field from the returned object -- bcs already came with "id" field
-    # "_id": 0,
   })
 
   if created_review_qna_document:
