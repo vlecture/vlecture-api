@@ -124,14 +124,16 @@ class QNAQuestionReviewSchema(BaseModel):
   """
 
   id: UUID
-  qna_set_review_uuid: UUID
+  qna_set_review_uuid: PyObjectId
 
   created_at: datetime
   updated_at: datetime
   is_deleted: bool = Field(default=False)
 
+  question: str
   question_id: UUID
   user_answer: QNAAnswerSchema
+  answer_options: List[QNAAnswerSchema]
 
   is_answered_correctly: bool
 
@@ -146,6 +148,7 @@ class QNASetReviewSchema(BaseModel):
 
   uuid: UUID
   note_id: str
+  owner_id: UUID
   
   # created_at here serves as the "answered at" time for a QNA Set 
   # (when the user submits a QNA Set)
@@ -153,9 +156,8 @@ class QNASetReviewSchema(BaseModel):
   updated_at: datetime
   is_deleted: bool = Field(default=False)
 
-  qna_set_id: UUID
-  correctly_answered_q: List[QNAQuestionReviewSchema]
-  incorrectly_answered_q: List[QNAQuestionReviewSchema]
+  qna_set_id: PyObjectId
+  answered_q: List[QNAQuestionReviewSchema]
 
   score_obtained: float
 
@@ -164,6 +166,19 @@ class QNASetReviewSchema(BaseModel):
     arbitrary_types_allowed=True,
   )
   
+class QNAUserAnswerPayloadSchema(BaseModel):
+  question_id: UUID
+  answer_id: UUID
+  content: str
+  created_at: datetime
+
+class QNASetReviewPayloadSchema(BaseModel):
+  id: PyObjectId
+  owner_id: UUID
+  note_id: PyObjectId
+  created_at: datetime
+  answers: List[QNAUserAnswerPayloadSchema]
+
 
 # REQUEST SCHEMAS
 class GenerateQNASetRequestSchema(BaseModel):

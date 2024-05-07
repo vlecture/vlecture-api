@@ -17,6 +17,7 @@ from src.utils.settings import (
     MONGODB_DB_NAME,
     MONGODB_COLLECTION_NOTE,
     MONGODB_COLLECTION_QNA,
+    MONGODB_COLLECTION_QNA_RESULTS,
 )
 from src.controllers import (
     transcription, 
@@ -26,6 +27,7 @@ from src.controllers import (
     note,
     flashcards,
     qna,
+    streaks,
 )
 from src.utils.db import Base, engine
 
@@ -80,6 +82,7 @@ app.include_router(waitlist.waitlist_router)
 app.include_router(note.note_router)
 app.include_router(flashcards.flashcards_router)
 app.include_router(qna.qna_router)
+app.include_router(streaks.streaks_router)
 
 
 # Connect to MongoDB on startup
@@ -103,6 +106,7 @@ def startup_mongodb_client():
         app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
         app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NOTE)
         app.qna_collection = app.database.get_collection(MONGODB_COLLECTION_QNA)
+        app.qna_results_collection = app.database.get_collection(MONGODB_COLLECTION_QNA_RESULTS)
         
         print("Connected to MongoDB Database.")
     except Exception as e:
