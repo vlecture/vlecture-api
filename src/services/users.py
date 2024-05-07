@@ -58,10 +58,13 @@ def get_current_user(request: Request, session: Session = Depends(get_db)):
 
         user = session.query(User).filter(
             User.access_token == access_token).first()
+        
 
         if user:
+            print(f"Success fetching user: {user.email}")
             return user
-
-    raise HTTPException(
-        status_code=HTTP_401_UNAUTHORIZED, detail="Not authenticated"
-    )
+    else:
+        print("Access token is none!")
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )

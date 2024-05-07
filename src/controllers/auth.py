@@ -154,7 +154,9 @@ def logout(
     return auth.logout(response, session, payload)
 
 @auth_router.get("/name", tags=[AuthRouterTags.auth])
-def get_username( user: User = Depends(get_current_user)):
+def get_username( 
+    user: User = Depends(get_current_user),
+):
     return JSONResponse(
             status_code=HTTP_200_OK,
             content={
