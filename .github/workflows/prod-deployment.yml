@@ -3,6 +3,9 @@ name: Prod Deployment
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   Prod-Deployment:
     name: Production Deployment
