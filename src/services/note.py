@@ -4,6 +4,7 @@ from openai import (
 
 from fastapi import (
   Request,
+  HTTPException,
 )
 
 import re
@@ -20,7 +21,7 @@ from bson import ObjectId
 from sqlalchemy.orm import Session
 from typing import List, Union
 from botocore.exceptions import ClientError
-
+from pymongo.collection import ReturnDocument
 
 from src.models.users import User
 
@@ -66,6 +67,18 @@ class NoteService:
     request: Request, 
     user: User,
   ) -> NoteSchema:
+    if not note_id:
+      raise HTTPException(
+        status_code=400,
+        detail="Note ID not specified."
+      )
+    
+    if not user:
+      raise HTTPException(
+        status_code=401,
+        detail="Not logged in."
+      )
+
     note_id = ObjectId(note_id)
     my_note = request.app.note_collection.find_one({
       "_id": note_id,
@@ -257,3 +270,34 @@ class NoteService:
     # Return the deleted item
     return note_item
   
+  def save_note(
+    self,
+    request: Request,
+    note_id: str,
+    note_blocks: BlockNoteCornellSchema,
+  ):
+    time_now_jkt = get_datetime_now_jkt()
+
+    main = [note_blocks.main[i].model_dump() for i in range(len(note_blocks.main))] if note_blocks.main else None
+    cues = [note_blocks.cues[i].model_dump() for i in range(len(note_blocks.cues))] if note_blocks.cues else None
+    summary = [note_blocks.summary[i].model_dump() for i in range(len(note_blocks.summary))] if note_blocks.summary else None
+
+    q_filter = {"_id": ObjectId(note_id)}
+
+    q_update = {"$set": {
+      "updated_at": time_now_jkt,
+      "main": main,
+      "cues": cues,
+      "summary": summary,
+    }}
+
+    result = request.app.note_collection.find_one_and_update(
+      q_filter,
+      q_update,
+      return_document=ReturnDocument.AFTER
+    )
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    return result

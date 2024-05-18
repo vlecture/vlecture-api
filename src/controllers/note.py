@@ -9,6 +9,7 @@ from fastapi import (
     Response,
     Depends,
     Body,
+    HTTPException,
 )
 
 from fastapi.responses import JSONResponse
@@ -29,6 +30,7 @@ from src.services.note import (
 
 from src.schemas.note import (
   NoteSchema,
+  BlockNoteCornellSchema,
   GenerateVlectureNoteRequestSchema,
   GenerateNoteServiceRequestSchema,
 )
@@ -108,6 +110,45 @@ def get_all_notes(
 
   return my_notes
 
+@note_router.patch(
+    "/save/{note_id}",
+    response_description="Update specified fields of a block note section",
+    status_code=http.HTTPStatus.OK,
+    response_model=NoteSchema,
+)
+def save_note(
+  note_id: str,
+  note_blocks: BlockNoteCornellSchema,
+  request: Request,
+  user: User = Depends(get_current_user),
+):
+  if not user:
+    return JSONResponse(
+      content="Error: Not logged in.",
+      status_code=http.HTTPStatus.UNAUTHORIZED,
+    )
+  
+  service = NoteService()
+
+  try:
+    result = service.save_note(
+      request=request,
+      note_id=note_id,
+      note_blocks=note_blocks,
+    )
+
+    return result
+  except HTTPException as e:
+    if e.status_code == 404:
+      return JSONResponse(
+        content="Error: Note not found.",
+        status_code=http.HTTPStatus.NOT_FOUND,
+      )
+    else:
+      return JSONResponse(
+        content="Error: Failed to save note.",
+        status_code=http.HTTPStatus.BAD_REQUEST,
+      )
 
 @note_router.get(
   "/{note_id}",
@@ -120,21 +161,34 @@ def get_a_note(
   request: Request,
   user: User = Depends(get_current_user),
 ):
-  service = NoteService()
+  try:
+    service = NoteService()
 
-  my_note = service.fetch_note_from_mongodb(
-    note_id=note_id,
-    request=request,
-    user=user,
-  )
-
-  if not my_note:
-    return JSONResponse(
-      status_code=http.HTTPStatus.NOT_FOUND, 
-      content={"message": "NotFound: Note not found or already deleted."}
+    my_note = service.fetch_note_from_mongodb(
+      note_id=note_id,
+      request=request,
+      user=user,
     )
 
-  return my_note
+    if not my_note:
+      return JSONResponse(
+        status_code=http.HTTPStatus.NOT_FOUND, 
+        content={"message": "Note not found or already deleted."}
+      )
+
+    return my_note
+  except HTTPException as e:
+    if e.status_code == 400:
+      return JSONResponse(
+        content="Invalid request body parameters.",
+        status_code=http.HTTPStatus.BAD_REQUEST,
+      )
+    
+    if e.status_code == 401:
+      return JSONResponse(
+        content="Not logged in.",
+        status_code=http.HTTPStatus.UNAUTHORIZED,
+      )
 
 @note_router.delete(
   "/delete/{note_id}",
@@ -146,6 +200,12 @@ def delete_a_note(
   request: Request,
   user: User = Depends(get_current_user),
 ):
+  if not user:
+    return JSONResponse(
+      content="Error: Not logged in.",
+      status_code=http.HTTPStatus.UNAUTHORIZED,
+    )
+  
   service = NoteService()
   
   response = service.delete_note(
