@@ -1,29 +1,19 @@
-# vlecture Backend Documentation
+# vlecture.tech
 
-## Instructions
+vlecture is your notetaking companion for all your lectures! Whether you're a student or a professional, vlecture.tech simplifies the process of capturing lecture content and transforming it into organized, accessible notes.
 
-### How to install and use the project (for the first time)
+## Features
 
-1. Clone this repository with the command `git clone https://github.com/jeremyalv/vlecture-api.git`
-2. Make sure to enter the directory using `cd vlecture-api`
-3. Create a virtual environment using `python -m venv env`
-4. Run the virtual environment using `source env/bin/activate` for Mac and `env\Scripts\activate.bat` for Windows
-5. Install the required modules with `pip install -r requirements.txt`
-6. Run the app using `make dev` or `.\build.bat`
+- **Record Lectures**: Easily record your lectures using your smartphone or any recording device.
+- **Upload and Transcribe**: Upload your recorded lectures to the app and our app will transcribe your recording.
+- **AI-Generated Notes**: Instantly access AI-generated notes from your transcriptions, saving you time and effort in manual note-taking.
+- **AI-Generated Flashcards**: Use our Flashcards feature to review key concepts and information from your lectures.
+- **AI-Generated Quiz**: Test your knowledge and prepare for exams with our Quiz feature, which helps reinforce your learning.
 
-### How to run (if you have already installed)
+## Get Started
 
-1. Make sure get in the **vlecture-api** directory using `cd vlecture-api`
-2. Run your virtual environment using `source env/bin/activate` for Mac and `env\Scripts\activate.bat` for Windows
-3. Keep your project up-to-date by installing the newest modules using `pip install -r requirements.txt`
-4. Run the app using `make dev` or `.\build.bat`
+Visit [vlecture.tech](https://www.vlecture.tech) to sign up and start using our platform today!
 
-### Running Docker container
+## Contact Us
 
-1. Build Docker image: `docker build -t vlecture-api .`
-2. Run image on container port 8080: `docker run -p 8080:8080 vlecture-api`
-
-### Running Tests in Standardized Virtual Environments using tox
-
-1. Swap the environment variable into `test` environment (`bash scripts/swap-env.sh test`)
-2. Run `tox` and you'll see that `pytest` will automatically collect and run all your tests!
+Have questions or feedback? Reach out to us at [team@vlecture.tech](mailto:team@vlecture.tech). We'd love to hear from you!
