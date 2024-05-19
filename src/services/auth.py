@@ -126,7 +126,7 @@ def renew_access_token(request: Request, response: Response, session: Session):
             {
                 "first_name": decoded_refresh_token.get("first_name"),
                 "email": decoded_refresh_token.get("email"),
-                "exp": datetime.now(timezone.utc) + timedelta(minutes=1),
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
             },
             ACCESS_TOKEN_SECRET,
         )
@@ -208,7 +208,7 @@ def generate_access_token(user: User):
         {
             "first_name": user.first_name,
             "email": user.email,
-            "exp": datetime.now(timezone.utc) + timedelta(minutes=1),
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
         },
         ACCESS_TOKEN_SECRET,
     )
