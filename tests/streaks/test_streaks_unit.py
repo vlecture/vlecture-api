@@ -74,3 +74,31 @@ def test_update_streak_12h_by_18h(streaks_service):
     actual_response = streaks_service.update_streak_length(**input_value)
 
     assert actual_response == expected_response
+
+
+# Terminate streak progress
+# Update streak_obj by 30h directly, without the 12h update
+def test_terminate_streak_after_30h(streaks_service):
+    input_value = {
+        "streak": streak_obj,
+    }
+
+    expected_response = streak_obj_terminate_streak_after_30h
+
+    actual_response = streaks_service.terminate_streak(**input_value)
+
+    assert actual_response == expected_response
+
+
+# Create new Streak
+def test_create_new_streak(streaks_service):
+    input_value = {
+        "user_id": owner_id,
+        "time_created": time_after_30h,
+    }
+
+    expected_response = new_streak_obj_after_30h
+
+    actual_response = streaks_service.create_new_streak(**input_value)
+
+    assert actual_response == expected_response
