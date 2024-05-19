@@ -69,9 +69,6 @@ def login(response: Response, session: Session, payload: LoginSchema):
     update_refresh_token(session, user, refresh_token)
     update_active_status(session, user)
 
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
-    response.set_cookie(key="access_token", value=access_token, httponly=True)
-
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -116,8 +113,9 @@ def verify_access_token(request: Request, session: Session):
 
 
 def renew_access_token(request: Request, response: Response, session: Session):
-    refresh_token = request.cookies.get("refresh_token")
-    if refresh_token is None:
+    authorization_header = request.headers.get("Authorization")
+    refresh_token = authorization_header[len("Bearer "):] 
+    if authorization_header is None:
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Unauthorized. Refresh token not provided!",
@@ -128,7 +126,7 @@ def renew_access_token(request: Request, response: Response, session: Session):
             {
                 "first_name": decoded_refresh_token.get("first_name"),
                 "email": decoded_refresh_token.get("email"),
-                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=1),
             },
             ACCESS_TOKEN_SECRET,
         )
@@ -136,9 +134,7 @@ def renew_access_token(request: Request, response: Response, session: Session):
             user = get_user(session=session, field="refresh_token", value=refresh_token)
 
             update_access_token(session, user, new_access_token)
-            response.set_cookie(
-                key="access_token", value=new_access_token, httponly=True
-            )
+            
             return new_access_token
         except InvalidFieldName as e:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
@@ -212,7 +208,7 @@ def generate_access_token(user: User):
         {
             "first_name": user.first_name,
             "email": user.email,
-            "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=1),
         },
         ACCESS_TOKEN_SECRET,
     )
