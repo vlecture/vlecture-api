@@ -1,7 +1,5 @@
 from jose import jwt
 from datetime import datetime, timedelta, timezone
-from fastapi import HTTPException
-from src.exceptions.users import InvalidFieldName
 from tests.utils.test_db import client, test_db
 
 renew_url = "/v1/auth/renew"
