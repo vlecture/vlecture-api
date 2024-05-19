@@ -1,4 +1,6 @@
 from tests.utils.test_db import client, test_db
+import os
+from pydub.generators import Sine
 
 register_url = "/v1/auth/register"
 login_url = "/v1/auth/login"
@@ -13,7 +15,51 @@ file_non_audio = {'file': ('test_image.jpg', open(
 user_id = None
 filename_test = None
 
+from pydub.generators import Sine
 
+# Path to the dummy large file
+dummy_large_file_path = 'tests/upload_transcription/test_large_audio.mp3'
+
+def create_dummy_large_mp3():
+    """Helper function to create a dummy large MP3 file of 100MB"""
+    duration_in_seconds = 6000  # 6000 seconds of audio to get approximately 100MB file
+    bit_rate = "192k"  # 192 kbps
+
+    # Generate a sine wave audio segment of the specified duration
+    sine_wave = Sine(440).to_audio_segment(duration=duration_in_seconds, volume=-3.0)
+    
+    # Export the audio segment to an MP3 file
+    sine_wave.export(dummy_large_file_path, format="mp3", bitrate=bit_rate)
+
+def test_upload_large_file_within_limit(test_db):
+    """Attempt to upload an audio file within the 100MB limit"""
+    create_dummy_large_mp3()  # Create a 100MB dummy file
+    with open(dummy_large_file_path, 'rb') as file:
+        file_audio_large = {'file': ('test_large_audio.mp3', file, 'audio/mp3')}
+        response = client.post(upload_url, files=file_audio_large,
+                               headers=get_headers(test_db))
+
+    assert response.status_code == 200
+    assert 'filename' in response.json()
+
+    # Clean up the dummy file after the test
+    os.remove(dummy_large_file_path)
+
+def test_upload_large_file_over_limit(test_db, dummy_large_mp3_over_limit):
+    """Attempt to upload an audio file over the 100MB limit"""
+    with open(dummy_large_mp3_over_limit, 'rb') as file:
+        file_audio_large = {'file': ('test_large_audio_over_limit.mp3', file, 'audio/mp3')}
+        response = client.post(upload_url, files=file_audio_large,
+                               headers=get_headers(test_db))
+
+    assert response.status_code == 400
+    expected_payload = {
+        "status_code": 400,
+        "detail": "File size exceeds the 100MB limit",
+        "headers": None
+    }
+    assert response.json() == expected_payload
+    
 def test_register_user(test_db):
     """Register a user to test upload and delete functionality"""
     global user_id
