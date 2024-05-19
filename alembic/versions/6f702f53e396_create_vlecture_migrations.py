@@ -146,6 +146,14 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=False),
     )
 
+    op.create_table(
+        'usages',
+        sa.Column('id', sa.UUID(), nullable=False),
+        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column('user_id', sa.UUID(), nullable=False),
+        sa.Column('quota', sa.Integer(), nullable=False, default=5),
+    )
+
     # ### end Alembic commands ###
 
 

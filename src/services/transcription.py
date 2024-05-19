@@ -6,21 +6,21 @@ import requests
 import pytz
 from datetime import datetime
 
-from sqlalchemy.orm import Session
 from typing import List, Union
 from botocore.exceptions import ClientError
 from fastapi.encoders import jsonable_encoder
 
-from src.models.users import (
-  User
-)
+from sqlalchemy.orm import Session
+from sqlalchemy import desc
 
-from src.services.users import get_current_user
-
+from src.models.users import User
+from src.models.usage import Usage
 from src.models.transcription import (
   Transcription,
   TranscriptionChunk,
 )
+
+from src.services.users import get_current_user
 
 from src.schemas.transcription import (
   TranscriptionChunkItemSchema,
@@ -377,3 +377,17 @@ class TranscriptionService:
     )
     
     return response
+  
+  def get_current_usage(self, session: Session, user_id: str):
+    print("!!!getting usage obj")
+    return session.query(Usage).filter(Usage.user_id == user_id) \
+                                .order_by(desc(Usage.created_at)).first()
+
+  def get_current_usage_quota(self, session: Session, user_id: str):
+    print("!!!getting quota")
+    usage = self.get_current_usage(session, user_id)
+
+    print("!!!lets go")
+
+    # return  {"quota": usage.quota}
+    return usage.quota

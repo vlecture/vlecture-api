@@ -84,6 +84,11 @@ async def transcribe_audio(
     # print(filename)
 
     try:
+        # Check for quota
+        usage = service.get_current_usage(session, user.id)
+        if (usage.quota < 1):
+            raise PermissionError
+
         # Transcribe audio
         await service.transcribe_file(
             transcribe_client=transcribe_client,
@@ -147,6 +152,9 @@ async def transcribe_audio(
                 session=session, transcription_chunk_data=chunk
             )
 
+        # Decrease quota when transcription is succesful
+        usage.update_quota(session)
+
         response = {
             "transcription": tsc_create_schema,
             "transcription_chunks": transcription_chunks,
@@ -156,6 +164,11 @@ async def transcribe_audio(
             status_code=http.HTTPStatus.CREATED, content=jsonable_encoder(response)
         )
 
+    except PermissionError:
+        return JSONResponse(
+            status_code=http.HTTPStatus.UNAUTHORIZED,
+            content="Error: No transcription quota left.",
+        )
     except TimeoutError:
         return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
@@ -290,3 +303,26 @@ async def delete_transcription(job_name: str):
             status_code=http.HTTPStatus.BAD_REQUEST,
             content=f"Error: Failed to delete transcription job: {e}",
         )
+
+@transcription_router.get("/quota", status_code=http.HTTPStatus.OK)
+def get_quota(
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    print("!!START")
+ 
+    service = TranscriptionService()
+
+    print("!!!here")
+
+    response = service.get_current_usage_quota(
+        session=session,
+        user_id=user.id
+    )
+
+    print("!!!now here")
+
+    return JSONResponse(
+        status_code=http.HTTPStatus.OK,
+        content=response,
+    )
