@@ -14,6 +14,7 @@ from fastapi import (
 
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from pymongo.collection import ReturnDocument
 
 from typing import (
   List
@@ -131,11 +132,23 @@ def save_note(
   service = NoteService()
 
   try:
-    result = service.save_note(
+    params = service.save_note(
       request=request,
       note_id=note_id,
       note_blocks=note_blocks,
     )
+
+    q_filter = params["q_filter"]
+    q_update = params["q_update"]
+
+    result = request.app.note_collection.find_one_and_update(
+      q_filter,
+      q_update,
+      return_document=ReturnDocument.AFTER
+    )
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Note not found")
 
     return result
   except HTTPException as e:

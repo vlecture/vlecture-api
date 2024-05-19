@@ -291,13 +291,7 @@ class NoteService:
       "summary": summary,
     }}
 
-    result = request.app.note_collection.find_one_and_update(
-      q_filter,
-      q_update,
-      return_document=ReturnDocument.AFTER
-    )
-
-    if not result:
-        raise HTTPException(status_code=404, detail="Note not found")
-
-    return result
+    return {
+      "q_filter": q_filter,
+      "q_update": q_update,
+    }
