@@ -24,7 +24,9 @@ from src.services.users import (
     update_refresh_token,
     get_user_by_access_token,
 )
-
+from src.services.usages import (
+    get_current_usage,
+)
 
 def register(session: Session, payload: RegisterSchema):
     user = None
@@ -64,6 +66,8 @@ def login(response: Response, session: Session, payload: LoginSchema):
         )
     refresh_token = generate_refresh_token(user)
     access_token = generate_access_token(user)
+    usage = get_current_usage(session, user.id)
+    usage.renew_quota(session)
 
     update_access_token(session, user, access_token)
     update_refresh_token(session, user, refresh_token)

@@ -27,6 +27,13 @@ class Usage(Base):
     user_id = Column(UUID(as_uuid=True), nullable=False)
     quota = Column(Integer, nullable=False, default=5)
 
+    def renew_quota(self, session: Session):
+        if (time_now().day == 1):
+            new_usage = Usage(self.user_id) 
+            session.add(new_usage)
+            session.commit()
+            session.refresh(new_usage)
+
     def update_quota(self, session: Session):
         self.quota = self.quota - 1
         session.commit()

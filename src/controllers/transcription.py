@@ -42,6 +42,7 @@ from src.schemas.transcription import (
     ViewTranscriptionRequestSchema,
 )
 from src.services.transcription import TranscriptionService
+from src.services.usages import UsageService
 
 from src.utils.time import (
     get_datetime_now_jkt
@@ -70,6 +71,7 @@ async def transcribe_audio(
     transcribe_client = AWSTranscribeClient().get_client()
 
     service = TranscriptionService()
+    usage_service = UsageService()
 
     filename, file_format = req.s3_filename.split(".")
     job_name = req.job_name
@@ -85,7 +87,7 @@ async def transcribe_audio(
 
     try:
         # Check for quota
-        usage = service.get_current_usage(session, user.id)
+        usage = usage_service.get_current_usage(session, user.id)
         if (usage.quota < 1):
             raise PermissionError
 
@@ -311,7 +313,8 @@ def get_quota(
 ):
     print("!!START")
  
-    service = TranscriptionService()
+    service = UsageService()
+
 
     print("!!!here")
 
