@@ -270,9 +270,8 @@ class NoteService:
     # Return the deleted item
     return note_item
   
-  def save_note(
+  def generate_save_note_params(
     self,
-    request: Request,
     note_id: str,
     note_blocks: BlockNoteCornellSchema,
   ):

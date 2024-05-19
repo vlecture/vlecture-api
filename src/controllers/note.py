@@ -132,8 +132,7 @@ def save_note(
   service = NoteService()
 
   try:
-    params = service.save_note(
-      request=request,
+    params = service.generate_save_note_params(
       note_id=note_id,
       note_blocks=note_blocks,
     )
@@ -148,7 +147,7 @@ def save_note(
     )
 
     if not result:
-        raise HTTPException(status_code=404, detail="Note not found")
+      raise HTTPException(status_code=404, detail="Note not found")
 
     return result
   except HTTPException as e:
