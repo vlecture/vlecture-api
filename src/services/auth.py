@@ -38,6 +38,18 @@ def register(session: Session, payload: RegisterSchema):
             status_code=HTTP_422_UNPROCESSABLE_ENTITY,
             detail="All required fields must be filled!",
         )
+    if (password_char_constraint(payload.hashed_password)):
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Password must be a combination of uppercase letters, lowercase letters, and numbers!"
+        )
+    if (password_len_constraint(payload.hashed_password)):
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Password must be longer than 8 characters!"
+        )
+    if (password_sim_constraint(payload.hashed_password, payload.first_name, payload.middle_name, payload.last_name)):
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Password must not be the same as your first name, middle name, or last name!"
+        )
     try:
         user = get_user(session=session, field="email", value=payload.email.lower())
     except Exception:
@@ -175,6 +187,34 @@ def logout(response: Response, session: Session, payload: LogoutSchema):
 
 
 # Helper functions
+
+def password_sim_constraint(password: str, first_name: str, middle_name: str, last_name: str):
+    if first_name.lower() in password.lower() or middle_name.lower() in password.lower() or last_name.lower() in password.lower():
+        return True
+    return False
+
+def password_len_constraint(password: str):
+    if len(password) < 8:
+        return True
+    return False
+
+def password_char_constraint(password: str):
+    num_of_upp = 0
+    num_of_low = 0
+    num_of_num = 0
+
+    for i in password:
+        if i.isupper():
+            num_of_upp += 1
+        if i.islower():
+            num_of_low += 1
+        if i.isnumeric():
+            num_of_num += 1
+    
+    if num_of_low > 0 and num_of_num > 0 and num_of_upp > 0:
+        return False
+
+    return True
 
 
 def hash_password(password: bytes) -> bytes:
