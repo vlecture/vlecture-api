@@ -189,16 +189,19 @@ def logout(response: Response, session: Session, payload: LogoutSchema):
 # Helper functions
 
 def password_sim_constraint(password: str, first_name: str, middle_name: str, last_name: str):
+    password = password.decode("utf-8")
     if first_name.lower() in password.lower() or middle_name.lower() in password.lower() or last_name.lower() in password.lower():
         return True
     return False
 
 def password_len_constraint(password: str):
+    password = password.decode("utf-8")
     if len(password) < 8:
         return True
     return False
 
 def password_char_constraint(password: str):
+    password = password.decode("utf-8")
     num_of_upp = 0
     num_of_low = 0
     num_of_num = 0
