@@ -31,6 +31,9 @@ def get_user(session: Session, field: str, value: str):
         raise InvalidFieldName("Invalid field name provided")
     return session.query(User).filter(getattr(User, field) == value).one()
 
+def get_user(session: Session, email: str):
+    return session.query(User).filter(User.email == email).one()
+
 def get_user_by_access_token(session: Session, access_token:str):
     return session.query(User).filter(User.access_token == access_token).one()
 
