@@ -15,27 +15,14 @@ def create_user(session: Session, user: RegisterSchema):
     session.refresh(db_user)
     return db_user
 
-
-def get_user(session: Session, field: str, value: str):
-    fields = [
-        "email",
-        "first_name",
-        "middle_name",
-        "last_name",
-        "hashed_password",
-        "is_active",
-        "access_token",
-        "refresh_token",
-    ]
-    if field not in fields:
-        raise InvalidFieldName("Invalid field name provided")
-    return session.query(User).filter(getattr(User, field) == value).one()
-
 def get_user(session: Session, email: str):
     return session.query(User).filter(User.email == email).one()
 
 def get_user_by_access_token(session: Session, access_token:str):
     return session.query(User).filter(User.access_token == access_token).one()
+
+def get_user_by_refresh_token(session: Session, refresh_token:str):
+    return session.query(User).filter(User.refresh_token == refresh_token).one()
 
 def update_refresh_token(session: Session, user, refresh_token: str):
     user.refresh_token = refresh_token
