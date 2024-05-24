@@ -15,7 +15,7 @@ def test_register_positive(test_db):
             "first_name": "Positive",
             "middle_name": "Test",
             "last_name": "Case",
-            "password": "positivepassword",
+            "password": "StrongPassword123",
         },
     )
     assert response.status_code == 200
@@ -26,7 +26,7 @@ def test_login_positive(test_db):
     # Assuming a user "positive@example.com" already exists from the register test
     response = client.post(
         login_url,
-        json={"email": "positive@example.com", "password": "positivepassword"},
+        json={"email": "positive@example.com", "password": "StrongPassword123"},
     )
     assert response.status_code == 200
     assert "access_token" in response.json()
@@ -69,7 +69,7 @@ def test_register_user_already_exists(test_db):
             "first_name": "Positive",
             "middle_name": "Test",
             "last_name": "Case",
-            "password": "positivepassword",
+            "password": "StrongPassword123",
         },
     )
     assert response.status_code == 409
@@ -97,7 +97,7 @@ def test_register_with_special_characters_in_name(test_db):
             "first_name": "Speci@l",
             "middle_name": "@wesome",
             "last_name": "Ch@r",
-            "password": "specialpassword",
+            "password": "StrongPassword123",
         },
     )
     assert response.status_code == 200
@@ -112,7 +112,7 @@ def test_register_identical_emails_with_different_cases(test_db):
             "first_name": "Case",
             "middle_name": "Character",
             "last_name": "Sensitive",
-            "password": "casesensitive",
+            "password": "StrongPassword123",
         },
     )
     response2 = client.post(
@@ -122,7 +122,7 @@ def test_register_identical_emails_with_different_cases(test_db):
             "first_name": "Case",
             "middle_name": "Character",
             "last_name": "Insensitive",
-            "password": "caseinsensitive",
+            "password": "StrongPassword123",
         },
     )
     assert response1.status_code == 200
