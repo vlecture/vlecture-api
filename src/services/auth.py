@@ -64,11 +64,12 @@ def login(response: Response, session: Session, payload: LoginSchema):
         )
     refresh_token = generate_refresh_token(user)
     access_token = generate_access_token(user)
+
     usage_service = UsageService()
     usage = usage_service.get_current_usage(session, user.id)
-    # print("usage object: ", usage)
-    # print("usage quota: ", usage.quota)
     usage.renew_quota(session)
+    session.refresh(usage)
+    session.commit()
 
     update_access_token(session, user, access_token)
     update_refresh_token(session, user, refresh_token)

@@ -12,13 +12,12 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 def create_user(session: Session, user: RegisterSchema):
     db_user = User(**user.model_dump())
     session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
 
     usage = Usage(user_id=db_user.id)
     session.add(usage)
-
     session.commit()
-
-    session.refresh(db_user)
     session.refresh(usage)
     
     return db_user

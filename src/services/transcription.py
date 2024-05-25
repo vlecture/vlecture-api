@@ -196,8 +196,8 @@ class TranscriptionService:
     except Exception as e:
       session.rollback()
       raise RuntimeError(f"Error while inserting Transcription to DB: {e}")
-    finally:
-      session.close()
+    # finally:
+    #   session.close()
 
   async def insert_transcription_chunks(
     self, 
@@ -219,8 +219,8 @@ class TranscriptionService:
     except Exception as e:
         session.rollback()
         raise RuntimeError(f"Error while inserting Transcription Chunk to DB: {e}")
-    finally:
-        session.close()
+    # finally:
+    #     session.close()
 
   async def _fetch_transcription_data(self, transcribe_client, job_name: str):
     response = await self.get_all_transcriptions(
