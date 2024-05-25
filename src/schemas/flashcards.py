@@ -29,6 +29,7 @@ class GenerateFlashcardSetSchema(BaseModel):
     note_id: PyObjectId
     user_id: UUID4
     num_of_flashcards: int
+    title: str
 
 
 class GenerateFlashcardsJSONRequestSchema(BaseModel):
@@ -37,6 +38,7 @@ class GenerateFlashcardsJSONRequestSchema(BaseModel):
     main_word_count: int
     language: str
     num_of_flashcards: int
+    title: str
 
 class GenerateFlashcardsJSONSchema(BaseModel):
     type: str
