@@ -2,6 +2,7 @@ from tests.utils.test_db import client, test_db
 from tests.auth.utils import (
     REGISTER_URL,
     LOGIN_URL,
+    LOGOUT_URL,
     USER_REG,
     USER_LOGIN,
     USER_LOGIN_NON_EXIST,
@@ -10,6 +11,11 @@ from tests.auth.utils import (
     USER_REG_SPEC_CHAR,
     USER_REG_CASE_SENS,
     USER_REG_LONG_STRING,
+    USER_REG_SAME_FN,
+    USER_REG_SAME_MN,
+    USER_REG_SAME_LN,
+    USER_REG_BOUNDARY_VAL,
+    RANDOM_ACCESS_TOKEN,
 )
 
 ## Authentication Tests ##
@@ -33,20 +39,23 @@ def test_login_positive(test_db):
     assert "access_token" in response.json()
     assert "refresh_token" in response.json()
 
-# def test_logout_successful():
-#     # Login
-#     client.post("/login", data={"username": "user", "password": "password"})
+def test_logout_successful(test_db):
+    # Login
+    login_response = client.post(
+        LOGIN_URL,
+        json = USER_LOGIN,
+    )
 
-#     # Logout
-#     response = client.post("/logout")
-#     assert response.status_code == 200
+    # Logout
+    response = client.post(
+        LOGOUT_URL,
+        json = {
+            "access_token": login_response.json()["access_token"]
+        }
+    )
 
-#     # Ensure session token cookie is deleted
-#     assert "access_token" not in response.cookies
-
-#     # Access protected endpoint after logout should be unauthorized
-#     response = client.get("/home")
-#     assert response.status_code == 401 
+    assert response.status_code == 200
+    assert "access_token" not in response.cookies
 
 # Negative Cases
 def test_register_missing_fields(test_db):
@@ -69,7 +78,6 @@ def test_register_with_invalid_email(test_db):
         json = USER_REG_INV_EMAIL,
     )
     assert response.status_code == 422  # Invalid email format
-
 
 def test_register_with_special_characters_in_name(test_db):
     response = client.post(
@@ -110,79 +118,68 @@ def test_register_with_long_values(test_db):
     )
     assert response.status_code == 422
 
-# def test_logout_not_logged_in():
-#     # Attempt to logout when not logged in
-#     response = client.post("/logout")
-#     assert response.status_code == 404  
-#     assert "access_token" not in response.cookies
+def test_register_with_pw_similar_with_fn(test_db):
+    response = client.post(
+        REGISTER_URL,
+        json = USER_REG_SAME_FN,
+    )
+    assert response.status_code == 422
 
+def test_register_with_pw_similar_with_mn(test_db):
+    response = client.post(
+        REGISTER_URL,
+        json = USER_REG_SAME_MN,
+    )
+    assert response.status_code == 422
+
+def test_register_with_pw_similar_with_ln(test_db):
+    response = client.post(
+        REGISTER_URL,
+        json = USER_REG_SAME_LN,
+    )
+    assert response.status_code == 422
+
+def test_logout_not_logged_in(test_db):
+    response = client.post(
+        LOGOUT_URL,
+        json = {
+            "access_token": RANDOM_ACCESS_TOKEN,
+        }
+    )
+
+    assert response.status_code == 404  
+    assert "access_token" not in response.cookies
 
 # Edge Cases
 
-# def test_register_edge_case_boundary_values(test_db):
-#     response = client.post(
-#         REGISTER_URL,
-#         json={
-#             "email": "boundary@example.com",
-#             "first_name": "",  # Empty string
-#             "middle_name": "Boundary Test Case",
-#             "last_name": "B" * 255,  # Testing the max length
-#             "password": "boundarypassword",
-#         },
-#     )
-#     assert (
-#         response.status_code == 422
-#     )  # Assuming empty 'first_name' is invalid and 'last_name' length is validated
+def test_register_edge_case_boundary_values(test_db):
+    response = client.post(
+        REGISTER_URL,
+        json = USER_REG_BOUNDARY_VAL,
+    )
+    assert response.status_code == 422
 
+def test_logout_twice(test_db):
+    # Login
+    login_response = client.post(
+        LOGIN_URL,
+        json = USER_LOGIN,
+    )
 
-# def test_logout_successful():
-#     # Login
-#     client.post("/login", data={"username": "user", "password": "password"})
+    # Logout once
+    response = client.post(
+        LOGOUT_URL,
+        json = {
+            "access_token": login_response.json()["access_token"]
+        }
+    )
+    assert response.status_code == 200
 
-#     # Logout
-#     response = client.post("/logout")
-#     assert response.status_code == 200
-
-#     # Ensure session token cookie is deleted
-#     assert "access_token" not in response.cookies
-
-#     # Access protected endpoint after logout should be unauthorized
-#     response = client.get("/home")
-#     assert response.status_code == 401  
-
-# def test_logout_not_logged_in():
-#     # Attempt to logout when not logged in
-#     response = client.post("/logout")
-#     assert response.status_code == 404  
-#     assert "access_token" not in response.cookies
-
-# def test_logout_twice():
-#     # Login
-#     client.post("/login", data={"username": "user", "password": "password"})
-
-#     # Logout once
-#     response = client.post("/logout")
-#     assert response.status_code == 200
-
-#     # Attempt to logout again
-#     response = client.post("/logout")
-#     assert response.status_code == 404
-
-# def test_logout_twice():
-#     # Login
-#     client.post("/login", data={"username": "user", "password": "password"})
-
-#     # Logout once
-#     response = client.post("/logout")
-#     assert response.status_code == 200
-
-#     # Attempt to logout again
-#     response = client.post("/logout")
-#     assert response.status_code == 404
-
-
-    
-
-
-    
-
+    # Attempt to logout again
+    response = client.post(
+        LOGOUT_URL,
+        json = {
+            "access_token": login_response.json()["access_token"]
+        }
+    )
+    assert response.status_code == 404
