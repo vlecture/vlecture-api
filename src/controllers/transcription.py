@@ -178,12 +178,11 @@ async def transcribe_audio(
                 session=session, transcription_chunk_data=chunk
             )
 
-        # Decrease quota when transcription is succesful
+        # Last, decrease quota when transcription is succesful
         usage_service.update_quota(
             session=session,
             usage=usage
         )
-
 
         response = {
             "transcription": tsc_create_schema,

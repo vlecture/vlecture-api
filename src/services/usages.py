@@ -18,11 +18,10 @@ class UsageService():
     def update_quota(self, session: Session, usage: Usage):
         print("Updating quota...")
 
-        print("init usage quota: ", usage.quota)
+        # print("init usage quota: ", usage.quota)
 
-        tmp = usage.quota 
-        tmp -= 1
-        usage.quota = tmp
+        usage.quota -= 1
         
-        print("new usage quota: ", usage.quota)
+        # print("new usage quota: ", usage.quota)
+        
         session.commit()
