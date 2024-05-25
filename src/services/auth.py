@@ -22,6 +22,7 @@ from src.services.users import (
     get_user_by_refresh_token,
     update_access_token,
     update_active_status,
+    update_user_after_logout,
     update_refresh_token,
     get_user_by_access_token,
 )
@@ -174,10 +175,9 @@ def logout(response: Response, session: Session, payload: LogoutSchema):
                 status_code=HTTP_404_NOT_FOUND, detail="User is not logged in!"
             )
 
-        user.clear_token(session)
+        update_user_after_logout(session, user)
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
-
         return {"message": "Logout successful."}
 
     except Exception:

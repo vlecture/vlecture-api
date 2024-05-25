@@ -36,7 +36,14 @@ def update_access_token(session: Session, user, access_token: str):
 
 
 def update_active_status(session: Session, user):
-    user.is_active = not user.is_active
+    user.is_active = True
+    session.commit()
+
+
+def update_user_after_logout(session: Session, user):
+    user.is_active = False
+    user.access_token = None
+    user.refresh_token = None
     session.commit()
 
     
