@@ -33,7 +33,4 @@ class Usage(Base):
             session.add(new_usage)
             session.commit()
             session.refresh(new_usage)
-
-    def update_quota(self, session: Session):
-        self.quota = self.quota - 1
-        session.commit()
+    

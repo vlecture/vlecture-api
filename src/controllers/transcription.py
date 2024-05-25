@@ -62,6 +62,29 @@ transcription_router = APIRouter(
 )
 
 
+@transcription_router.get("/quota", status_code=http.HTTPStatus.OK)
+def fetch_quota(
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    service = UsageService()
+    # print("session: ", session)
+    # print("user: ", user)
+    # print("user id: ", user.id)
+    usage = service.get_current_usage(
+        session=session,
+        user_id=user.id
+    )
+
+    response = {
+        "quota": usage.quota
+    }
+
+    return JSONResponse(
+        status_code=http.HTTPStatus.OK,
+        content=response,
+    )
+
 @transcription_router.post("/create", status_code=http.HTTPStatus.OK)
 async def transcribe_audio(
     req: TranscribeAudioRequestSchema,
@@ -87,6 +110,7 @@ async def transcribe_audio(
 
     try:
         # Check for quota
+        print("checking for quota...")
         usage = usage_service.get_current_usage(session, user.id)
         if (usage.quota < 1):
             raise PermissionError
@@ -155,7 +179,11 @@ async def transcribe_audio(
             )
 
         # Decrease quota when transcription is succesful
-        usage.update_quota(session)
+        usage_service.update_quota(
+            session=session,
+            usage=usage
+        )
+
 
         response = {
             "transcription": tsc_create_schema,
@@ -306,26 +334,3 @@ async def delete_transcription(job_name: str):
             content=f"Error: Failed to delete transcription job: {e}",
         )
 
-@transcription_router.get("/quota", status_code=http.HTTPStatus.OK)
-def get_quota(
-    session: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
-):
-    print("!!START")
- 
-    service = UsageService()
-
-
-    print("!!!here")
-
-    response = service.get_current_usage_quota(
-        session=session,
-        user_id=user.id
-    )
-
-    print("!!!now here")
-
-    return JSONResponse(
-        status_code=http.HTTPStatus.OK,
-        content=response,
-    )
