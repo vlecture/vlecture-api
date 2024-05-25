@@ -79,6 +79,9 @@ def login(response: Response, session: Session, payload: LoginSchema):
     refresh_token = generate_refresh_token(user)
     access_token = generate_access_token(user)
 
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+
     update_access_token(session, user, access_token)
     update_refresh_token(session, user, refresh_token)
     update_active_status(session, user)
@@ -176,8 +179,10 @@ def logout(response: Response, session: Session, payload: LogoutSchema):
             )
 
         update_user_after_logout(session, user)
+
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
+
         return {"message": "Logout successful."}
 
     except Exception:
