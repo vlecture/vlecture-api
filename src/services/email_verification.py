@@ -30,7 +30,7 @@ class EmailVerificationService:
        )
 
     try:
-       user = get_user(session=session, email=payload.email.lower())
+      user = get_user(session=session, email=payload.email.lower())
     except Exception:
        return False
     
