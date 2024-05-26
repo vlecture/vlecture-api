@@ -19,6 +19,7 @@ from src.schemas.auth import (
     OTPCreateSchema,
     OTPCheckSchema,
     LogoutSchema,
+    UpdatePasswordSchema,
 )
 from starlette.status import HTTP_200_OK
 from fastapi.responses import JSONResponse
@@ -36,7 +37,10 @@ auth_router = APIRouter(prefix="/v1/auth", tags=[AuthRouterTags.auth])
 
 
 @auth_router.post("/register", tags=[AuthRouterTags.auth])
-def register(payload: RegisterSchema = Body(), session: Session = Depends(get_db)):
+def register(
+    payload: RegisterSchema = Body(), 
+    session: Session = Depends(get_db)
+):
     """Processes request to register user account."""
     return auth.register(session, payload=payload)
 
@@ -176,3 +180,14 @@ def verify(
     session: Session = Depends(get_db),
 ):
     return auth.verify_access_token(request, session)
+
+@auth_router.post("/update-password")
+def update_password(
+    payload: UpdatePasswordSchema = Body(),
+    session: Session = Depends(get_db)
+):
+    """Updates the user's password."""
+    return auth.update_password(
+        session=session,
+        payload=payload,
+    )
