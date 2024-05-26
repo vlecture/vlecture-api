@@ -29,6 +29,8 @@ from src.utils.db import get_db
 from src.models.transcription import Transcription
 
 from src.models.users import User
+from src.exceptions.usages import QuotaError
+
 from src.services.users import get_current_user
 
 from src.utils.settings import AWS_BUCKET_NAME
@@ -68,9 +70,7 @@ def fetch_quota(
     user: User = Depends(get_current_user),
 ):
     service = UsageService()
-    print("session: ", session)
-    print("user: ", user)
-    print("user id: ", user.id)
+  
     usage = service.get_current_usage(
         session=session,
         user_id=user.id
@@ -106,19 +106,9 @@ async def transcribe_audio(
         extension=file_format,
     )
 
-    # print(filename)
-
     try:
         # Check for quota
 
-        class QuotaError(Exception):
-            """Exception raised when the user's quota is exceeded."""
-
-            def __init__(self, message="Quota exceeded, cannot proceed with transcription"):
-                self.message = message
-                super().__init__(self.message)
-
-        print("checking for quota...")
         usage = usage_service.get_current_usage(session, user.id)
         if (usage.quota < 1):
             raise QuotaError
@@ -203,7 +193,7 @@ async def transcribe_audio(
 
     except QuotaError:
         return JSONResponse(
-            status_code=http.HTTPStatus.UNAUTHORIZED,
+            status_code=http.HTTPStatus.OK,
             content="Error: No transcription quota left.",
         )
     except TimeoutError:
