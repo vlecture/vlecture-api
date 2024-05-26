@@ -68,9 +68,9 @@ def fetch_quota(
     user: User = Depends(get_current_user),
 ):
     service = UsageService()
-    # print("session: ", session)
-    # print("user: ", user)
-    # print("user id: ", user.id)
+    print("session: ", session)
+    print("user: ", user)
+    print("user id: ", user.id)
     usage = service.get_current_usage(
         session=session,
         user_id=user.id
@@ -110,10 +110,18 @@ async def transcribe_audio(
 
     try:
         # Check for quota
+
+        class QuotaError(Exception):
+            """Exception raised when the user's quota is exceeded."""
+
+            def __init__(self, message="Quota exceeded, cannot proceed with transcription"):
+                self.message = message
+                super().__init__(self.message)
+
         print("checking for quota...")
         usage = usage_service.get_current_usage(session, user.id)
         if (usage.quota < 1):
-            raise PermissionError
+            raise QuotaError
 
         # Transcribe audio
         await service.transcribe_file(
@@ -197,7 +205,7 @@ async def transcribe_audio(
             status_code=http.HTTPStatus.CREATED, content=jsonable_encoder(response)
         )
 
-    except PermissionError:
+    except QuotaError:
         return JSONResponse(
             status_code=http.HTTPStatus.UNAUTHORIZED,
             content="Error: No transcription quota left.",
