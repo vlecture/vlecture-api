@@ -1,6 +1,7 @@
 import bcrypt
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from jose import jwt
 from src.exceptions.users import InvalidFieldName
@@ -57,7 +58,13 @@ def register(session: Session, payload: RegisterSchema):
     except Exception:
         payload.email = payload.email.lower()
         payload.hashed_password = hash_password(payload.hashed_password)
-        return create_user(session=session, user=payload)
+        create_user(session=session, user=payload)
+        return JSONResponse(
+                status_code=HTTP_200_OK,
+                content={
+                    "message": "User successfully registered!"
+                }
+            )
     if user:
         raise HTTPException(
             status_code=HTTP_409_CONFLICT, detail="User already exists!"

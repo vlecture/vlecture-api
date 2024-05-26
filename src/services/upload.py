@@ -36,8 +36,7 @@ class UploadService:
         file_size_MB = file.file.tell() / (1024 * 1024)  # Size in MB
         file.file.seek(0)  # Reset the cursor to the start of the file
         if file_size_MB > self.max_file_size_mb:
-            raise ValueError(f"File size exceeds the {
-                             self.max_file_size_mb} MB limit")
+            raise ValueError(f"File size exceeds the {self.max_file_size_mb} MB limit")
 
     def upload_file(self, file, filename):
         try:
