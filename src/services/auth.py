@@ -19,12 +19,14 @@ from src.schemas.auth import LoginSchema, RegisterSchema, LogoutSchema
 from src.services.users import (
     create_user,
     get_user,
+    get_user_by_refresh_token,
     update_access_token,
     update_active_status,
+    update_user_after_logout,
     update_refresh_token,
     get_user_by_access_token,
 )
-
+from src.services.usages import UsageService
 
 def register(session: Session, payload: RegisterSchema):
     user = None
@@ -38,8 +40,20 @@ def register(session: Session, payload: RegisterSchema):
             status_code=HTTP_422_UNPROCESSABLE_ENTITY,
             detail="All required fields must be filled!",
         )
+    if (password_char_constraint(payload.hashed_password)):
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Password must be a combination of uppercase letters, lowercase letters, and numbers!"
+        )
+    if (password_len_constraint(payload.hashed_password)):
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Password must be longer than 8 characters!"
+        )
+    if (password_sim_constraint(payload.hashed_password, payload.first_name, payload.middle_name, payload.last_name)):
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Password must not be the same as your first name, middle name, or last name!"
+        )
     try:
-        user = get_user(session=session, field="email", value=payload.email.lower())
+        user = get_user(session=session, email=payload.email.lower())
     except Exception:
         payload.email = payload.email.lower()
         payload.hashed_password = hash_password(payload.hashed_password)
@@ -53,7 +67,7 @@ def register(session: Session, payload: RegisterSchema):
 def login(response: Response, session: Session, payload: LoginSchema):
     user = None
     try:
-        user = get_user(session=session, field="email", value=payload.email.lower())
+        user = get_user(session=session, email=payload.email.lower())
     except Exception:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found!")
     is_validated: bool = validate_password(user, payload.password)
@@ -65,12 +79,18 @@ def login(response: Response, session: Session, payload: LoginSchema):
     refresh_token = generate_refresh_token(user)
     access_token = generate_access_token(user)
 
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+
+    usage_service = UsageService()
+    usage = usage_service.get_current_usage(session, user.id)
+    usage.renew_quota(session)
+    session.refresh(usage)
+    session.commit()
+
     update_access_token(session, user, access_token)
     update_refresh_token(session, user, refresh_token)
     update_active_status(session, user)
-
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
-    response.set_cookie(key="access_token", value=access_token, httponly=True)
 
     return {
         "access_token": access_token,
@@ -88,7 +108,7 @@ def verify_access_token(request: Request, session: Session):
     try:
         decoded_access_token = jwt.decode(access_token, ACCESS_TOKEN_SECRET)
         try:
-            user = get_user(session=session, field="access_token", value=access_token)
+            user = get_user_by_access_token(session=session, access_token=access_token)
 
             if int(datetime.now(timezone.utc).timestamp()) > decoded_access_token.get(
                 "exp"
@@ -116,8 +136,9 @@ def verify_access_token(request: Request, session: Session):
 
 
 def renew_access_token(request: Request, response: Response, session: Session):
-    refresh_token = request.cookies.get("refresh_token")
-    if refresh_token is None:
+    authorization_header = request.headers.get("Authorization")
+    refresh_token = authorization_header[len("Bearer "):] 
+    if authorization_header is None:
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Unauthorized. Refresh token not provided!",
@@ -133,12 +154,10 @@ def renew_access_token(request: Request, response: Response, session: Session):
             ACCESS_TOKEN_SECRET,
         )
         try:
-            user = get_user(session=session, field="refresh_token", value=refresh_token)
+            user = get_user_by_refresh_token(session=session, refresh_token=refresh_token)
 
             update_access_token(session, user, new_access_token)
-            response.set_cookie(
-                key="access_token", value=new_access_token, httponly=True
-            )
+            
             return new_access_token
         except InvalidFieldName as e:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
@@ -165,7 +184,8 @@ def logout(response: Response, session: Session, payload: LogoutSchema):
                 status_code=HTTP_404_NOT_FOUND, detail="User is not logged in!"
             )
 
-        user.clear_token(session)
+        update_user_after_logout(session, user)
+
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
 
@@ -179,6 +199,37 @@ def logout(response: Response, session: Session, payload: LogoutSchema):
 
 
 # Helper functions
+
+def password_sim_constraint(password: str, first_name: str, middle_name: str, last_name: str):
+    password = password.decode("utf-8")
+    if first_name.lower() in password.lower() or middle_name.lower() in password.lower() or last_name.lower() in password.lower():
+        return True
+    return False
+
+def password_len_constraint(password: str):
+    password = password.decode("utf-8")
+    if len(password) < 8:
+        return True
+    return False
+
+def password_char_constraint(password: str):
+    password = password.decode("utf-8")
+    num_of_upp = 0
+    num_of_low = 0
+    num_of_num = 0
+
+    for i in password:
+        if i.isupper():
+            num_of_upp += 1
+        if i.islower():
+            num_of_low += 1
+        if i.isnumeric():
+            num_of_num += 1
+    
+    if num_of_low > 0 and num_of_num > 0 and num_of_upp > 0:
+        return False
+
+    return True
 
 
 def hash_password(password: bytes) -> bytes:
