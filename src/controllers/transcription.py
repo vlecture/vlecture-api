@@ -191,10 +191,6 @@ async def transcribe_audio(
             session=session,
             usage=usage
         )
-        # print("usage: ", usage)
-        # print("init usage ")
-        # usage.quota -= 1
-        # session.commit()
 
         response = {
             "transcription": tsc_create_schema,
