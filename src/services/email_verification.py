@@ -61,8 +61,11 @@ class EmailVerificationService:
    def purge_user_otp(self, session: Session, email: str):
       # Delete all user's OTP from otps table
       deleted_rows = session.query(OTP).filter(OTP.email == email)
-      deleted_rows.delete()
-      session.commit()
+
+      # Purge all OTP related to the user, if any
+      if deleted_rows:
+         deleted_rows.delete()
+         session.commit()
       
       return deleted_rows or None
 
