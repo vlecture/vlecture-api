@@ -26,7 +26,7 @@ from src.services.users import (
     update_refresh_token,
     get_user_by_access_token,
 )
-
+from src.services.usages import UsageService
 
 def register(session: Session, payload: RegisterSchema):
     user = None
@@ -81,6 +81,12 @@ def login(response: Response, session: Session, payload: LoginSchema):
 
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
+
+    usage_service = UsageService()
+    usage = usage_service.get_current_usage(session, user.id)
+    usage.renew_quota(session)
+    session.refresh(usage)
+    session.commit()
 
     update_access_token(session, user, access_token)
     update_refresh_token(session, user, refresh_token)

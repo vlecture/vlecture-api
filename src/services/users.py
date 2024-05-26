@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from src.exceptions.users import InvalidFieldName
 
 from src.models.users import User
+from src.models.usages import Usage
 from src.schemas.auth import RegisterSchema
 from src.utils.db import get_db
 from starlette.status import HTTP_401_UNAUTHORIZED
@@ -13,6 +14,12 @@ def create_user(session: Session, user: RegisterSchema):
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
+
+    usage = Usage(user_id=db_user.id)
+    session.add(usage)
+    session.commit()
+    session.refresh(usage)
+    
     return db_user
 
 def get_user(session: Session, email: str):

@@ -6,21 +6,20 @@ import requests
 import pytz
 from datetime import datetime
 
-from sqlalchemy.orm import Session
 from typing import List, Union
 from botocore.exceptions import ClientError
 from fastapi.encoders import jsonable_encoder
 
-from src.models.users import (
-  User
-)
+from sqlalchemy.orm import Session
+from sqlalchemy import desc
 
-from src.services.users import get_current_user
-
+from src.models.users import User
 from src.models.transcription import (
   Transcription,
   TranscriptionChunk,
 )
+
+from src.services.users import get_current_user
 
 from src.schemas.transcription import (
   TranscriptionChunkItemSchema,
@@ -197,8 +196,8 @@ class TranscriptionService:
     except Exception as e:
       session.rollback()
       raise RuntimeError(f"Error while inserting Transcription to DB: {e}")
-    finally:
-      session.close()
+    # finally:
+    #   session.close()
 
   async def insert_transcription_chunks(
     self, 
@@ -220,8 +219,8 @@ class TranscriptionService:
     except Exception as e:
         session.rollback()
         raise RuntimeError(f"Error while inserting Transcription Chunk to DB: {e}")
-    finally:
-        session.close()
+    # finally:
+    #     session.close()
 
   async def _fetch_transcription_data(self, transcribe_client, job_name: str):
     response = await self.get_all_transcriptions(

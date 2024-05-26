@@ -29,6 +29,8 @@ from src.utils.db import get_db
 from src.models.transcription import Transcription
 
 from src.models.users import User
+from src.exceptions.usages import QuotaError
+
 from src.services.users import get_current_user
 
 from src.utils.settings import AWS_BUCKET_NAME
@@ -42,6 +44,7 @@ from src.schemas.transcription import (
     ViewTranscriptionRequestSchema,
 )
 from src.services.transcription import TranscriptionService
+from src.services.usages import UsageService
 
 from src.utils.time import (
     get_datetime_now_jkt
@@ -61,6 +64,27 @@ transcription_router = APIRouter(
 )
 
 
+@transcription_router.get("/quota", status_code=http.HTTPStatus.OK)
+def fetch_quota(
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    service = UsageService()
+  
+    usage = service.get_current_usage(
+        session=session,
+        user_id=user.id
+    )
+
+    response = {
+        "quota": usage.quota
+    }
+
+    return JSONResponse(
+        status_code=http.HTTPStatus.OK,
+        content=response,
+    )
+
 @transcription_router.post("/create", status_code=http.HTTPStatus.OK)
 async def transcribe_audio(
     req: TranscribeAudioRequestSchema,
@@ -70,6 +94,7 @@ async def transcribe_audio(
     transcribe_client = AWSTranscribeClient().get_client()
 
     service = TranscriptionService()
+    usage_service = UsageService()
 
     filename, file_format = req.s3_filename.split(".")
     job_name = req.job_name
@@ -81,9 +106,13 @@ async def transcribe_audio(
         extension=file_format,
     )
 
-    # print(filename)
-
     try:
+        # Check for quota
+
+        usage = usage_service.get_current_usage(session, user.id)
+        if (usage.quota < 1):
+            raise QuotaError
+
         # Transcribe audio
         await service.transcribe_file(
             transcribe_client=transcribe_client,
@@ -147,6 +176,12 @@ async def transcribe_audio(
                 session=session, transcription_chunk_data=chunk
             )
 
+        # Last, decrease quota when transcription is succesful
+        usage_service.update_quota(
+            session=session,
+            usage=usage
+        )
+
         response = {
             "transcription": tsc_create_schema,
             "transcription_chunks": transcription_chunks,
@@ -156,6 +191,11 @@ async def transcribe_audio(
             status_code=http.HTTPStatus.CREATED, content=jsonable_encoder(response)
         )
 
+    except QuotaError:
+        return JSONResponse(
+            status_code=http.HTTPStatus.OK,
+            content="Error: No transcription quota left.",
+        )
     except TimeoutError:
         return JSONResponse(
             status_code=http.HTTPStatus.REQUEST_TIMEOUT,
@@ -290,3 +330,4 @@ async def delete_transcription(job_name: str):
             status_code=http.HTTPStatus.BAD_REQUEST,
             content=f"Error: Failed to delete transcription job",
         )
+

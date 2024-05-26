@@ -83,8 +83,8 @@ class EmailVerificationService:
          print(f"Error while inserting token to DB: {e}")
          session.rollback()
          raise e
-      finally:
-         session.close()
+      # finally:
+      #    session.close()
 
    def get_latest_valid_otp(self, session: Session, email: str):
       """
