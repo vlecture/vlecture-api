@@ -84,6 +84,7 @@ async def send_verif_email(
     otp_create_schema_obj = OTPCreateSchema(email=recipient, token=token)
 
     try:
+        service.purge_user_otp(session=session, email=recipient)
         service.insert_token_to_db(session=session, otp_data=otp_create_schema_obj)
 
         response = await service.send_verif_email(
