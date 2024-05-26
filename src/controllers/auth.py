@@ -176,3 +176,27 @@ def verify(
     session: Session = Depends(get_db),
 ):
     return auth.verify_access_token(request, session)
+
+@auth_router.post("/email-exist", tags=[AuthRouterTags])
+async def email_check(
+    payload: EmailSchema = Body(),
+    session: Session = Depends(get_db),
+):
+    service = EmailVerificationService()
+
+    is_user_exists = service.is_user_exists(session=session, payload=payload)
+
+    if is_user_exists:
+        return JSONResponse(
+            status_code=HTTP_200_OK,
+            content={
+                "status" : True,
+            }
+        )
+    
+    return JSONResponse(
+            status_code=HTTP_200_OK,
+            content={
+                "status" : False,
+            }
+    )

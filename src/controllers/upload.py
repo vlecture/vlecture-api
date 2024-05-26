@@ -50,8 +50,6 @@ async def upload_file(
 
         file_name = str(user_id) + "_" + str(sha()) + "_" + file.filename
         s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file_name)
-    except HTTPException as e:
-        return e
     except Exception as e:
         raise HTTPException(
             status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error on uploading the file")

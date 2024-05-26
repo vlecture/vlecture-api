@@ -342,6 +342,6 @@ async def delete_transcription(job_name: str):
     except ClientError as e:
         return JSONResponse(
             status_code=http.HTTPStatus.BAD_REQUEST,
-            content=f"Error: Failed to delete transcription job: {e}",
+            content=f"Error: Failed to delete transcription job",
         )
 
