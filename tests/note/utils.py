@@ -1,4 +1,67 @@
-NOTE_ID = "66214575dee0152b709ba24d" # FETCH API input
+from datetime import date
+NOTE_ID = "6648ceffe78436089ba24fc9" # FETCH API input
+
+NOTE_BLOCKS = {
+  "main": [
+        {
+            "id": "d6f111ec-0acc-429f-abb7-a11933cda21d",
+            "type": "paragraph",
+            "props": {
+                "textColor": "default",
+                "backgroundColor": "default",
+                "textAlignment": "left"
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "CRISPR CRISPR CRISPR - The CRISPR system exhibits Lamarckian principles, where specific environmental experiences are passed on to future generations, contrary to the traditional Darwinian view of evolution based on random genetic variations.",
+                    "styles": {}
+                },
+                
+            ],
+            "children": []
+        }
+    ],
+    "cues": [
+        {
+            "id": "480aee01-0463-4850-bbbe-2d67b76e19eb",
+            "type": "paragraph",
+            "props": {
+                "textColor": "default",
+                "backgroundColor": "default",
+                "textAlignment": "left"
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Challenges to traditional evolutionary theories",
+                    "styles": {}
+                }
+            ],
+            "children": []
+        }
+    ],
+    "summary": [
+        {
+            "id": "faf523a9-1b2b-464b-b5b6-4e7911e535ff",
+            "type": "paragraph",
+            "props": {
+                "textColor": "default",
+                "backgroundColor": "default",
+                "textAlignment": "left"
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "The UK Human Fertilisation and Embryology Authority has given the green light for gene editing on human embryos at the Francis Crick Institute in London, using the CRISPR-Cas gene editing technique to enhance our knowledge of human development. CRISPR, originally discovered in single-celled microbes, functions as a bacterial immune system by incorporating viral DNA into the bacterial genome to provide acquired immunity. This heritability of the CRISPR system challenges conventional views on evolution and immune responses, showcasing parallels between bacterial and human adaptive immunity. The ability of CRISPR to pass on acquired immune responses to offspring contradicts traditional Darwinian natural selection theories, reflecting Lamarckian principles where environmental experiences are inherited by future generations.",
+                    "styles": {}
+                }
+            ],
+            "children": []
+        }
+    ],
+}
+
 
 NOTE_LANGUAGE = "Indonesian"
 

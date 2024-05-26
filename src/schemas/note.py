@@ -86,4 +86,3 @@ class BlockNoteCornellSchema(BaseModel):
   main: Optional[List[NoteBlockSchema]]
   cues: Optional[List[NoteBlockSchema]]
   summary: Optional[List[NoteBlockSchema]]
-
