@@ -2,6 +2,7 @@ from tests.utils.test_db import client, test_db
 
 register_url = "/v1/auth/register"
 login_url = "/v1/auth/login"
+update_pw_url = "v1/auth/update-password"
 ## Authentication Tests ##
 
 # Positive Cases
@@ -231,9 +232,16 @@ def test_register_edge_case_boundary_values(test_db):
 #     response = client.post("/logout")
 #     assert response.status_code == 404
 
+def test_update_password(test_db):
+    # Login
+    client.post("/login", data={"email": "positive@example.com", "password": "positivepassword"})
 
-    
-
-
-    
+    response = client.post(
+        update_pw_url,
+        json={
+            "password": "password123",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["email"] == "positive@example.com"
 

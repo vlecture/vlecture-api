@@ -29,6 +29,7 @@ class GenerateFlashcardSetSchema(BaseModel):
     note_id: PyObjectId
     user_id: UUID4
     num_of_flashcards: int
+    title: str
 
 
 class GenerateFlashcardsJSONRequestSchema(BaseModel):
@@ -37,12 +38,18 @@ class GenerateFlashcardsJSONRequestSchema(BaseModel):
     main_word_count: int
     language: str
     num_of_flashcards: int
+    title: str
 
 class GenerateFlashcardsJSONSchema(BaseModel):
     type: str
     front: str
     back: str
     hints: Optional[List[str]]
+
+class GenerateFlashcardResponseJSONSchema(BaseModel):
+    note_id: PyObjectId
+    set_id: UUID4
+    flashcards: List[GenerateFlashcardsJSONSchema]
 
 class FlashcardRequestSchema(BaseModel):
     note_id: PyObjectId
