@@ -46,6 +46,11 @@ class GenerateFlashcardsJSONSchema(BaseModel):
     back: str
     hints: Optional[List[str]]
 
+class GenerateFlashcardResponseJSONSchema(BaseModel):
+    note_id: PyObjectId
+    set_id: UUID4
+    flashcards: List[GenerateFlashcardsJSONSchema]
+
 class FlashcardRequestSchema(BaseModel):
     note_id: PyObjectId
     set_id: UUID4
