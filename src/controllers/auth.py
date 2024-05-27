@@ -199,7 +199,8 @@ def update_password(
             "email": user_email,
         }
     )
-@auth_router.post("/email-exist", tags=[AuthRouterTags])
+
+@auth_router.post("/email-exist")
 async def email_check(
     payload: EmailSchema = Body(),
     session: Session = Depends(get_db),
