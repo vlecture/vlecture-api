@@ -101,4 +101,3 @@ jobs:
               -v "$(pwd)/.env:/app/.env:ro" \
               -p "8080:8080" \
               "${{ env.DEV_ECR_REGISTRY }}/${{ env.DEV_ECR_REPOSITORY }}:latest"
-

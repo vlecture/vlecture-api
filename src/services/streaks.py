@@ -96,8 +96,8 @@ class StreaksService:
     except Exception as e:
       session.rollback()
       raise RuntimeError(f"Error while creating new Streak: ${e}")
-    finally:
-      session.close()
+    # finally:
+    #   session.close()
 
     return streak_obj_db
   

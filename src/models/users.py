@@ -45,19 +45,5 @@ class User(Base):
         """Returns string representation of model instance"""
         return "<User {first_name}>".format(first_name=self.first_name)
 
-    def update_refresh_token(self, token):
-        self.refresh_token = token
-
-    def update_access_token(self, token):
-        self.access_token = token
-    
-    def clear_token(self, session: Session):
-        """Deactivate user as well as clear access token and refresh token upon logout"""
-        self.is_active = False
-        self.access_token = None
-        self.refresh_token = None
-        session.commit()
-        return {"message": "Token cleared from user."}
-
     def get_is_active(self):
         return self.is_active

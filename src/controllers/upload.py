@@ -34,31 +34,15 @@ upload_router = APIRouter(prefix="/v1/upload", tags=[UploadRouterTags.upload])
 async def upload_file(
     user: User = Depends(get_current_user), file: UploadFile = File(...)
 ):
+    service = UploadService(AWS_BUCKET_NAME)
     user_id = user.id
+    file_name = f"{user_id}_{sha()}_{file.filename}"
     try:
-        allowed_types = ["audio/mp4", "audio/mp4a-latm",
-                         "audio/x-m4a", "audio/mpeg"]
-        file_type, _ = mimetypes.guess_type(file.filename)
-
-        # NOTE delete
-        print(file_type)
-        if file_type not in allowed_types:
-            raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail="Only MP3 or M4A files are allowed",
-            )
-
-        file_name = str(user_id) + "_" + str(sha()) + "_" + file.filename
-        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file_name)
-    except HTTPException as e:
-        return e
+        service.upload_file(file, file_name)
+    except ValueError as e:
+        return HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        raise HTTPException(
-            status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error on uploading the file")
-
-    finally:
-        file.file.close()
-
+        return HTTPException(status_code=500, detail="Error on uploading the file")
     return {"status_code": HTTP_200_OK, "filename": file_name}
 
 
@@ -85,4 +69,3 @@ async def delete_audio(filename: str, user: User = Depends(get_current_user)):
         )
 
     return JSONResponse(status_code=HTTP_200_OK, content="Successfully deleted the audio file")
-

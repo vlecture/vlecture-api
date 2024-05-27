@@ -19,6 +19,7 @@ from src.schemas.flashcards import (
     GenerateFlashcardSetSchema,
     FlashcardRequestSchema,
     GenerateFlashcardsJSONSchema,
+    GenerateFlashcardResponseJSONSchema,
 )
 from src.utils.openai import construct_system_flashcard_instructions
 from src.utils.db import get_db
@@ -141,7 +142,13 @@ class FlashcardService:
             session.commit()
             session.refresh(flashcard)
 
-        return flashcard_jsons
+        response = GenerateFlashcardResponseJSONSchema(
+            note_id=note_id,
+            set_id=set_id,
+            flashcards=flashcard_jsons,
+        )
+
+        return response
 
     # Flashcard Manipulation and Accessing
 
