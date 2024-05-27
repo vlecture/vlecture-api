@@ -20,9 +20,9 @@ from src.utils.settings import (
     MONGODB_COLLECTION_QNA_RESULTS,
 )
 from src.controllers import (
-    transcription, 
-    auth, 
-    upload, 
+    transcription,
+    auth,
+    upload,
     waitlist,
     note,
     flashcards,
@@ -59,7 +59,7 @@ app.add_middleware(
         "http://localhost:8080",
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=[
         "Accept",
         "Authorization",
@@ -90,15 +90,14 @@ app.include_router(streaks.streaks_router)
 def startup_mongodb_client():
     client = MongoClient(
         MONGODB_URL,
-        server_api=ServerApi('1'),
-
+        server_api=ServerApi("1"),
         # MongoClient Configs
         uuidRepresentation="standard",
         tlsCAFile=certifi.where(),
     )
 
     try:
-        client.admin.command('ping')
+        client.admin.command("ping")
         print("Successfully pinged your MongoDB deployment!")
 
         # Assign MongoDB client to FastAPI app
@@ -106,12 +105,15 @@ def startup_mongodb_client():
         app.database = app.mongodb_client.get_database(MONGODB_DB_NAME)
         app.note_collection = app.database.get_collection(MONGODB_COLLECTION_NOTE)
         app.qna_collection = app.database.get_collection(MONGODB_COLLECTION_QNA)
-        app.qna_results_collection = app.database.get_collection(MONGODB_COLLECTION_QNA_RESULTS)
-        
+        app.qna_results_collection = app.database.get_collection(
+            MONGODB_COLLECTION_QNA_RESULTS
+        )
+
         print("Connected to MongoDB Database.")
     except Exception as e:
         print(e)
- 
+
+
 @app.on_event("shutdown")
 def shutdown_db_client():
     app.mongodb_client.close()
