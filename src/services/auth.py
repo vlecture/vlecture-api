@@ -16,7 +16,12 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 from src.models.users import User
-from src.schemas.auth import LoginSchema, RegisterSchema, LogoutSchema
+from src.schemas.auth import (
+  LoginSchema, 
+  RegisterSchema, 
+  LogoutSchema,
+  UpdatePasswordSchema,
+)
 from src.services.users import (
     create_user,
     get_user,
@@ -34,6 +39,7 @@ def register(session: Session, payload: RegisterSchema):
     if (
         len(payload.email) == 0
         or len(payload.first_name) == 0
+        # NOTE - should this be len() == 0?
         or (payload.last_name) == 0
         or (payload.hashed_password) == 0
     ):
@@ -275,3 +281,15 @@ def generate_access_token(user: User):
         ACCESS_TOKEN_SECRET,
     )
     return access_token
+
+def update_password(session: Session, payload: UpdatePasswordSchema):
+    """Updates a user's password"""
+    user = get_user(session=session, email=payload.email.lower())
+
+    if user:
+        hashed_password = hash_password(payload.hashed_password)
+        
+        user.hashed_password = hashed_password
+        session.commit()
+
+        return user.email

@@ -31,6 +31,7 @@ from src.controllers import (
 )
 from src.utils.db import Base, engine
 
+from src.utils.settings import ENV_TYPE
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
@@ -43,7 +44,9 @@ sentry_sdk.init(
     profiles_sample_rate=1.0,
 )
 
-app = FastAPI()
+OPENAPI_URL = "/openapi.json" if ENV_TYPE == "DEV" else ""
+
+app = FastAPI(openapi_url=OPENAPI_URL)
 
 # CORS
 app.add_middleware(
