@@ -74,15 +74,7 @@ async def send_verif_email(
 
     service = EmailVerificationService()
 
-    is_user_exists = service.is_user_exists(session=session, payload=payload)
-
-    if is_user_exists:
-        return JSONResponse(
-            status_code=http.HTTPStatus.CONFLICT, content="Error: User already exists!"
-        )
-
     recipient = payload.model_dump().get("email")
-
     token = service.generate_token()
 
     otp_create_schema_obj = OTPCreateSchema(email=recipient, token=token)
@@ -101,7 +93,7 @@ async def send_verif_email(
         )
     except ValueError:
         return JSONResponse(
-            status_code=http.HTTPStatus.UNPROCESSABLE_ENTITY,
+            status_code=http.HTTPStatus.BAD_REQUEST,
             content="Error: Invalid value when sending email.",
         )
     except Exception:
