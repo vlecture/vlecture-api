@@ -185,20 +185,18 @@ def verify(
 @auth_router.post("/update-password")
 def update_password(
     payload: UpdatePasswordSchema = Body(),
-    user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ):
     """Updates the user's password."""
-    auth.update_password(
+    user_email = auth.update_password(
         session=session,
-        user=user,
         payload=payload,
     )
     
     return JSONResponse(
         status_code=HTTP_200_OK,
         content={
-            "email":user.email,
+            "email": user_email,
         }
     )
 @auth_router.post("/email-exist", tags=[AuthRouterTags])
