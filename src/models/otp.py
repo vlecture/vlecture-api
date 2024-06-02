@@ -36,6 +36,8 @@ class OTP(Base):
   PrimaryKeyConstraint("id", name="pk_otp_id")
   UniqueConstraint("email", name="uq_otp_token")
 
+  
+
   def __str__(self):
      return f"id: {self.id}\nemail: {self.email}\ntoken: {self.token}\ncreated_at: {self.created_at}\nexpires_at: {self.expires_at}\n"
 
